@@ -1,7 +1,8 @@
-import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { t } from "../lib/i18n";
 import { ENGINES } from "../lib/search";
 import type { Settings as S } from "../lib/settings";
+import { addImage, deleteImage, listImages, toUrl, type StoredImage } from "../lib/images";
 
 /**
  * 設定抽屜。
@@ -21,11 +22,13 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
   const first = useRef<HTMLInputElement>(null);
   useLayoutEffect(() => first.current?.focus(), []);
 
+  const close = useRef(onClose);
+  close.current = onClose;
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close.current();
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, []);
 
   return (
     <div class="sheet" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -59,7 +62,7 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
               >
                 {ENGINES.map((eng) => (
                   <option key={eng.id} value={eng.id}>
-                    {eng.name}　{eng.prefix} +空白
+                    {eng.name}
                   </option>
                 ))}
               </select>
@@ -90,14 +93,14 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
           <section>
             <h3>{t("s_background")}</h3>
             <div class="seg" role="group" aria-label={t("s_background")}>
-              {(["mesh", "solid"] as const).map((src) => (
+              {(["mesh", "solid", "image"] as const).map((src) => (
                 <button
                   key={src}
                   type="button"
                   aria-pressed={value.background === src}
                   onClick={() => onChange({ background: src })}
                 >
-                  {t(src === "mesh" ? "s_bg_mesh" : "s_bg_solid")}
+                  {t(`s_bg_${src}`)}
                 </button>
               ))}
             </div>
@@ -111,6 +114,24 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
                   onInput={(e) => onChange({ solidColor: e.currentTarget.value })}
                 />
               </label>
+            )}
+
+            {value.background === "image" && (
+              <ImagePicker selected={value.imageId} onSelect={(imageId) => onChange({ imageId })} />
+            )}
+
+            {value.background === "image" && (
+              <>
+                <label class="row switch">
+                  <span>{t("s_tint")}</span>
+                  <input
+                    type="checkbox"
+                    checked={value.shichenTint}
+                    onChange={(e) => onChange({ shichenTint: e.currentTarget.checked })}
+                  />
+                </label>
+                <p class="note">{t("s_tint_hint")}</p>
+              </>
             )}
 
             <label class="row">
@@ -155,6 +176,109 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
           </section>
         </div>
       </aside>
+    </div>
+  );
+}
+
+
+/**
+ * 自訂桌布的挑圖區。
+ *
+ * 圖存在 IndexedDB，只在這台電腦 —— storage.sync 每項 8KB，圖片塞不進去，
+ * 而我們沒有伺服器。這件事直接寫在下面那行小字裡，不要讓使用者以為傳丟了。
+ */
+function ImagePicker({
+  selected,
+  onSelect,
+}: {
+  selected: string | null;
+  onSelect: (id: string | null) => void;
+}) {
+  const [images, setImages] = useState<StoredImage[]>([]);
+  const [urls, setUrls] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function refresh() {
+    const list = await listImages();
+    setImages(list);
+    setUrls((old) => {
+      // 舊的縮圖網址要收掉，不然每次重整都漏一批 blob
+      for (const url of Object.values(old)) URL.revokeObjectURL(url);
+      return Object.fromEntries(list.map((img) => [img.id, toUrl(img)]));
+    });
+  }
+
+  useEffect(() => {
+    void refresh();
+    return () => {
+      for (const url of Object.values(urls)) URL.revokeObjectURL(url);
+    };
+  }, []);
+
+  async function onFiles(files: FileList | null) {
+    if (!files?.length) return;
+    setBusy(true);
+    setError(null);
+    try {
+      let last = "";
+      for (const file of Array.from(files)) {
+        if (!file.type.startsWith("image/")) continue;
+        last = (await addImage(file)).id;
+      }
+      await refresh();
+      if (last) onSelect(last);
+    } catch {
+      // 配額滿、檔案壞掉、或格式解不開都會走到這裡。講清楚發生什麼事就好。
+      setError(t("s_bg_upload_failed"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div class="picker">
+      <label class="drop">
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={(e) => void onFiles(e.currentTarget.files)}
+        />
+        <span>{busy ? t("s_bg_working") : t("s_bg_pick")}</span>
+      </label>
+
+      {error && <p class="note err">{error}</p>}
+
+      {images.length > 0 && (
+        <div class="thumbs">
+          {images.map((img) => (
+            <div key={img.id} class={`thumb${img.id === selected ? " on" : ""}`}>
+              <button
+                type="button"
+                style={{ backgroundImage: `url("${urls[img.id]}")` }}
+                aria-pressed={img.id === selected}
+                aria-label={t("s_bg_use")}
+                onClick={() => onSelect(img.id)}
+              />
+              <button
+                type="button"
+                class="rm"
+                aria-label={t("s_bg_remove")}
+                onClick={async () => {
+                  await deleteImage(img.id);
+                  if (img.id === selected) onSelect(null);
+                  await refresh();
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <p class="note">{t("s_bg_local_only")}</p>
     </div>
   );
 }

@@ -265,5 +265,32 @@
   },
   "s_version": {
     "message": "版本"
+  },
+  "s_bg_image": {
+    "message": "图片"
+  },
+  "s_tint": {
+    "message": "时辰调色层"
+  },
+  "s_tint_hint": {
+    "message": "依时辰在你的图上叠一层明暗与色温，寅卯偏冷、酉戌偏暖。关掉就是纯粹你的照片。"
+  },
+  "s_bg_pick": {
+    "message": "拖进来或点一下选图"
+  },
+  "s_bg_working": {
+    "message": "处理中…"
+  },
+  "s_bg_use": {
+    "message": "设为壁纸"
+  },
+  "s_bg_remove": {
+    "message": "删掉这张"
+  },
+  "s_bg_local_only": {
+    "message": "图只存在这台电脑，不跨设备同步。导入时会自动缩到 2048px 并转 WebP。"
+  },
+  "s_bg_upload_failed": {
+    "message": "这张图存不进去。可能是格式不支持，或浏览器的存储空间满了。"
   }
 }

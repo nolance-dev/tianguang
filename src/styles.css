@@ -58,10 +58,16 @@ body {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
 }
 
+/* #app 沒設高度的話，.app 的 height:100% 解不出來，整個版面會塌成內容高度。
+   直接吃視窗高度，不倚賴祖先鏈。 */
+#app {
+  height: 100%;
+}
+
 .app {
   position: relative;
   z-index: 2;
-  height: 100%;
+  height: 100dvh;
   display: grid;
   grid-template-rows: auto 1fr auto;
   padding: clamp(1.2rem, 3vw, 2.4rem);
@@ -304,6 +310,19 @@ body {
 
 /* ---------- 變暗層。夾在漸層與顆粒之間，滑桿拉多少就多暗 ---------- */
 
+/* 換成自訂照片後，仍依時辰疊一層明暗與色溫。soft-light 保住原圖的細節，
+   不會像直接蓋一層半透明色那樣把整張圖洗掉。 */
+.tint {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--tint, none);
+  opacity: var(--tint-opacity, 0);
+  mix-blend-mode: soft-light;
+  transition: opacity 0.4s, background 1.2s linear;
+}
+
 .dim {
   position: fixed;
   inset: 0;
@@ -333,6 +352,13 @@ body {
 
 .icon-btn:hover {
   background: var(--glass-line);
+}
+
+.gear {
+  position: fixed;
+  right: clamp(1rem, 2.4vw, 1.8rem);
+  bottom: clamp(1rem, 2.4vw, 1.8rem);
+  z-index: 5;
 }
 
 /* ---------- 時辰盤 ---------- */
@@ -745,4 +771,97 @@ body {
 .seg button[aria-pressed="true"] {
   color: var(--fg);
   background: var(--glass-line);
+}
+
+
+/* ---------- 挑圖 ---------- */
+
+.picker {
+  margin-top: 0.8rem;
+}
+
+.drop {
+  display: block;
+  border: 1px dashed var(--glass-line);
+  border-radius: 10px;
+  padding: 1.1rem 0.8rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--fg-2);
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.drop:hover,
+.drop:focus-within {
+  border-color: var(--fg-2);
+  color: var(--fg);
+}
+
+.drop input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.thumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.4rem, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+}
+
+.thumb {
+  position: relative;
+  aspect-ratio: 4 / 3;
+}
+
+.thumb > button:first-child {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--glass-line);
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  padding: 0;
+  transition: outline-color 0.2s;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.thumb.on > button:first-child {
+  outline-color: var(--fg);
+}
+
+.thumb .rm {
+  position: absolute;
+  top: -0.35rem;
+  right: -0.35rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.6rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--fg);
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.thumb:hover .rm,
+.thumb:focus-within .rm {
+  opacity: 1;
+}
+
+.panel .note.err {
+  color: var(--fg);
 }

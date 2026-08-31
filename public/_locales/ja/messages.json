@@ -265,5 +265,32 @@
   },
   "s_version": {
     "message": "バージョン"
+  },
+  "s_bg_image": {
+    "message": "画像"
+  },
+  "s_tint": {
+    "message": "辰刻の色味"
+  },
+  "s_tint_hint": {
+    "message": "その時刻の光を写真に重ねます。夜明けは冷たく、夕暮れは暖かく。オフにすると写真そのままです。"
+  },
+  "s_bg_pick": {
+    "message": "ここにドロップ、またはクリックして選択"
+  },
+  "s_bg_working": {
+    "message": "処理中…"
+  },
+  "s_bg_use": {
+    "message": "背景にする"
+  },
+  "s_bg_remove": {
+    "message": "削除"
+  },
+  "s_bg_local_only": {
+    "message": "画像はこのパソコンにのみ保存され、同期はされません。取り込み時に 2048px へ縮小し WebP に変換します。"
+  },
+  "s_bg_upload_failed": {
+    "message": "この画像は保存できませんでした。形式が非対応か、ブラウザーの保存容量が不足しています。"
   }
 }

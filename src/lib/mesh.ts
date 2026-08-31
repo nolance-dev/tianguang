@@ -44,7 +44,7 @@ function mix(a: string, b: string, t: number): string {
 }
 
 /** WCAG 相對亮度。用來決定前景該用亮字還是暗字，不必為每組錨點另外標一個旗標。 */
-function luminance(hex: string): number {
+export function luminance(hex: string): number {
   const lin = (v: number) => {
     const s = v / 255;
     return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
@@ -84,19 +84,39 @@ export function meshCss(c: Six): string {
   ].join(", ");
 }
 
-export function paletteAt(hour: number): Palette {
-  const c = colorsAt(hour);
-  // 底色三層的平均亮度決定前景，比替每組錨點手寫一個旗標穩，插值中段也不會判斷錯
-  const light = (luminance(c[3]) + luminance(c[4]) + luminance(c[5])) / 3 > 0.4;
+/**
+ * 前景色一律由背後的亮度決定，背景是漸層、純色還是照片都走這裡。
+ * 之前純色背景沒接上這條，結果深藍底配白天的暗字，整頁讀不到。
+ */
+export function foreground(bgLuminance: number, css: string, boot: string): Palette {
+  const light = bgLuminance > 0.4;
   return {
-    css: meshCss(c),
-    boot: c[4],
+    css,
+    boot,
     fg: light ? "#1B2230" : "#F4F2EE",
     fg2: light ? "rgba(27,34,48,.62)" : "rgba(244,242,238,.66)",
     glass: light ? "rgba(255,255,255,.42)" : "rgba(255,255,255,.10)",
     glassLine: light ? "rgba(27,34,48,.13)" : "rgba(255,255,255,.20)",
     light,
   };
+}
+
+export function paletteAt(hour: number): Palette {
+  const c = colorsAt(hour);
+  // 底色三層的平均亮度決定前景，比替每組錨點手寫一個旗標穩，插值中段也不會判斷錯
+  const lum = (luminance(c[3]) + luminance(c[4]) + luminance(c[5])) / 3;
+  return foreground(lum, meshCss(c), c[4]);
+}
+
+/** 純色背景。 */
+export function paletteForColor(hex: string): Palette {
+  return foreground(luminance(hex), hex, hex);
+}
+
+/** 自訂圖片背景。亮度是匯入時量好存起來的，不用每次重讀像素。 */
+export function paletteForImage(url: string, imageLuminance: number, dim: number): Palette {
+  // 變暗層壓在圖上面，所以判斷前景時要把它算進去
+  return foreground(imageLuminance * (1 - dim), `center / cover no-repeat url("${url}")`, "#000");
 }
 
 /** 二十四筆整點底色，給 vite 注入首屏 inline script 用。 */

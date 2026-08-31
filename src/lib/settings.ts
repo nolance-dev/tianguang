@@ -27,6 +27,8 @@ export interface Settings {
   searchEngine: string;
   background: BackgroundSource;
   solidColor: string;
+  /** 自訂桌布：IndexedDB 裡的圖片 id。background 為 image 時才有意義。 */
+  imageId: string | null;
   /** 換成自訂圖之後，是否仍依時辰疊一層明暗與色溫 */
   shichenTint: boolean;
   grain: number;
@@ -49,6 +51,7 @@ export const DEFAULTS: Settings = {
   searchEngine: "bing",
   background: "mesh",
   solidColor: "#131C30",
+  imageId: null,
   shichenTint: true,
   grain: 0.055,
   dim: 0,

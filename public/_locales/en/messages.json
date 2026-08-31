@@ -229,5 +229,32 @@
   },
   "s_version": {
     "message": "Version"
+  },
+  "s_bg_image": {
+    "message": "Photo"
+  },
+  "s_tint": {
+    "message": "Tint by the hour"
+  },
+  "s_tint_hint": {
+    "message": "Lays the light of the current hour over your photo — cool at dawn, warm at dusk. Turn it off for the photo alone."
+  },
+  "s_bg_pick": {
+    "message": "Drop a photo here, or click to choose"
+  },
+  "s_bg_working": {
+    "message": "Working…"
+  },
+  "s_bg_use": {
+    "message": "Use as background"
+  },
+  "s_bg_remove": {
+    "message": "Remove"
+  },
+  "s_bg_local_only": {
+    "message": "Photos stay on this computer and do not sync. Each one is resized to 2048px and saved as WebP."
+  },
+  "s_bg_upload_failed": {
+    "message": "That photo could not be saved. The format may be unsupported, or the browser is out of storage."
   }
 }

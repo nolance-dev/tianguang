@@ -265,5 +265,32 @@
   },
   "s_version": {
     "message": "版本"
+  },
+  "s_bg_image": {
+    "message": "圖片"
+  },
+  "s_tint": {
+    "message": "時辰調色層"
+  },
+  "s_tint_hint": {
+    "message": "依時辰在你的圖上疊一層明暗與色溫，寅卯偏冷、酉戌偏暖。關掉就是純粹你的照片。"
+  },
+  "s_bg_pick": {
+    "message": "拖進來或點一下選圖"
+  },
+  "s_bg_working": {
+    "message": "處理中…"
+  },
+  "s_bg_use": {
+    "message": "設為桌布"
+  },
+  "s_bg_remove": {
+    "message": "刪掉這張"
+  },
+  "s_bg_local_only": {
+    "message": "圖只存在這台電腦，不跨裝置同步。匯入時會自動縮到 2048px 並轉 WebP。"
+  },
+  "s_bg_upload_failed": {
+    "message": "這張圖存不進去。可能是格式不支援，或瀏覽器的儲存空間滿了。"
   }
 }

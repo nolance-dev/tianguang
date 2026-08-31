@@ -1,6 +1,7 @@
 import { useComputed, useSignal, useSignalEffect } from "@preact/signals";
 import { useEffect, useRef } from "preact/hooks";
-import { paletteAt } from "../lib/mesh";
+import { meshCss, colorsAt, paletteAt, paletteForColor, paletteForImage } from "../lib/mesh";
+import { getImage, toUrl } from "../lib/images";
 import { decimalHour, dayFraction, greetSlot, indexAt } from "../lib/shichen";
 import { jieqiIndex, moonIndex } from "../lib/solar";
 import { isEnglish, outerRingName, shichenAlt, shichenName, t } from "../lib/i18n";
@@ -37,7 +38,39 @@ export function App() {
     });
   }
 
-  const palette = useComputed(() => paletteAt(decimalHour(now.value)));
+  // 自訂桌布。blob 網址換一次就要 revoke 一次，否則舊圖會一直留在記憶體裡。
+  const bgImage = useSignal<{ url: string; luminance: number } | null>(null);
+  useSignalEffect(() => {
+    const s = settings.value;
+    if (s.background !== "image" || !s.imageId) {
+      const old = bgImage.peek();
+      if (old) {
+        URL.revokeObjectURL(old.url);
+        bgImage.value = null;
+      }
+      return;
+    }
+    let url: string | null = null;
+    void getImage(s.imageId).then((img) => {
+      if (!img) return;
+      url = toUrl(img);
+      const old = bgImage.peek();
+      if (old) URL.revokeObjectURL(old.url);
+      bgImage.value = { url, luminance: img.luminance };
+    });
+    return () => {
+      if (url) URL.revokeObjectURL(url);
+    };
+  });
+
+  const palette = useComputed(() => {
+    const s = settings.value;
+    if (s.background === "solid") return paletteForColor(s.solidColor);
+    const img = bgImage.value;
+    if (s.background === "image" && img) return paletteForImage(img.url, img.luminance, s.dim);
+    // 還沒選圖、或圖讀不到，就退回時辰漸層，不要留一片空白
+    return paletteAt(decimalHour(now.value));
+  });
   const scIndex = useComputed(() => indexAt(now.value));
 
   // 顏色全部從這裡下到 :root，元件自己不判斷白天晚上
@@ -45,20 +78,24 @@ export function App() {
     const s = settings.value;
     const p = palette.value;
     const r = document.documentElement;
-    r.style.setProperty("--mesh", s.background === "solid" ? s.solidColor : p.css);
-    // 純色背景的前景靠使用者自己選色，我們只保證漸層模式一定讀得到
+    r.style.setProperty("--mesh", p.css);
     r.style.setProperty("--fg", p.fg);
     r.style.setProperty("--fg-2", p.fg2);
     r.style.setProperty("--glass", p.glass);
     r.style.setProperty("--glass-line", p.glassLine);
     r.style.setProperty("--grain", String(s.grain));
     r.style.setProperty("--dim", String(s.dim));
+    // 自訂圖上仍依時辰疊一層明暗與色溫 —— 換了桌布，時間感不必跟著消失
+    const tinted = s.background === "image" && s.shichenTint && bgImage.value;
+    r.style.setProperty("--tint", tinted ? meshCss(colorsAt(decimalHour(now.value))) : "none");
+    r.style.setProperty("--tint-opacity", tinted ? "0.34" : "0");
     r.dataset.sc = String(scIndex.value);
   });
 
   return (
     <>
       <div class="mesh" />
+      <div class="tint" />
       <div class="dim" />
       <div class="grain" />
 
@@ -88,18 +125,18 @@ export function App() {
           <SearchBar engineId={settings.value.searchEngine} />
         </main>
 
-        <footer class="bottom">
-          {notice.value && <p class="notice">{notice.value}</p>}
-          <button
-            class="icon-btn"
-            type="button"
-            aria-label={t("settings_open")}
-            onClick={() => (panelOpen.value = true)}
-          >
-            ⚙
-          </button>
-        </footer>
+        <footer class="bottom">{notice.value && <p class="notice">{notice.value}</p>}</footer>
       </div>
+
+      {/* 釘在右下角。放在版面流裡的話會被中間那一列推著跑，位置飄忽不定。 */}
+      <button
+        class="icon-btn gear"
+        type="button"
+        aria-label={t("settings_open")}
+        onClick={() => (panelOpen.value = true)}
+      >
+        ⚙
+      </button>
 
       {dialOpen.value && (
         <Dial

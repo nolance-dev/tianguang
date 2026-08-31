@@ -7,6 +7,7 @@ import { isEnglish } from "../src/lib/i18n";
 import { jieqiIndex } from "../src/lib/solar";
 import zhTW from "../public/_locales/zh_TW/messages.json";
 import { ENGINES } from "../src/lib/search";
+import { paletteForColor } from "../src/lib/mesh";
 
 /**
  * 冒煙測試。不驗長相 —— 那要載進 Edge 用眼睛看。
@@ -142,7 +143,9 @@ describe("時辰盤與設定", () => {
     const el = mount(new Date(2026, 7, 30, 10, 0, 0));
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     (el.querySelector(".clock") as HTMLButtonElement).click();
-    await vi.waitFor(() => expect(document.querySelector(".dial")).not.toBeNull());
+    // 等 .in —— 那個 class 是在 effect 裡加的，代表 keydown 監聽器已經掛好了。
+    // 只等 DOM 出現的話，Esc 會打在還沒註冊監聽的空檔上。
+    await vi.waitFor(() => expect(document.querySelector(".dial.in")).not.toBeNull());
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     await vi.waitFor(() => expect(document.querySelector(".dial")).toBeNull());
   });
@@ -150,7 +153,7 @@ describe("時辰盤與設定", () => {
   it("設定面板列出所有搜尋引擎，選了會存起來", async () => {
     const el = mount(new Date(2026, 7, 30, 10, 0, 0));
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
-    (el.querySelector(".bottom .icon-btn") as HTMLButtonElement).click();
+    (el.querySelector(".gear") as HTMLButtonElement).click();
     await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
 
     const select = document.querySelector(".panel select") as HTMLSelectElement;
@@ -167,12 +170,58 @@ describe("時辰盤與設定", () => {
   it("關於區塊講清楚怎麼換回原生新分頁，並標註天氣來源", async () => {
     const el = mount(new Date(2026, 7, 30, 10, 0, 0));
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
-    (el.querySelector(".bottom .icon-btn") as HTMLButtonElement).click();
+    (el.querySelector(".gear") as HTMLButtonElement).click();
     await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
 
     const about = document.querySelector(".panel .about")!;
     expect(about.textContent).toContain("edge://extensions");
     expect(about.querySelector('a[href="https://open-meteo.com/"]')).not.toBeNull();
     expect(about.textContent).toContain("CC BY 4.0");
+  });
+});
+
+describe("背景來源", () => {
+  it("純色深底要翻成亮字 —— 之前這裡是暗字壓深藍，整頁讀不到", async () => {
+    // 深藍 #131C30 的亮度遠低於門檻，不管當下幾點都該給亮字
+    expect(paletteForColor("#131C30").fg).toBe("#F4F2EE");
+    expect(paletteForColor("#F5F1E8").fg).toBe("#1B2230");
+  });
+
+  it("純色背景的前景不再跟著時間跑", async () => {
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--fg")).toBe("#1B2230")); // 漸層模式，白天暗字
+    (el.querySelector(".gear") as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+
+    const solid = Array.from(document.querySelectorAll<HTMLButtonElement>(".seg button")).find(
+      (b) => b.textContent === zhTW.s_bg_solid.message || b.textContent === "Solid colour",
+    )!;
+    solid.click();
+    await vi.waitFor(() => expect(cssVar("--fg")).toBe("#F4F2EE"));
+  });
+
+  it("背景有三種來源可選", async () => {
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+    (el.querySelector(".gear") as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+    expect(document.querySelectorAll(".seg button").length).toBe(3);
+  });
+
+  it("搜尋引擎下拉只寫引擎名，不塞前綴", async () => {
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+    (el.querySelector(".gear") as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(document.querySelector(".panel select")).not.toBeNull());
+    for (const opt of Array.from(document.querySelectorAll(".panel select option"))) {
+      expect(opt.textContent).not.toMatch(/\+/);
+    }
+  });
+
+  it("齒輪釘在版面外，不會被中間那一列推著跑", async () => {
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+    const gear = el.querySelector(".gear")!;
+    expect(gear.closest(".app"), "齒輪不該在 .app 版面流裡").toBeNull();
   });
 });

@@ -70,11 +70,15 @@ export function Dial({ now, lat, lon, onClose }: Props) {
     };
   }, []);
 
+  // onClose 每次 render 都是新的函式，直接放進相依陣列會讓監聽器一秒拆裝一次。
+  // 用 ref 接住最新的，監聽器只掛一次。
+  const close = useRef(onClose);
+  close.current = onClose;
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close.current();
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, []);
 
   const closeRef = useRef<HTMLButtonElement>(null);
   useLayoutEffect(() => closeRef.current?.focus(), []);
