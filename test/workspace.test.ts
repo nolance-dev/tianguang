@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
   advance,
   EMPTY,
-  focusForToday,
   formatLeft,
   isRunning,
   makeTodo,
@@ -21,18 +20,8 @@ import {
 
 const fresh = (): Pomodoro => ({ ...EMPTY.pomodoro });
 
-describe("今日焦點", () => {
-  it("跨日就作廢 —— 一天一件事，昨天的不留在畫面上", () => {
-    const now = new Date(2026, 7, 31, 9, 0);
-    const w = { ...EMPTY, focus: { text: "定案設計", done: false, date: "2026-08-30" } };
-    expect(focusForToday(w, now)).toBeNull();
-    expect(focusForToday({ ...w, focus: { ...w.focus!, date: "2026-08-31" } }, now)?.text).toBe(
-      "定案設計",
-    );
-  });
-
-  it("today() 用當地日期 —— UTC 會讓台灣早上八點前算成昨天", () => {
-    // 台灣時間 2026-08-31 07:00 的 UTC 還是 8/30
+describe("當地日期", () => {
+  it("用當地日期 —— UTC 會讓台灣早上八點前算成昨天", () => {
     expect(today(new Date(2026, 7, 31, 7, 0))).toBe("2026-08-31");
     expect(today(new Date(2026, 0, 1, 0, 30))).toBe("2026-01-01");
   });

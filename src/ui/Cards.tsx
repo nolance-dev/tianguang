@@ -3,7 +3,6 @@ import { useEffect } from "preact/hooks";
 import { t } from "../lib/i18n";
 import {
   advance,
-  focusForToday,
   formatLeft,
   isRunning,
   makeTodo,
@@ -12,7 +11,6 @@ import {
   reset,
   roundsToday,
   start,
-  today,
   WORK_MS,
   REST_MS,
   type Workspace,
@@ -28,71 +26,17 @@ import {
 interface Props {
   value: Workspace;
   onChange: (patch: Partial<Workspace>) => void;
-  show: { focus: boolean; todos: boolean; note: boolean; pomodoro: boolean };
+  show: { todos: boolean; note: boolean; pomodoro: boolean };
 }
 
 export function Cards({ value, onChange, show }: Props) {
-  if (!show.focus && !show.todos && !show.note && !show.pomodoro) return null;
+  if (!show.todos && !show.note && !show.pomodoro) return null;
   return (
     <div class="cards">
-      {show.focus && <FocusCard value={value} onChange={onChange} />}
       {show.todos && <TodoCard value={value} onChange={onChange} />}
       {show.note && <NoteCard value={value} onChange={onChange} />}
       {show.pomodoro && <PomodoroCard value={value} onChange={onChange} />}
     </div>
-  );
-}
-
-function FocusCard({ value, onChange }: Omit<Props, "show">) {
-  const focus = focusForToday(value);
-  const draft = useSignal("");
-
-  return (
-    <section class="card focus">
-      <header>
-        <b>{t("c_focus")}</b>
-        {focus && <span>{focus.done ? t("c_done") : "1"}</span>}
-      </header>
-
-      {focus ? (
-        <>
-          <button
-            type="button"
-            class={`focus-line${focus.done ? " done" : ""}`}
-            onClick={() => onChange({ focus: { ...focus, done: !focus.done } })}
-          >
-            <i class="box" />
-            <span>{focus.text}</span>
-          </button>
-          <button
-            type="button"
-            class="linkish"
-            onClick={() => onChange({ focus: null })}
-          >
-            {t("c_focus_change")}
-          </button>
-        </>
-      ) : (
-        <form
-          class="one"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const text = draft.value.trim();
-            if (!text) return;
-            onChange({ focus: { text, done: false, date: today() } });
-            draft.value = "";
-          }}
-        >
-          <input
-            type="text"
-            value={draft.value}
-            placeholder={t("c_focus_hint")}
-            aria-label={t("c_focus")}
-            onInput={(e) => (draft.value = e.currentTarget.value)}
-          />
-        </form>
-      )}
-    </section>
   );
 }
 

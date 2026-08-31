@@ -1575,3 +1575,99 @@ body::-webkit-scrollbar-thumb {
   letter-spacing: 0.12em;
   color: var(--fg-2);
 }
+
+/* ---------- 兩屏 ---------- */
+
+/*
+ * 第一屏是「現在幾點、我要去哪」，第二屏是「我今天要做什麼」。
+ * 兩件事分開，中間有一整個換頁的距離 —— 開新分頁時眼睛落在第一屏，
+ * 不會被下面的待辦拉走注意力。
+ * snap 用 proximity 不用 mandatory：第二屏的卡片在小螢幕上可能比一屏還高，
+ * mandatory 會把人卡住。
+ */
+html {
+  scroll-snap-type: y proximity;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+.app {
+  display: block;
+  padding: 0;
+}
+
+.screen {
+  position: relative;
+  min-height: 100dvh;
+  scroll-snap-align: start;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: clamp(1.2rem, 3vw, 2.4rem);
+}
+
+.screen.desk {
+  grid-template-rows: auto 1fr auto;
+  align-content: start;
+  gap: clamp(1rem, 3vh, 2.4rem);
+  padding-top: clamp(2rem, 8vh, 5rem);
+}
+
+/* 第一屏底部的往下提示 */
+.cue {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(1rem, 3vh, 2rem);
+  translate: -50% 0;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  color: var(--fg-2);
+  transition: color 0.2s;
+}
+
+.cue:hover {
+  color: var(--fg);
+}
+
+.cue span {
+  display: block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  rotate: 45deg;
+  translate: 0 -0.15rem;
+  animation: nudge 2.4s ease-in-out infinite;
+}
+
+@keyframes nudge {
+  0%, 70%, 100% { translate: 0 -0.15rem; }
+  35% { translate: 0 0.15rem; }
+}
+
+/* 第二屏：語錄在最上，卡片在下 */
+.screen.desk .quote {
+  margin: 0 auto;
+  max-width: min(38rem, 88%);
+  font-size: clamp(0.9rem, 1.3vw, 1.1rem);
+}
+
+.screen.desk .cards {
+  margin: 0 auto;
+  width: min(64rem, 92%);
+  align-self: start;
+}
+
+.screen.desk .card {
+  min-height: 11rem;
+}

@@ -430,5 +430,8 @@
   },
   "s_cards_local": {
     "message": "To-dos and notes live on this computer and do not sync — they grow, and a synced item is capped at 8KB."
+  },
+  "scroll_down": {
+    "message": "Scroll down to the workspace"
   }
 }

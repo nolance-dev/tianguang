@@ -1,5 +1,5 @@
 /**
- * 工作區：今日焦點、待辦、隨手記、番茄鐘。
+ * 工作區：待辦、隨手記、番茄鐘。
  *
  * 這些東西走 chrome.storage.local，不走 sync —— 待辦和筆記會長大，
  * sync 每項 8KB、總計 100KB，塞不了多久就會靜默寫失敗。
@@ -18,13 +18,6 @@ export interface Todo {
   createdAt: number;
 }
 
-export interface Focus {
-  text: string;
-  done: boolean;
-  /** yyyy-mm-dd。跨日就換一件事，昨天的不留在畫面上。 */
-  date: string;
-}
-
 export type PomodoroMode = "work" | "rest";
 
 export interface Pomodoro {
@@ -40,7 +33,6 @@ export interface Pomodoro {
 
 export interface Workspace {
   schemaVersion: number;
-  focus: Focus | null;
   todos: Todo[];
   note: string;
   pomodoro: Pomodoro;
@@ -51,7 +43,6 @@ export const REST_MS = 5 * 60 * 1000;
 
 export const EMPTY: Workspace = {
   schemaVersion: WORKSPACE_VERSION,
-  focus: null,
   todos: [],
   note: "",
   pomodoro: { mode: "work", endsAt: null, pausedLeft: null, rounds: 0, roundsDate: "" },
@@ -61,12 +52,6 @@ export const EMPTY: Workspace = {
 export function today(now = new Date()): string {
   const p = (n: number) => String(n).padStart(2, "0");
   return `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}`;
-}
-
-/** 焦點跨日就作廢。一天一件事，昨天沒做完的不該賴在今天的畫面上。 */
-export function focusForToday(w: Workspace, now = new Date()): Focus | null {
-  if (!w.focus) return null;
-  return w.focus.date === today(now) ? w.focus : null;
 }
 
 /** 今日輪數跨日歸零。 */

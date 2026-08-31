@@ -35,7 +35,7 @@ export interface Settings {
   grain: number;
   dim: number;
   blur: number;
-  cards: { focus: boolean; todos: boolean; note: boolean; pomodoro: boolean; quote: boolean };
+  cards: { todos: boolean; note: boolean; pomodoro: boolean; quote: boolean };
   links: Link[];
   weatherOn: boolean;
   unit: "c" | "f";
@@ -59,7 +59,7 @@ export const DEFAULTS: Settings = {
   grain: 0.055,
   dim: 0,
   blur: 0,
-  cards: { focus: true, todos: true, note: true, pomodoro: false, quote: true },
+  cards: { todos: true, note: true, pomodoro: false, quote: true },
   links: [],
   weatherOn: false,
   unit: "c",

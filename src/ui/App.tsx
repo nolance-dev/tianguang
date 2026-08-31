@@ -130,7 +130,8 @@ export function App() {
       <div class="grain" />
 
       <div class="app">
-        <header class="top">
+        <section class="screen">
+          <header class="top">
           <button
             class="badge"
             type="button"
@@ -147,27 +148,43 @@ export function App() {
             </span>
           </button>
 
-          {settings.value.weatherOn && (
-            <Weather
-              lat={settings.value.lat}
-              lon={settings.value.lon}
-              place={settings.value.placeName || t("s_city")}
-              unit={settings.value.unit}
-            />
-          )}
-        </header>
+            {settings.value.weatherOn && (
+              <Weather
+                lat={settings.value.lat}
+                lon={settings.value.lon}
+                place={settings.value.placeName || t("s_city")}
+                unit={settings.value.unit}
+              />
+            )}
+          </header>
 
-        <main class="core">
+          <main class="core">
           <Greeting now={now.value} name={settings.value.name} />
           <Clock now={now.value} settings={settings.value} onOpen={() => (dialOpen.value = true)} />
           <DateLine now={now.value} />
           <SearchBar engineId={settings.value.searchEngine} />
-          <Links links={settings.value.links} onChange={(links) => patch({ links })} />
+            <Links links={settings.value.links} onChange={(links) => patch({ links })} />
+          </main>
+
+          {/* 往下還有一屏。不給提示的話沒人知道要捲。 */}
+          <button
+            class="cue"
+            type="button"
+            aria-label={t("scroll_down")}
+            onClick={() =>
+              document.getElementById("desk")?.scrollIntoView({ behavior: "smooth" })
+            }
+          >
+            <span />
+          </button>
+        </section>
+
+        {/* 第二屏：工作區。語錄在最上面，底下是各個功能卡。 */}
+        <section class="screen desk" id="desk">
           {settings.value.cards.quote && <QuoteLine />}
           <Cards value={work.value} onChange={patchWork} show={settings.value.cards} />
-        </main>
-
-        <footer class="bottom">{notice.value && <p class="notice">{notice.value}</p>}</footer>
+          <footer class="bottom">{notice.value && <p class="notice">{notice.value}</p>}</footer>
+        </section>
       </div>
 
       {/* 釘在右下角。放在版面流裡的話會被中間那一列推著跑，位置飄忽不定。 */}

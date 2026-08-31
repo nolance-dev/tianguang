@@ -177,7 +177,7 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
 
           <section>
             <h3>{t("s_cards")}</h3>
-            {(["focus", "todos", "note", "pomodoro", "quote"] as const).map((k) => (
+            {(["todos", "note", "pomodoro", "quote"] as const).map((k) => (
               <label class="row switch" key={k}>
                 <span>{t(`s_card_${k}`)}</span>
                 <input

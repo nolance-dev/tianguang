@@ -336,12 +336,26 @@ describe("焦點不該被搶走", () => {
 });
 
 describe("工作區卡片", () => {
-  it("三張卡預設出現，番茄鐘預設關閉", async () => {
+  it("兩張卡預設出現，番茄鐘預設關閉", async () => {
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelector(".cards")).not.toBeNull());
-    expect(el.querySelector(".card.focus")).not.toBeNull();
     expect(el.querySelector(".card.note")).not.toBeNull();
+    expect(el.querySelectorAll(".card").length).toBe(2);
     expect(el.querySelector(".card.pomo"), "番茄鐘預設不開").toBeNull();
+  });
+
+  it("第二屏在下面，第一屏有往下的提示", async () => {
+    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector("#desk")).not.toBeNull());
+    expect(el.querySelectorAll(".screen").length).toBe(2);
+    // 語錄在第二屏最上面，卡片在它下面
+    const desk = el.querySelector("#desk")!;
+    expect(desk.querySelector(".quote")).not.toBeNull();
+    expect(desk.querySelector(".cards")).not.toBeNull();
+    expect(el.querySelector(".cue"), "沒有提示就沒人知道要捲").not.toBeNull();
+    // 搜尋列與快速連結留在第一屏
+    expect(el.querySelector(".screen:not(.desk) .search")).not.toBeNull();
+    expect(el.querySelector(".screen:not(.desk) .links")).not.toBeNull();
   });
 
   it("待辦空的時候是一句邀請，不是空框", async () => {
@@ -355,8 +369,7 @@ describe("工作區卡片", () => {
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelector(".cards")).not.toBeNull());
 
-    const forms = Array.from(el.querySelectorAll<HTMLFormElement>(".card .one"));
-    const todoForm = forms[forms.length - 1]!;
+    const todoForm = el.querySelector<HTMLFormElement>(".card .one")!;
     const input = todoForm.querySelector("input")!;
     input.value = "整理上架截圖";
     input.dispatchEvent(new Event("input", { bubbles: true }));
