@@ -355,5 +355,80 @@
   },
   "s_city_cjk_hint": {
     "message": "The place index is Latin-only. Try the romanised name, for example Taipei or Tokyo."
+  },
+  "c_focus": {
+    "message": "Today’s one thing"
+  },
+  "c_focus_hint": {
+    "message": "The one that matters today"
+  },
+  "c_focus_change": {
+    "message": "Change it"
+  },
+  "c_done": {
+    "message": "done"
+  },
+  "c_todos": {
+    "message": "To do"
+  },
+  "c_todos_empty": {
+    "message": "Nothing today. Go and rest."
+  },
+  "c_todo_add": {
+    "message": "Add one…"
+  },
+  "c_todo_remove": {
+    "message": "Remove"
+  },
+  "c_note": {
+    "message": "Notes"
+  },
+  "c_note_hint": {
+    "message": "Write whatever comes up. It saves itself."
+  },
+  "c_saved": {
+    "message": "saved"
+  },
+  "c_pomodoro": {
+    "message": "Pomodoro"
+  },
+  "c_pomo_work": {
+    "message": "Focus"
+  },
+  "c_pomo_rest": {
+    "message": "Break"
+  },
+  "c_pomo_start": {
+    "message": "Start"
+  },
+  "c_pomo_pause": {
+    "message": "Pause"
+  },
+  "c_pomo_reset": {
+    "message": "Reset"
+  },
+  "c_pomo_rounds": {
+    "message": "Today"
+  },
+  "s_cards": {
+    "message": "Workspace"
+  },
+  "s_card_focus": {
+    "message": "Today’s one thing"
+  },
+  "s_card_todos": {
+    "message": "To do"
+  },
+  "s_card_note": {
+    "message": "Notes"
+  },
+  "s_card_pomodoro": {
+    "message": "Pomodoro"
+  },
+  "s_card_quote": {
+    "message": "Quote"
+  },
+  "s_cards_local": {
+    "message": "To-dos and notes live on this computer and do not sync — they grow, and a synced item is capped at 8KB."
   }
 }

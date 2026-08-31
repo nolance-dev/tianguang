@@ -1246,3 +1246,311 @@ body {
   font-size: 0.68rem;
   color: var(--fg-2);
 }
+
+/* ---------- 語錄 ---------- */
+
+.quote {
+  margin: clamp(0.8rem, 2vh, 1.5rem) 0 0;
+  max-width: min(34rem, 80%);
+  text-align: center;
+  font-family: var(--f-cjk);
+  font-size: clamp(0.78rem, 1vw, 0.9rem);
+  line-height: 1.85;
+  letter-spacing: 0.06em;
+  color: var(--fg-2);
+}
+
+:root[lang^="en"] .quote {
+  font-family: var(--f-latin);
+  letter-spacing: 0.01em;
+  font-size: clamp(0.85rem, 1.1vw, 1rem);
+}
+
+.quote cite {
+  display: block;
+  margin-top: 0.35rem;
+  font-family: var(--f-mono);
+  font-style: normal;
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  opacity: 0.7;
+}
+
+/* ---------- 工作區卡片 ---------- */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: clamp(0.6rem, 1.2vw, 1rem);
+  width: min(58rem, 88%);
+  margin-top: clamp(1rem, 2.5vh, 2rem);
+  align-items: start;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 14px;
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  min-height: 7.5rem;
+}
+
+.card.focus {
+  grid-column: span 2;
+}
+
+@media (max-width: 44rem) {
+  .card.focus {
+    grid-column: auto;
+  }
+}
+
+.card > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.card > header b {
+  font-family: var(--f-cjk);
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.13em;
+}
+
+:root[lang^="en"] .card > header b {
+  font-family: var(--f-latin);
+  letter-spacing: 0.03em;
+  font-size: 0.9rem;
+}
+
+.card > header span {
+  font-family: var(--f-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.09em;
+  color: var(--fg-2);
+}
+
+.card .empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.7;
+  color: var(--fg-2);
+}
+
+/* 一行輸入框，卡片底部的統一寫法 */
+.card .one input,
+.card textarea {
+  width: 100%;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--glass-line);
+  padding: 0.45rem 0.1rem 0;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 0.78rem;
+  outline: none;
+  resize: none;
+}
+
+.card .one input::placeholder,
+.card textarea::placeholder {
+  color: var(--fg-2);
+}
+
+.card .one {
+  margin-top: auto;
+}
+
+.card.note textarea {
+  flex: 1;
+  min-height: 4.5rem;
+  line-height: 1.7;
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* 勾選列：焦點與待辦共用 */
+.card .box {
+  width: 0.72rem;
+  height: 0.72rem;
+  border-radius: 3px;
+  border: 1px solid var(--glass-line);
+  flex: 0 0 auto;
+  display: block;
+  transition: background 0.15s;
+}
+
+.focus-line,
+.todos button:first-child {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.focus-line {
+  font-family: var(--f-cjk);
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.5;
+  gap: 0.6rem;
+}
+
+:root[lang^="en"] .focus-line {
+  font-family: var(--f-latin);
+  font-weight: 400;
+  font-size: 1.1rem;
+}
+
+.focus-line.done span,
+.todos .done span {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+.focus-line.done .box,
+.todos .done .box {
+  background: var(--fg-2);
+  border-color: transparent;
+}
+
+.linkish {
+  align-self: flex-start;
+  margin-top: auto;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--f-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: var(--fg-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.todos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 8rem;
+  overflow-y: auto;
+}
+
+.todos li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+}
+
+.todos li > button:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.todos li span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.todos .rm {
+  background: none;
+  border: 0;
+  padding: 0 0.15rem;
+  cursor: pointer;
+  color: var(--fg-2);
+  font-size: 0.6rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.todos li:hover .rm,
+.todos li:focus-within .rm {
+  opacity: 1;
+}
+
+/* 番茄鐘 */
+.card.pomo {
+  align-items: center;
+  text-align: center;
+}
+
+.clockface {
+  position: relative;
+  width: 5rem;
+  height: 5rem;
+  display: grid;
+  place-items: center;
+}
+
+.clockface svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.clockface circle:last-of-type {
+  transition: stroke-dasharray 0.5s linear;
+}
+
+.clockface .left {
+  font-family: var(--f-latin);
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.card.pomo .acts {
+  display: flex;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.card.pomo .acts button {
+  flex: 1;
+  padding: 0.3rem;
+  border-radius: 7px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.7rem;
+  color: var(--fg-2);
+  background: none;
+  border: 1px solid var(--glass-line);
+  transition: color 0.18s, background 0.18s;
+}
+
+.card.pomo .acts button:first-child {
+  color: var(--fg);
+  background: var(--glass-line);
+}
+
+.card.pomo .rounds {
+  margin: 0;
+  font-family: var(--f-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  color: var(--fg-2);
+}

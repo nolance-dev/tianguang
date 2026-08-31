@@ -12,6 +12,9 @@ import { Dial } from "./Dial";
 import { SettingsPanel } from "./Settings";
 import { Links } from "./Links";
 import { Weather } from "./Weather";
+import { Cards } from "./Cards";
+import { quoteOfDay } from "../lib/quotes";
+import * as ws from "../lib/workspace";
 
 /** 秒針之外的東西一秒更新一次就夠。時辰環一分鐘才動 0.25 度，看不出來。 */
 const TICK_MS = 1000;
@@ -29,8 +32,26 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    void load().then((s) => (settings.value = s));
+    // 載入是非同步的。使用者在它回來之前就可能已經動過設定（開頁馬上打字），
+    // 這時用磁碟上的舊值蓋掉會讓輸入憑空消失 —— 只在還沒被動過時才套用。
+    void load().then((s) => {
+      if (settings.peek() === DEFAULTS) settings.value = s;
+    });
   }, []);
+
+  // 工作區與設定分開存：待辦和筆記會長大，塞不進 storage.sync 的 8KB
+  const work = useSignal<ws.Workspace>(ws.EMPTY);
+  useEffect(() => {
+    void ws.load().then((w) => {
+      if (work.peek() === ws.EMPTY) work.value = w;
+    });
+  }, []);
+
+  function patchWork(p: Partial<ws.Workspace>) {
+    const next = { ...work.value, ...p };
+    work.value = next;
+    ws.save(next);
+  }
 
   function patch(p: Partial<Settings>) {
     const next = { ...settings.value, ...p };
@@ -142,6 +163,8 @@ export function App() {
           <DateLine now={now.value} />
           <SearchBar engineId={settings.value.searchEngine} />
           <Links links={settings.value.links} onChange={(links) => patch({ links })} />
+          {settings.value.cards.quote && <QuoteLine />}
+          <Cards value={work.value} onChange={patchWork} show={settings.value.cards} />
         </main>
 
         <footer class="bottom">{notice.value && <p class="notice">{notice.value}</p>}</footer>
@@ -267,5 +290,15 @@ function SearchBar({ engineId }: { engineId: string }) {
       />
       {hit.value ? <span class="hint">{hit.value.name}</span> : <span class="kbd">Ctrl K</span>}
     </form>
+  );
+}
+
+function QuoteLine() {
+  const q = quoteOfDay(isEnglish());
+  return (
+    <p class="quote">
+      {q.text}
+      <cite>{q.by}</cite>
+    </p>
   );
 }

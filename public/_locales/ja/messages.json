@@ -391,5 +391,80 @@
   },
   "s_city_cjk_hint": {
     "message": "地名の索引は英字のみです。ローマ字表記でお試しください（例：Tokyo、Taipei）。"
+  },
+  "c_focus": {
+    "message": "今日の一点"
+  },
+  "c_focus_hint": {
+    "message": "今日いちばん大事なこと"
+  },
+  "c_focus_change": {
+    "message": "変える"
+  },
+  "c_done": {
+    "message": "完了"
+  },
+  "c_todos": {
+    "message": "ToDo"
+  },
+  "c_todos_empty": {
+    "message": "今日は何もありません。休みましょう。"
+  },
+  "c_todo_add": {
+    "message": "追加…"
+  },
+  "c_todo_remove": {
+    "message": "削除"
+  },
+  "c_note": {
+    "message": "メモ"
+  },
+  "c_note_hint": {
+    "message": "思いついたことをどうぞ。自動で保存します。"
+  },
+  "c_saved": {
+    "message": "保存済み"
+  },
+  "c_pomodoro": {
+    "message": "ポモドーロ"
+  },
+  "c_pomo_work": {
+    "message": "集中"
+  },
+  "c_pomo_rest": {
+    "message": "休憩"
+  },
+  "c_pomo_start": {
+    "message": "開始"
+  },
+  "c_pomo_pause": {
+    "message": "一時停止"
+  },
+  "c_pomo_reset": {
+    "message": "リセット"
+  },
+  "c_pomo_rounds": {
+    "message": "本日"
+  },
+  "s_cards": {
+    "message": "ワークスペース"
+  },
+  "s_card_focus": {
+    "message": "今日の一点"
+  },
+  "s_card_todos": {
+    "message": "ToDo"
+  },
+  "s_card_note": {
+    "message": "メモ"
+  },
+  "s_card_pomodoro": {
+    "message": "ポモドーロ"
+  },
+  "s_card_quote": {
+    "message": "名言"
+  },
+  "s_cards_local": {
+    "message": "ToDo とメモはこのパソコンにのみ保存され、同期はされません。データは増えていきますが、同期領域は 1 項目 8KB までです。"
   }
 }

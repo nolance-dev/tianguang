@@ -176,6 +176,23 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
           </section>
 
           <section>
+            <h3>{t("s_cards")}</h3>
+            {(["focus", "todos", "note", "pomodoro", "quote"] as const).map((k) => (
+              <label class="row switch" key={k}>
+                <span>{t(`s_card_${k}`)}</span>
+                <input
+                  type="checkbox"
+                  checked={value.cards[k]}
+                  onChange={(e) =>
+                    onChange({ cards: { ...value.cards, [k]: e.currentTarget.checked } })
+                  }
+                />
+              </label>
+            ))}
+            <p class="note">{t("s_cards_local")}</p>
+          </section>
+
+          <section>
             <h3>{t("s_links")}</h3>
             <LinkImport value={value} onChange={onChange} />
           </section>

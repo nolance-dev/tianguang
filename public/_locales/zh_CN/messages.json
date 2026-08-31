@@ -391,5 +391,80 @@
   },
   "s_city_cjk_hint": {
     "message": "这个地名的索引只收英文。试试罗马拼音，例如 Taipei、Tokyo。"
+  },
+  "c_focus": {
+    "message": "今日焦点"
+  },
+  "c_focus_hint": {
+    "message": "今天最重要的一件事"
+  },
+  "c_focus_change": {
+    "message": "换一件"
+  },
+  "c_done": {
+    "message": "完成"
+  },
+  "c_todos": {
+    "message": "待办"
+  },
+  "c_todos_empty": {
+    "message": "今天没有事，去休息。"
+  },
+  "c_todo_add": {
+    "message": "加一件…"
+  },
+  "c_todo_remove": {
+    "message": "移除"
+  },
+  "c_note": {
+    "message": "随手记"
+  },
+  "c_note_hint": {
+    "message": "想到什么就写，会自动保存。"
+  },
+  "c_saved": {
+    "message": "已保存"
+  },
+  "c_pomodoro": {
+    "message": "番茄钟"
+  },
+  "c_pomo_work": {
+    "message": "专注"
+  },
+  "c_pomo_rest": {
+    "message": "休息"
+  },
+  "c_pomo_start": {
+    "message": "开始"
+  },
+  "c_pomo_pause": {
+    "message": "暂停"
+  },
+  "c_pomo_reset": {
+    "message": "重置"
+  },
+  "c_pomo_rounds": {
+    "message": "今日"
+  },
+  "s_cards": {
+    "message": "工作区"
+  },
+  "s_card_focus": {
+    "message": "今日焦点"
+  },
+  "s_card_todos": {
+    "message": "待办"
+  },
+  "s_card_note": {
+    "message": "随手记"
+  },
+  "s_card_pomodoro": {
+    "message": "番茄钟"
+  },
+  "s_card_quote": {
+    "message": "语录"
+  },
+  "s_cards_local": {
+    "message": "待办与笔记存在这台电脑，不跨设备同步 —— 它们会长大，而同步区每项只有 8KB。"
   }
 }

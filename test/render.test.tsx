@@ -334,3 +334,75 @@ describe("焦點不該被搶走", () => {
     expect(document.activeElement, "重繪之後焦點還要留在名稱欄").toBe(titleField);
   });
 });
+
+describe("工作區卡片", () => {
+  it("三張卡預設出現，番茄鐘預設關閉", async () => {
+    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector(".cards")).not.toBeNull());
+    expect(el.querySelector(".card.focus")).not.toBeNull();
+    expect(el.querySelector(".card.note")).not.toBeNull();
+    expect(el.querySelector(".card.pomo"), "番茄鐘預設不開").toBeNull();
+  });
+
+  it("待辦空的時候是一句邀請，不是空框", async () => {
+    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector(".cards")).not.toBeNull());
+    expect(el.querySelector(".card .empty")?.textContent).toBeTruthy();
+    expect(el.querySelectorAll(".todos li").length).toBe(0);
+  });
+
+  it("加一件待辦，勾掉之後計數跟著變", async () => {
+    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector(".cards")).not.toBeNull());
+
+    const forms = Array.from(el.querySelectorAll<HTMLFormElement>(".card .one"));
+    const todoForm = forms[forms.length - 1]!;
+    const input = todoForm.querySelector("input")!;
+    input.value = "整理上架截圖";
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    todoForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+
+    await vi.waitFor(() => expect(el.querySelectorAll(".todos li").length).toBe(1));
+    expect(el.querySelector(".todos li span")?.textContent).toBe("整理上架截圖");
+
+    (el.querySelector(".todos li button") as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(el.querySelector(".todos .done")).not.toBeNull());
+  });
+
+  it("語錄一天固定一句，不是每次開分頁重抽", async () => {
+    const a = mount(new Date(2026, 7, 31, 9, 0, 0));
+    await vi.waitFor(() => expect(a.querySelector(".quote")).not.toBeNull());
+    const first = a.querySelector(".quote")?.textContent;
+
+    render(null, host!);
+    host!.remove();
+    const b = mount(new Date(2026, 7, 31, 22, 0, 0));
+    await vi.waitFor(() => expect(b.querySelector(".quote")).not.toBeNull());
+    expect(b.querySelector(".quote")?.textContent, "同一天同一句").toBe(first);
+  });
+});
+
+describe("開頁馬上輸入", () => {
+  it("非同步載入不該蓋掉使用者已經打的東西", async () => {
+    // 磁碟上有一份舊資料，載入會晚一個微任務回來
+    localStorage.setItem(
+      "tg.workspace",
+      JSON.stringify({ schemaVersion: 1, todos: [], note: "磁碟上的舊筆記", focus: null }),
+    );
+
+    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector(".cards")).not.toBeNull());
+
+    // 載入還沒回來就先打字
+    const area = el.querySelector(".card.note textarea") as HTMLTextAreaElement;
+    area.value = "我剛打的";
+    area.dispatchEvent(new Event("input", { bubbles: true }));
+
+    // 讓載入的 promise 有機會回來
+    await vi.advanceTimersByTimeAsync(50);
+    await vi.waitFor(() =>
+      expect((el.querySelector(".card.note textarea") as HTMLTextAreaElement).value).toBe("我剛打的"),
+    );
+    localStorage.removeItem("tg.workspace");
+  });
+});
