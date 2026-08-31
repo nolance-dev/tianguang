@@ -1,5 +1,5 @@
 import { defineConfig, type Plugin } from "vite";
-import { bootColorTable } from "./src/lib/mesh.ts";
+import { readFileSync } from "node:fs";
 import pkg from "./package.json" with { type: "json" };
 
 /**
@@ -9,14 +9,18 @@ import pkg from "./package.json" with { type: "json" };
  * 所以 head 裡放一段同步 inline script，先把整頁塗成接近最終結果的底色，
  * 之後 app 起來再換上完整漸層 —— 使用者永遠看不到白畫面。
  *
- * 那二十四筆底色是打包時從 mesh.ts 算出來的，不是另外手寫一份。
- * 調色盤只有一個真相來源，改了 ANCHORS 這裡自動跟著變。
+ * 那二十四筆底色由 scripts/gen-boot-colors.mjs 從 mesh.ts 算出來，
+ * 這裡只是把生成好的 JSON 讀進來 —— 調色盤仍然只有一個真相來源。
+ *
+ * 刻意用讀檔而不是 import：config 的 import 圖被 Vite 監看，
+ * 直接 import mesh.ts 會讓「改一次顏色就重啟開發伺服器」，
+ * 開著的分頁 HMR 一斷就再也不更新，改了看不到。
  */
 function bootPaint(): Plugin {
   return {
     name: "tg-boot-paint",
     transformIndexHtml() {
-      const table = JSON.stringify(bootColorTable());
+      const table = readFileSync(new URL("./boot-colors.json", import.meta.url), "utf8").trim();
       const js =
         `(function(){var T=${table},d=new Date(),c=T[d.getHours()];` +
         `try{var b=JSON.parse(localStorage.getItem("tg.boot")||"null");if(b&&b.color)c=b.color}catch(e){}` +
