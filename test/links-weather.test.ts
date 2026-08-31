@@ -85,11 +85,14 @@ describe("天氣", () => {
           temperature_2m_min: [27, 25, 26, 25],
         },
       },
+      25,
+      121,
       1_000,
     );
     expect(w.temp).toBe(33.2);
     expect(w.days).toHaveLength(3);
     expect(w.days[0]).toEqual({ date: "2026-09-01", code: 61, max: 31, min: 25 });
+    expect([w.lat, w.lon]).toEqual([25, 121]);
     expect(w.stale).toBe(false);
   });
 });
@@ -178,6 +181,55 @@ describe("中文城市名", () => {
     expect(decodeURIComponent(String(spy.mock.calls[0]![0]))).toContain("name=Taipei");
     // language 只取前綴，zh-TW 要變成 zh
     expect(String(spy.mock.calls[0]![0])).toContain("language=zh");
+    spy.mockRestore();
+  });
+});
+
+describe("換城市要重新取得", () => {
+  const body = (temp: number) =>
+    JSON.stringify({
+      current: { temperature_2m: temp, apparent_temperature: temp + 3, weather_code: 0 },
+      daily: {
+        time: ["2026-08-31", "2026-09-01", "2026-09-02", "2026-09-03"],
+        weather_code: [0, 0, 0, 0],
+        temperature_2m_max: [temp, temp, temp, temp],
+        temperature_2m_min: [temp - 5, temp - 5, temp - 5, temp - 5],
+      },
+    });
+
+  it("台北和雪梨不能共用同一份快取", async () => {
+    localStorage.clear();
+    const spy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response(body(32)))
+      .mockResolvedValueOnce(new Response(body(14)));
+
+    const taipei = await fetchWeather(25.033, 121.565, 0);
+    expect(taipei!.temp).toBe(32);
+
+    // 同一分鐘內換城市 —— 快取還在保鮮期，但地點不同，必須重打
+    const sydney = await fetchWeather(-33.868, 151.209, 60_000);
+    expect(sydney!.temp, "換了城市卻拿到上一個城市的溫度").toBe(14);
+    expect(spy).toHaveBeenCalledTimes(2);
+    spy.mockRestore();
+  });
+
+  it("同一個城市在保鮮期內仍然用快取", async () => {
+    localStorage.clear();
+    const spy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(body(32)));
+    await fetchWeather(25.033, 121.565, 0);
+    await fetchWeather(25.0331, 121.5651, 60_000);
+    expect(spy, "座標只差幾公尺不該讓快取失效").toHaveBeenCalledTimes(1);
+    spy.mockRestore();
+  });
+
+  it("斷線時不拿別的城市的舊資料頂 —— 那不是舊，是錯", async () => {
+    localStorage.clear();
+    const spy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(body(32)));
+    await fetchWeather(25.033, 121.565, 0);
+
+    spy.mockRejectedValue(new TypeError("offline"));
+    expect(await fetchWeather(-33.868, 151.209, 0)).toBeNull();
     spy.mockRestore();
   });
 });

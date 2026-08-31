@@ -42,6 +42,12 @@ export interface Weather {
   code: number;
   days: Day[];
   fetchedAt: number;
+  /**
+   * 這份資料是哪裡的。快取一定要帶座標 —— 沒有的話換了城市會沿用上一個城市
+   * 還在保鮮期內的資料，台北和雪梨顯示同一個溫度。
+   */
+  lat: number;
+  lon: number;
   /** 這份資料是不是快取來的舊資料。UI 要據此標「離線」。 */
   stale: boolean;
 }
@@ -102,7 +108,7 @@ interface RawForecast {
   };
 }
 
-export function parseForecast(raw: RawForecast, at = Date.now()): Weather {
+export function parseForecast(raw: RawForecast, lat: number, lon: number, at = Date.now()): Weather {
   const d = raw.daily;
   return {
     temp: raw.current.temperature_2m,
@@ -116,6 +122,8 @@ export function parseForecast(raw: RawForecast, at = Date.now()): Weather {
       min: d.temperature_2m_min[i + 1]!,
     })),
     fetchedAt: at,
+    lat,
+    lon,
     stale: false,
   };
 }
@@ -213,22 +221,28 @@ async function writeCache(w: Weather): Promise<void> {
   }
 }
 
+/** 座標到小數第二位就夠分辨城市了，再細只會讓快取白白失效。 */
+const sameSpot = (w: Weather, lat: number, lon: number) =>
+  Math.abs(w.lat - lat) < 0.005 && Math.abs(w.lon - lon) < 0.005;
+
 /**
  * 拿天氣。快取三十分鐘內直接用，過期才打網路。
  * 網路失敗時回傳快取並標成 stale —— 免費層沒有 SLA，空格子比舊資料難看得多。
  */
 export async function fetchWeather(lat: number, lon: number, now = Date.now()): Promise<Weather | null> {
   const cached = await readCache();
-  if (cached && now - cached.fetchedAt < FRESH_MS) return { ...cached, stale: false };
+  // 只有同一個地點的快取才算數。別的城市的舊資料不是「舊」，是「錯」。
+  const usable = cached && sameSpot(cached, lat, lon) ? cached : null;
+  if (usable && now - usable.fetchedAt < FRESH_MS) return { ...usable, stale: false };
 
   try {
     const res = await fetch(forecastUrl(lat, lon));
     if (!res.ok) throw new Error(`forecast ${res.status}`);
-    const parsed = parseForecast((await res.json()) as RawForecast, now);
+    const parsed = parseForecast((await res.json()) as RawForecast, lat, lon, now);
     await writeCache(parsed);
     return parsed;
   } catch {
-    return cached ? { ...cached, stale: true } : null;
+    return usable ? { ...usable, stale: true } : null;
   }
 }
 

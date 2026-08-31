@@ -1078,11 +1078,8 @@ body {
   transition: background 0.2s, border-color 0.2s;
 }
 
-.wx.open {
-  background: var(--glass);
-  border-color: var(--glass-line);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+.wx.open .now b {
+  color: var(--fg);
 }
 
 .wx .now {
@@ -1113,13 +1110,31 @@ body {
   padding: 0 0.35rem;
 }
 
+/*
+ * 展開的預報疊在上面，不佔版面高度。
+ * 原本它撐開上排那一列，整個中間區塊就被往下推 —— 點一下天氣，
+ * 時鐘和搜尋列跟著跳一次，很吵。
+ */
+.wx {
+  position: relative;
+}
+
 .wx .days {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  min-width: 10rem;
-  padding-top: 0.45rem;
-  border-top: 1px solid var(--glass-line);
+  min-width: 12rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  z-index: 6;
 }
 
 .wx .feels,
