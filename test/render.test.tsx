@@ -231,7 +231,6 @@ describe("背景濾鏡", () => {
     mount(new Date(2026, 7, 30, 11, 0, 0));
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     expect(cssVar("--bg-filter")).toBe("none");
-    expect(cssVar("--bg-inset")).toBe("0");
   });
 
   it("純色模式也不掛濾鏡", async () => {
@@ -243,5 +242,30 @@ describe("背景濾鏡", () => {
     buttons[1]!.click();
     await vi.waitFor(() => expect(cssVar("--fg")).toBe("#F4F2EE"));
     expect(cssVar("--bg-filter")).toBe("none");
+  });
+});
+
+describe("拖滑桿不該重讀背景圖", () => {
+  it("只有換圖才重讀 —— 動別的設定不會重建 blob 網址，畫面才不會閃", async () => {
+    // 記下 createObjectURL 被叫了幾次。每多叫一次就是瀏覽器要重新解碼一張圖。
+    const spy = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:fake");
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+    (el.querySelector(".gear") as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+
+    const before = spy.mock.calls.length;
+    // 顆粒滑桿連拖十格，模擬實際拖曳
+    const grain = Array.from(document.querySelectorAll<HTMLInputElement>('.panel input[type="range"]'))[0]!;
+    for (let i = 0; i < 10; i++) {
+      grain.value = String(0.01 * i);
+      grain.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    await vi.waitFor(() => expect(cssVar("--grain")).toBe("0.09"));
+
+    expect(spy.mock.calls.length - before, "拖滑桿期間不該產生任何新的 blob 網址").toBe(0);
+    spy.mockRestore();
   });
 });

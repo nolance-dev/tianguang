@@ -58,10 +58,15 @@ body {
    * 就混不到它，整片漸層會被洗成灰的。漸層模式根本不需要模糊，
    * 所以由 App 只在自訂圖時才把這兩個變數填上。
    */
+  /*
+   * 只有模糊，不做任何補償。
+   *
+   * 試過 scale 和負 inset：兩個都會讓圖看起來被推近。負 inset 撐大繪製框後
+   * cover 會重新計算，效果跟 scale 一模一樣，只是換個寫法。
+   * 模糊糊出來的那圈軟邊，就讓它融進底下 documentElement 的底色 ——
+   * 那個色本來就跟畫面同一個色系，比整張圖跟著縮放好看得多。
+   */
   filter: var(--bg-filter, none);
-  /* 模糊會把邊緣糊出一圈透明。用負 inset 把整層往外撐出畫面，
-     不用 scale —— 放大會讓圖看起來被推近，改模糊時整張圖跟著縮放很晃。 */
-  inset: var(--bg-inset, 0);
 }
 
 .grain {
@@ -336,7 +341,9 @@ body {
   background: var(--tint, none);
   opacity: var(--tint-opacity, 0);
   mix-blend-mode: soft-light;
-  transition: opacity 0.4s, background 1.2s linear;
+  /* 只對 opacity 過場。這層的漸層每秒重算一次，對 background 做 1.2s 過場
+     會一直被打斷重來，看起來就是背景在脈動。 */
+  transition: opacity 0.4s;
 }
 
 .dim {

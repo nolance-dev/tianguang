@@ -40,27 +40,29 @@ export function App() {
 
   // 自訂桌布。blob 網址換一次就要 revoke 一次，否則舊圖會一直留在記憶體裡。
   const bgImage = useSignal<{ url: string; luminance: number } | null>(null);
+  // effect 會訂閱整個 settings，所以拖任何一根滑桿都會重跑。沒有這道閘的話
+  // 每動一格就重讀一次圖、產生新的 blob URL、撤銷舊的 —— 瀏覽器得重新解碼
+  // 整張圖，畫面就閃一下。只有真的換圖時才需要重讀。
+  const loadedKey = useRef<string | null>(null);
   useSignalEffect(() => {
     const s = settings.value;
-    if (s.background !== "image" || !s.imageId) {
-      const old = bgImage.peek();
-      if (old) {
-        URL.revokeObjectURL(old.url);
-        bgImage.value = null;
-      }
-      return;
+    const key = s.background === "image" ? s.imageId : null;
+    if (key === loadedKey.current) return;
+    loadedKey.current = key;
+
+    const old = bgImage.peek();
+    if (old) {
+      URL.revokeObjectURL(old.url);
+      bgImage.value = null;
     }
-    let url: string | null = null;
-    void getImage(s.imageId).then((img) => {
+    if (!key) return;
+
+    void getImage(key).then((img) => {
+      // 讀取期間若又換了一張，這次的結果就作廢，不要蓋掉比較新的
+      if (loadedKey.current !== key) return;
       if (!img) return;
-      url = toUrl(img);
-      const old = bgImage.peek();
-      if (old) URL.revokeObjectURL(old.url);
-      bgImage.value = { url, luminance: img.luminance };
+      bgImage.value = { url: toUrl(img), luminance: img.luminance };
     });
-    return () => {
-      if (url) URL.revokeObjectURL(url);
-    };
   });
 
   const palette = useComputed(() => {
@@ -89,8 +91,7 @@ export function App() {
     // filter 有值就會讓背景層自成合成層，顆粒層混不到它，漸層會被洗成灰的。
     const blur = s.background === "image" ? s.blur : 0;
     r.style.setProperty("--bg-filter", blur > 0 ? `blur(${blur}px)` : "none");
-    // 把整層往外撐出畫面，蓋掉模糊糊出來的透明邊緣。撐出去的量取兩倍模糊半徑就夠。
-    r.style.setProperty("--bg-inset", blur > 0 ? `${-blur * 2}px` : "0");
+
     // 自訂圖上仍依時辰疊一層明暗與色溫 —— 換了桌布，時間感不必跟著消失
     const tinted = s.background === "image" && s.shichenTint && bgImage.value;
     r.style.setProperty("--tint", tinted ? meshCss(colorsAt(decimalHour(now.value))) : "none");
