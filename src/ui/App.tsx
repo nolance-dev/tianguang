@@ -66,14 +66,13 @@ export function App() {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         palOpen.value = true;
-      } else if (e.key === "PageDown" && settings.peek().layout === "stage") {
-        // 瀏覽器的捲動被關掉了，換頁的鍵盤路徑得自己補，
-        // 否則只用鍵盤的人到不了第二屏。
+      } else if (e.key === "PageDown" || e.key === "PageUp") {
+        // 瀏覽器的捲動被關掉了，往下的鍵盤路徑得自己補，
+        // 否則只用鍵盤的人到不了工作區。
         e.preventDefault();
-        page.value = 1;
-      } else if (e.key === "PageUp" && settings.peek().layout === "stage") {
-        e.preventDefault();
-        page.value = 0;
+        const down = e.key === "PageDown";
+        if (settings.peek().layout === "flow") tight.value = down;
+        else page.value = down ? 1 : 0;
       }
     };
     document.addEventListener("keydown", onKey);
@@ -85,42 +84,45 @@ export function App() {
     return () => clearInterval(id);
   }, []);
 
-  // 一條直的版面：捲過去之後把搜尋列釘在頂端。門檻放在標題區的高度上，
-  // 太小會在微捲時抖動。
-  useEffect(() => {
-    const onScroll = () => (tight.value = window.scrollY > 72);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // 滾輪換頁。彈窗開著時完全不收，那時滾輪屬於彈窗。
+  // 滾輪。彈窗開著時完全不收，那時滾輪屬於彈窗。
   useEffect(() => {
     let acc = 0;
     let last = 0;
     let until = 0;
 
     const onWheel = (e: WheelEvent) => {
-      // 一條直的版面用瀏覽器自己的捲動，這裡完全不插手
-      if (settings.peek().layout === "flow") return;
       if (dialOpen.peek() || palOpen.peek() || panelOpen.peek()) return;
       const dy = wheelPixels(e);
       if (!dy) return;
+
+      // 兩個版面收滾輪的方式一模一樣，差在收完之後動的是哪一格：
+      // 兩張牌動的是「第幾屏」，一條直的動的是「收起來了沒」。
+      const flowing = settings.peek().layout === "flow";
 
       const at = Date.now();
       if (at < until) return;
       if (at - last > RESET_MS || Math.sign(dy) !== Math.sign(acc)) acc = 0;
       last = at;
 
-      if (canScroll(document.querySelector<HTMLElement>(".screen.on"), dy)) return;
+      // 只有真的捲得動的容器才先讓它捲。一條直的在展開狀態是鎖住的，
+      // 這時內容雖然比一屏高，但那是「還沒收起來」，不是「可以捲」。
+      const scroller = flowing
+        ? tight.peek()
+          ? document.querySelector<HTMLElement>(".app.flow")
+          : null
+        : document.querySelector<HTMLElement>(".screen.on");
+      if (canScroll(scroller, dy)) return;
 
       e.preventDefault();
       acc += dy;
       if (Math.abs(acc) < NOTCH * NEED - 20) return;
 
-      const next = page.peek() + (acc > 0 ? 1 : -1);
+      const from = flowing ? (tight.peek() ? 1 : 0) : page.peek();
+      const next = from + (acc > 0 ? 1 : -1);
       acc = 0;
       if (next < 0 || next > 1) return;
-      page.value = next;
+      if (flowing) tight.value = next === 1;
+      else page.value = next;
       until = at + COOLDOWN_MS;
     };
 
@@ -224,8 +226,6 @@ export function App() {
     r.style.setProperty("--tint", tinted ? meshCss(colorsAt(decimalHour(now.value))) : "none");
     r.style.setProperty("--tint-opacity", tinted ? "0.34" : "0");
     r.dataset.sc = String(scIndex.value);
-    // 版面決定文件本身捲不捲，那條規則寫在 CSS 裡，靠這個屬性切
-    r.dataset.layout = s.layout;
   });
 
   const cfg = settings.value;
@@ -287,11 +287,20 @@ export function App() {
       {flow ? (
         <div class="app flow" data-tight={tight.value ? "1" : "0"}>
           {topBar}
-          <div class="hero">{hero}</div>
 
           {/*
-            這一列會黏在頂端。黏住之後左邊那個小時間才長出來，同時上面的大時間
-            淡掉 —— 讀起來是「時間縮進了搜尋列」，不是憑空多一個時鐘。
+            滾輪一動，這一格的高度收到零，底下的東西整批擠上來坐定。
+            grid-template-rows 從 1fr 到 0fr 是唯一不必先量出高度就能做的收合 ——
+            量高度那條路遇到換行、換字級、換視窗大小就會算錯一次。
+          */}
+          <div class="hero-wrap">
+            <div class="hero">{hero}</div>
+          </div>
+
+          {/*
+            收起來之後這一列就是最上面那一列：左邊那顆小時間長出來，
+            上面的大時間同時淡掉 —— 讀起來是「時間縮進了搜尋列」，
+            不是憑空多一個時鐘。
           */}
           <div class="bar">
             <Clock now={now.value} settings={cfg} mini onOpen={() => (dialOpen.value = true)} />
@@ -304,6 +313,16 @@ export function App() {
             {cards}
             {notices}
           </div>
+
+          {/* 不給提示的話沒人知道滾輪會把版面收起來 */}
+          <button
+            class="cue"
+            type="button"
+            aria-label={t("scroll_down")}
+            onClick={() => (tight.value = true)}
+          >
+            <span />
+          </button>
         </div>
       ) : (
         <div class="app" data-page={page.value}>

@@ -204,10 +204,10 @@
     "message": "Two cards"
   },
   "s_layout_flow": {
-    "message": "One column"
+    "message": "Collapse"
   },
   "s_layout_hint": {
-    "message": "Two cards: the clock on one screen, the desk on the next; two wheel notches turn the page. One column: everything in a single run — scroll down and the search bar sticks to the top with the time shrunk in beside it."
+    "message": "Two cards: the clock on one screen, the desk on the next; two wheel notches turn the page. Collapse: two notches fold the clock away into the search bar and everything below rises into place, all on one screen."
   },
   "s_background": {
     "message": "Background"

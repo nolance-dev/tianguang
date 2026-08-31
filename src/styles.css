@@ -1681,52 +1681,75 @@ html::-webkit-scrollbar {
 /* ---------- 一條直的 ---------- */
 
 /*
- * 另一種用法：不是兩張牌，是一列。時間在最上面，往下捲時搜尋列黏在頂端、
- * 大時間縮進它左邊，接著名言、快速存取、工作區。
+ * 另一種用法。不是把兩張牌接成一份長文件 —— 它一樣不捲。
  *
- * 這個版面用瀏覽器自己的捲動 —— 有 sticky 就夠了，不必自己收滾輪，
- * 鍵盤的上下鍵、空白鍵、Home/End 也全部照舊能用。
+ * 展開時是「現在幾點」：大時間、日期、搜尋列。滾輪一動，時間那一格的高度
+ * 收到零，底下的名言、快速存取、工作區整批擠上來，全部在同一屏坐定，
+ * 大時間同時縮進搜尋列左邊。收合用 grid-template-rows 從 1fr 到 0fr，
+ * 不必先量高度 —— 量高度那條路遇到換行、換字級、換視窗就會算錯一次。
  */
-:root[data-layout="flow"],
-:root[data-layout="flow"] body {
-  overflow: auto;
-}
-
 .app.flow {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: auto;
-  min-height: 100dvh;
-  overflow: visible;
-  padding: clamp(1.2rem, 3vw, 2.4rem) clamp(1.2rem, 3vw, 2.4rem) clamp(3rem, 10vh, 7rem);
+  height: 100dvh;
+  /* 展開時鎖住。內容比一屏高不是「可以捲」，是「還沒收起來」 */
+  overflow: hidden;
+  padding: clamp(1.2rem, 3vw, 2.4rem);
+}
+
+/* 收起來之後若內容還是比一屏高（矮螢幕、卡片開滿），才交還捲動 */
+.app.flow[data-tight="1"] {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+
+.app.flow::-webkit-scrollbar {
+  display: none;
 }
 
 .app.flow .top {
   width: 100%;
+  flex: none;
+}
+
+.app.flow .hero-wrap {
+  display: grid;
+  grid-template-rows: 1fr;
+  width: 100%;
+  flex: none;
+  /* 塌到 0fr 時裡面那格的 padding 還在，沒有這道剪裁會留一條空白 */
+  overflow: hidden;
+  transition: grid-template-rows 0.62s cubic-bezier(0.22, 1, 0.28, 1);
+}
+
+.app.flow[data-tight="1"] .hero-wrap {
+  grid-template-rows: 0fr;
 }
 
 .app.flow .hero {
+  /* 0fr 那一格要真的塌下去，min-height 必須歸零 */
+  min-height: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: clamp(0.4rem, 1vw, 0.9rem);
   padding: clamp(1.5rem, 7vh, 4.5rem) 0 clamp(0.6rem, 2vh, 1.4rem);
-  transition:
-    opacity 0.35s ease,
-    transform 0.45s cubic-bezier(0.22, 1, 0.28, 1);
+  transition: opacity 0.32s ease;
 }
 
-/* 黏住之後大時間淡掉 —— 時間沒有消失，它在下面那一列裡 */
 .app.flow[data-tight="1"] .hero {
   opacity: 0;
-  transform: translateY(-10px) scale(0.97);
 }
 
 .app.flow .bar {
   position: sticky;
   top: 0;
   z-index: 6;
+  flex: none;
   width: min(44rem, 100%);
   display: flex;
   align-items: center;
@@ -1735,8 +1758,9 @@ html::-webkit-scrollbar {
 }
 
 /*
- * 黏住的那一列底下要有東西擋，否則名言和連結會從搜尋列後面穿過去。
- * 拉到 -50vw 是為了整條到邊，下緣用漸層收掉，才不會是一條硬邊的橫幅。
+ * 收起來之後這一列是最上面那一列。若內容還捲得動，底下要有東西擋，
+ * 否則名言會從搜尋列後面穿過去。拉到 -50vw 是為了整條到邊，
+ * 下緣用漸層收掉，才不會是一條硬邊的橫幅。
  */
 .app.flow .bar::before {
   content: "";
@@ -1763,7 +1787,7 @@ html::-webkit-scrollbar {
   margin-top: 0;
 }
 
-/* 縮進搜尋列左邊的那顆時間。收起來時寬度為零，撐開才長出來 */
+/* 縮進搜尋列左邊的那顆時間。收起來前寬度為零，撐開才長出來 */
 .clock.mini {
   font-size: clamp(1.05rem, 2vw, 1.4rem);
   line-height: 1;
@@ -1773,9 +1797,9 @@ html::-webkit-scrollbar {
   max-width: 0;
   opacity: 0;
   transition:
-    max-width 0.42s cubic-bezier(0.22, 1, 0.28, 1),
-    opacity 0.3s ease,
-    margin 0.42s cubic-bezier(0.22, 1, 0.28, 1);
+    max-width 0.5s cubic-bezier(0.22, 1, 0.28, 1),
+    opacity 0.3s ease 0.12s,
+    margin 0.5s cubic-bezier(0.22, 1, 0.28, 1);
 }
 
 .app.flow[data-tight="1"] .clock.mini {
@@ -1784,13 +1808,23 @@ html::-webkit-scrollbar {
   margin-right: 0.35rem;
 }
 
+/*
+ * 擠上來的那一疊。展開時它整批在摺線下面，收起來之後往上補進來。
+ * 間距在收起來後放寬一點 —— 一屏裡只剩這三塊，密著排反而顯得局促。
+ */
 .app.flow .stream {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(1.2rem, 4vh, 2.8rem);
-  padding-top: clamp(1rem, 3vh, 2rem);
+  gap: clamp(1rem, 2.5vh, 1.8rem);
+  padding-top: clamp(0.8rem, 2vh, 1.4rem);
+  transition: gap 0.62s cubic-bezier(0.22, 1, 0.28, 1);
+}
+
+.app.flow[data-tight="1"] .stream {
+  gap: clamp(1.3rem, 4vh, 2.8rem);
+  padding-top: clamp(1.2rem, 3.5vh, 2.4rem);
 }
 
 .app.flow .stream .quote,
@@ -1811,73 +1845,19 @@ html::-webkit-scrollbar {
   width: min(64rem, 96%);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .app.flow .hero,
-  .clock.mini,
-  .app.flow .bar::before {
-    transition-duration: 0.01ms;
-  }
-}
-
-/* 第一屏底部的往下提示 */
-.cue {
-  position: absolute;
-  left: 50%;
-  bottom: clamp(1rem, 3vh, 2rem);
-  translate: -50% 0;
-  width: 2.4rem;
-  height: 2.4rem;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  background: none;
-  border: 0;
-  color: var(--fg-2);
-  transition: color 0.2s, opacity 0.4s;
-}
-
-/* 已經在第二屏了就沒有「往下」這回事 */
-.app[data-page="1"] .cue {
+/* 收起來了就沒有「還有東西在下面」這回事 */
+.app.flow[data-tight="1"] .cue {
   opacity: 0;
   pointer-events: none;
 }
 
-.cue:hover {
-  color: var(--fg);
-}
-
-.cue span {
-  display: block;
-  width: 0.55rem;
-  height: 0.55rem;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  rotate: 45deg;
-  translate: 0 -0.15rem;
-  animation: nudge 2.4s ease-in-out infinite;
-}
-
-@keyframes nudge {
-  0%, 70%, 100% { translate: 0 -0.15rem; }
-  35% { translate: 0 0.15rem; }
-}
-
-/* 第二屏：語錄在最上，卡片在下 */
-.screen.desk .quote {
-  margin: 0 auto;
-  max-width: min(38rem, 88%);
-  font-size: clamp(0.9rem, 1.3vw, 1.1rem);
-}
-
-.screen.desk .cards {
-  margin: 0 auto;
-  width: min(64rem, 92%);
-  align-self: start;
-}
-
-.screen.desk .card {
-  min-height: 11rem;
+@media (prefers-reduced-motion: reduce) {
+  .app.flow .hero-wrap,
+  .app.flow .hero,
+  .app.flow .stream,
+  .clock.mini {
+    transition-duration: 0.01ms;
+  }
 }
 
 /* ---------- 指令面板 ---------- */
