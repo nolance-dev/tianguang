@@ -34,7 +34,26 @@ body {
 body {
   font-family: var(--f-body);
   color: var(--fg);
-  overflow: hidden;
+  /*
+   * 直向可以捲。加了工作區卡片之後，內容在筆電螢幕上撐得過一屏 ——
+   * 原本 overflow: hidden 是直接把下面切掉，使用者連捲都捲不到。
+   * 橫向仍然鎖住，背景層才不會拉出捲軸。
+   */
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-line) transparent;
+}
+
+body::-webkit-scrollbar {
+  width: 10px;
+}
+
+body::-webkit-scrollbar-thumb {
+  background: var(--glass-line);
+  border-radius: 99px;
+  border: 3px solid transparent;
+  background-clip: content-box;
 }
 
 /* 漸層與顆粒各自一層，才能分別做過場與調整強度 */
@@ -85,7 +104,8 @@ body {
 .app {
   position: relative;
   z-index: 2;
-  height: 100dvh;
+  /* 至少滿一屏，內容更高就往下長，不要把卡片切掉 */
+  min-height: 100dvh;
   display: grid;
   grid-template-rows: auto 1fr auto;
   padding: clamp(1.2rem, 3vw, 2.4rem);
@@ -155,8 +175,9 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding-top: clamp(0.5rem, 4vh, 3rem);
-  gap: clamp(0.7rem, 1.4vw, 1.2rem);
+  padding-top: clamp(0.4rem, 2.5vh, 2rem);
+  padding-bottom: clamp(1rem, 3vh, 2.5rem);
+  gap: clamp(0.5rem, 1.1vw, 1rem);
 }
 
 .greet {
