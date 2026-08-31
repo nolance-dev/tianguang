@@ -199,7 +199,7 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
 
           <section>
             <h3>{t("s_cards")}</h3>
-            {(["todos", "note", "pomodoro", "quote"] as const).map((k) => (
+            {(["links", "todos", "note", "pomodoro", "quote"] as const).map((k) => (
               <label class="row switch" key={k}>
                 <span>{t(`s_card_${k}`)}</span>
                 <input
@@ -224,6 +224,18 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
 
           <section>
             <h3>{t("s_links")}</h3>
+            <div class="seg" data-seg="linkstyle" role="group" aria-label={t("s_link_style")}>
+              {([true, false] as const).map((on) => (
+                <button
+                  key={String(on)}
+                  type="button"
+                  aria-pressed={value.linkGrid === on}
+                  onClick={() => onChange({ linkGrid: on })}
+                >
+                  {t(on ? "s_link_style_grid" : "s_link_style_flat")}
+                </button>
+              ))}
+            </div>
             <LinkImport value={value} onChange={onChange} />
           </section>
 

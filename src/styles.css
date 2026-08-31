@@ -1411,6 +1411,8 @@ body::-webkit-scrollbar {
 
 .card.note textarea {
   min-height: calc(var(--h, 1) * 4.5rem);
+  /* 卡片拉高時筆記框跟著填滿，不要在底下留一塊死白 */
+  flex: 1;
 }
 
 @container (min-width: 22rem) {
@@ -1429,6 +1431,41 @@ body::-webkit-scrollbar {
     max-width: 7.5rem;
   }
 }
+
+/*
+ * 快速存取這張卡。
+ *
+ * 九宮格：九個一組切塊。十幾個圖示排成一長條時，找東西得從頭掃到尾；
+ * 切成一眼數得完的塊，位置才記得住 —— 「第二塊左下角」是記得住的，
+ * 「第十一個」不是。加號也佔一格，所以一塊滿了會自己開下一塊。
+ */
+.card.linkcard .links {
+  margin-top: 0;
+  max-width: none;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.card.linkcard .links::-webkit-scrollbar {
+  display: none;
+}
+
+.links.nine {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(0.8rem, 2vw, 1.6rem);
+}
+
+.links.nine .block {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(0.4rem, 1vw, 0.7rem);
+  padding: clamp(0.4rem, 1vw, 0.7rem);
+  border-radius: 12px;
+  border: 1px solid var(--glass-line);
+}
+
 
 /* 窄視窗上跨距要收斂，否則一張兩欄寬的卡會把整排擠爆 */
 @media (max-width: 52rem) {
@@ -1634,6 +1671,13 @@ body::-webkit-scrollbar {
 }
 
 /* 番茄鐘 */
+/*
+ * 番茄鐘拉高時要跟著長高。
+ *
+ * 原本錶面是固定的 5rem，卡片拉到三列高就變成一顆小圓圈頂在上面、
+ * 底下一大片空白。現在錶面吃掉剩下的高度，圓的直徑取「寬與高的較小值」
+ * ——圓不能被拉成橢圓，所以用 aspect-ratio 鎖住，讓空間去遷就它。
+ */
 .card.pomo {
   align-items: center;
   text-align: center;
@@ -1641,8 +1685,11 @@ body::-webkit-scrollbar {
 
 .clockface {
   position: relative;
-  width: 5rem;
-  height: 5rem;
+  flex: 1;
+  min-height: 5rem;
+  aspect-ratio: 1;
+  max-width: 100%;
+  margin: 0 auto;
   display: grid;
   place-items: center;
 }
@@ -1660,7 +1707,9 @@ body::-webkit-scrollbar {
 
 .clockface .left {
   font-family: var(--f-latin);
-  font-size: 1.35rem;
+  /* 單位是 viewBox 的座標，不是像素 —— 錶面多大字就多大 */
+  font-size: 20px;
+  fill: currentColor;
   font-variant-numeric: tabular-nums;
 }
 

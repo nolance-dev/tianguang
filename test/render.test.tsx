@@ -336,11 +336,12 @@ describe("焦點不該被搶走", () => {
 });
 
 describe("工作區卡片", () => {
-  it("兩張卡預設出現，番茄鐘預設關閉", async () => {
+  it("預設開快速存取、待辦、隨手記，番茄鐘預設關閉", async () => {
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelector(".cards")).not.toBeNull());
     expect(el.querySelector(".card.note")).not.toBeNull();
-    expect(el.querySelectorAll(".card").length).toBe(2);
+    expect(el.querySelector(".card.linkcard")).not.toBeNull();
+    expect(el.querySelectorAll(".card").length).toBe(3);
     expect(el.querySelector(".card.pomo"), "番茄鐘預設不開").toBeNull();
   });
 
@@ -353,9 +354,10 @@ describe("工作區卡片", () => {
     expect(desk.querySelector(".quote")).not.toBeNull();
     expect(desk.querySelector(".cards")).not.toBeNull();
     expect(el.querySelector(".cue"), "沒有提示就沒人知道要捲").not.toBeNull();
-    // 搜尋列與快速連結留在第一屏
+    // 搜尋列留在第一屏，快速存取搬到第二屏當一張卡
     expect(el.querySelector(".screen:not(.desk) .search")).not.toBeNull();
-    expect(el.querySelector(".screen:not(.desk) .links")).not.toBeNull();
+    expect(el.querySelector(".screen:not(.desk) .links")).toBeNull();
+    expect(desk.querySelector(".card.linkcard .links")).not.toBeNull();
   });
 
   it("滾輪一格不換頁，兩格才換，收起來的那屏 Tab 不進去", async () => {
@@ -400,9 +402,9 @@ describe("工作區卡片", () => {
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelector(".cards")).not.toBeNull());
 
-    const card = () => el.querySelector<HTMLElement>(".card")!;
+    const order = () => [...el.querySelectorAll<HTMLElement>(".card")].map((c) => c.dataset.id);
     const todos = () => el.querySelector<HTMLElement>('.card[data-id="todos"]')!;
-    expect(card().dataset.id, "預設待辦排第一").toBe("todos");
+    expect(order()).toEqual(["links", "todos", "note"]);
     expect(todos().style.getPropertyValue("--w")).toBe("2");
 
     const grow = todos().querySelector<HTMLButtonElement>(".grow")!;
@@ -420,7 +422,45 @@ describe("工作區卡片", () => {
     await vi.waitFor(() => expect(todos().style.getPropertyValue("--w")).toBe("4"));
 
     key("ArrowRight", true);
-    await vi.waitFor(() => expect(card().dataset.id, "Shift 是換位置").toBe("note"));
+    await vi.waitFor(() =>
+      expect(order(), "Shift 是換位置").toEqual(["links", "note", "todos"]),
+    );
+  });
+
+  it("快速存取九個一組切塊，加號也佔一格", async () => {
+    const eleven = Array.from({ length: 11 }, (_, i) => ({
+      id: `l${i}`,
+      title: `站 ${i}`,
+      url: `https://example.com/${i}`,
+    }));
+    localStorage.setItem(
+      "tg.settings",
+      JSON.stringify({ schemaVersion: 1, links: eleven, linkGrid: true }),
+    );
+
+    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector(".links.nine")).not.toBeNull());
+
+    const blocks = el.querySelectorAll(".links.nine .block");
+    expect(blocks.length, "十一個連結加一顆加號 = 兩塊").toBe(2);
+    expect(blocks[0]!.children.length).toBe(9);
+    expect(blocks[1]!.children.length, "剩下兩個加上加號").toBe(3);
+    localStorage.removeItem("tg.settings");
+  });
+
+  it("換成單獨排開就不切塊", async () => {
+    localStorage.setItem(
+      "tg.settings",
+      JSON.stringify({
+        schemaVersion: 1,
+        linkGrid: false,
+        links: [{ id: "a", title: "站", url: "https://example.com" }],
+      }),
+    );
+    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector(".card.linkcard .links")).not.toBeNull());
+    expect(el.querySelector(".links.nine")).toBeNull();
+    localStorage.removeItem("tg.settings");
   });
 
   it("待辦空的時候是一句邀請，不是空框", async () => {

@@ -496,5 +496,20 @@
   },
   "s_desk_hint": {
     "message": "Drag a card by its title row to move it, drag the bottom-right corner to resize. Wider and taller cards show more inside."
+  },
+  "c_links": {
+    "message": "Shortcuts"
+  },
+  "s_card_links": {
+    "message": "Shortcuts"
+  },
+  "s_link_style": {
+    "message": "Arrangement"
+  },
+  "s_link_style_grid": {
+    "message": "Nine to a block"
+  },
+  "s_link_style_flat": {
+    "message": "One by one"
   }
 }

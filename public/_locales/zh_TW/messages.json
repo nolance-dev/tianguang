@@ -532,5 +532,20 @@
   },
   "s_desk_hint": {
     "message": "拖卡片的標題列換位置，拖右下角改大小。卡片變寬變高之後，裡面顯示的東西也會跟著變多。"
+  },
+  "c_links": {
+    "message": "快速存取"
+  },
+  "s_card_links": {
+    "message": "快速存取"
+  },
+  "s_link_style": {
+    "message": "呈現方式"
+  },
+  "s_link_style_grid": {
+    "message": "九宮格"
+  },
+  "s_link_style_flat": {
+    "message": "單獨排開"
   }
 }

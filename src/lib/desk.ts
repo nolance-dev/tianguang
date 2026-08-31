@@ -8,7 +8,7 @@
  * 存像素的話換一台螢幕就全錯位，而且拖起來永遠對不齊隔壁那張。
  */
 
-export type CardId = "todos" | "note" | "pomodoro";
+export type CardId = "todos" | "note" | "pomodoro" | "links";
 
 export interface Tile {
   id: CardId;
@@ -21,9 +21,10 @@ export interface Tile {
 export const COLS = 4;
 export const MAX_H = 3;
 
-const IDS: CardId[] = ["todos", "note", "pomodoro"];
+const IDS: CardId[] = ["todos", "note", "pomodoro", "links"];
 
 export const DEFAULT_DESK: Tile[] = [
+  { id: "links", w: 2, h: 2 },
   { id: "todos", w: 2, h: 1 },
   { id: "note", w: 2, h: 1 },
   { id: "pomodoro", w: 1, h: 1 },

@@ -1,6 +1,8 @@
 import { useSignal } from "@preact/signals";
 import { useEffect, useRef } from "preact/hooks";
 import { t } from "../lib/i18n";
+import { Links } from "./Links";
+import type { Link } from "../lib/links";
 import {
   COLS,
   move,
@@ -43,14 +45,31 @@ interface Body {
 }
 
 interface Props extends Body {
-  show: { todos: boolean; note: boolean; pomodoro: boolean };
+  show: Record<CardId, boolean>;
   desk: Tile[];
   onDesk: (desk: Tile[]) => void;
+  links: Link[];
+  onLinks: (links: Link[]) => void;
+  linkGrid: boolean;
 }
 
-const VARIANT: Record<CardId, string> = { todos: "", note: " note", pomodoro: " pomo" };
+const VARIANT: Record<CardId, string> = {
+  todos: "",
+  note: " note",
+  pomodoro: " pomo",
+  links: " linkcard",
+};
 
-export function Cards({ value, onChange, show, desk, onDesk }: Props) {
+export function Cards({
+  value,
+  onChange,
+  show,
+  desk,
+  onDesk,
+  links,
+  onLinks,
+  linkGrid,
+}: Props) {
   const live = useSignal<Tile[] | null>(null);
   const held = useSignal<CardId | null>(null);
   const grid = useRef<HTMLDivElement>(null);
@@ -163,6 +182,15 @@ export function Cards({ value, onChange, show, desk, onDesk }: Props) {
           {tile.id === "todos" && <TodoCard value={value} onChange={onChange} />}
           {tile.id === "note" && <NoteCard value={value} onChange={onChange} />}
           {tile.id === "pomodoro" && <PomodoroCard value={value} onChange={onChange} />}
+          {tile.id === "links" && (
+            <>
+              <header>
+                <b>{t("c_links")}</b>
+                <span>{links.length}</span>
+              </header>
+              <Links links={links} onChange={onLinks} grid={linkGrid} />
+            </>
+          )}
 
           <button
             type="button"
@@ -287,7 +315,9 @@ function PomodoroCard({ value, onChange }: Body) {
       </header>
 
       <div class="clockface">
-        <svg viewBox="0 0 100 100" aria-hidden="true">
+        {/* 剩餘時間畫在 svg 裡，跟著 viewBox 縮放 —— 卡片拉大時數字自己會變大，
+            不必拿容器查詢單位去猜。也因為它是真的文字，讀螢幕讀得到。 */}
+        <svg viewBox="0 0 100 100" role="img" aria-label={formatLeft(left)}>
           <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-opacity=".15" stroke-width="5" />
           <circle
             cx="50"
@@ -300,8 +330,10 @@ function PomodoroCard({ value, onChange }: Body) {
             transform="rotate(-90 50 50)"
             stroke-dasharray={`${(1 - left / total) * 2 * Math.PI * 42} ${2 * Math.PI * 42}`}
           />
+          <text class="left" x="50" y="51" text-anchor="middle" dominant-baseline="central">
+            {formatLeft(left)}
+          </text>
         </svg>
-        <span class="left">{formatLeft(left)}</span>
       </div>
 
       <div class="acts">

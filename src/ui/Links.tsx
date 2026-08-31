@@ -8,14 +8,28 @@ import { faviconUrl, initial, makeLink, MAX_LINKS, reorder, type Link } from "..
  *
  * 圖示走瀏覽器內建的 favicon 快取（_favicon/），不對外抓圖 —— 離線也有圖示，
  * 也不會把使用者開過哪些站洩漏給第三方。開發模式沒有那個協定，退回字母磚。
+ *
+ * 兩種排法：九個一組的九宮格，或一個一個排開。九宮格是把格子切成
+ * 一眼數得完的塊 —— 十幾個圖示排成一長條，找東西時得從頭掃到尾。
  */
+
+/** 九宮格一組九格。加號也佔一格，所以滿了會自己開下一塊。 */
+const PER_BLOCK = 9;
+
+function blocks<T>(cells: T[]): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < cells.length; i += PER_BLOCK) out.push(cells.slice(i, i + PER_BLOCK));
+  return out.length ? out : [[]];
+}
 
 interface Props {
   links: Link[];
   onChange: (links: Link[]) => void;
+  /** 九宮格排法。false 是一個一個排開 */
+  grid?: boolean;
 }
 
-export function Links({ links, onChange }: Props) {
+export function Links({ links, onChange, grid }: Props) {
   const adding = useSignal(false);
   const dragging = useSignal<number | null>(null);
   const over = useSignal<number | null>(null);
@@ -34,9 +48,7 @@ export function Links({ links, onChange }: Props) {
     );
   }
 
-  return (
-    <div class="links">
-      {links.map((link, i) => (
+  const slots = links.map((link, i) => (
         <div
           key={link.id}
           class={`slot${dragging.value === i ? " dragging" : ""}${over.value === i ? " over" : ""}`}
@@ -71,29 +83,48 @@ export function Links({ links, onChange }: Props) {
             ✕
           </button>
         </div>
-      ))}
+  ));
 
-      {links.length < MAX_LINKS &&
-        (adding.value ? (
-          <AddForm
-            onCancel={() => (adding.value = false)}
-            onAdd={(link) => {
-              onChange([...links, link]);
-              adding.value = false;
-            }}
-          />
-        ) : (
-          <button
-            type="button"
-            class="tile add"
-            aria-label={t("links_add")}
-            onClick={() => (adding.value = true)}
-          >
-            ＋
-          </button>
+  const adder =
+    links.length < MAX_LINKS ? (
+      adding.value ? (
+        <AddForm
+          key="add"
+          onCancel={() => (adding.value = false)}
+          onAdd={(link) => {
+            onChange([...links, link]);
+            adding.value = false;
+          }}
+        />
+      ) : (
+        <button
+          key="add"
+          type="button"
+          class="tile add"
+          aria-label={t("links_add")}
+          onClick={() => (adding.value = true)}
+        >
+          ＋
+        </button>
+      )
+    ) : null;
+
+  const cells = adder ? [...slots, adder] : slots;
+
+  // 九宮格是把 cells 切塊，不是換一套 DOM —— 拖曳換位那段兩種排法共用
+  if (grid) {
+    return (
+      <div class="links nine">
+        {blocks(cells).map((block, i) => (
+          <div class="block" key={i}>
+            {block}
+          </div>
         ))}
-    </div>
-  );
+      </div>
+    );
+  }
+
+  return <div class="links">{cells}</div>;
 }
 
 function Icon({ link }: { link: Link }) {

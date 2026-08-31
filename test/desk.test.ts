@@ -25,7 +25,7 @@ describe("整理存下來的版面", () => {
       { id: "note", w: 3, h: 2 },
       { id: "todos", w: 2, h: 1 },
     ];
-    expect(ids(normalize(saved))).toEqual(["pomodoro", "note", "todos"]);
+    expect(ids(normalize(saved)).slice(0, 3)).toEqual(["pomodoro", "note", "todos"]);
   });
 
   it("缺的卡補在最後面，不插隊", () => {

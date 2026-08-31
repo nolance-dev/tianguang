@@ -10,7 +10,6 @@ import { DEFAULTS, load, save, type Settings } from "../lib/settings";
 import { Ring } from "./Ring";
 import { Dial } from "./Dial";
 import { SettingsPanel } from "./Settings";
-import { Links } from "./Links";
 import { Weather } from "./Weather";
 import { Cards } from "./Cards";
 import { Palette } from "./Palette";
@@ -250,7 +249,6 @@ export function App() {
     </>
   );
   const search = <SearchBar engineId={cfg.searchEngine} />;
-  const links = <Links links={cfg.links} onChange={(l) => patch({ links: l })} />;
   const quote = cfg.cards.quote ? <QuoteLine text={cfg.quoteText} by={cfg.quoteBy} /> : null;
   const cards = (
     <Cards
@@ -259,6 +257,9 @@ export function App() {
       show={cfg.cards}
       desk={cfg.desk}
       onDesk={(desk) => patch({ desk })}
+      links={cfg.links}
+      onLinks={(l) => patch({ links: l })}
+      linkGrid={cfg.linkGrid}
     />
   );
   const notices = (
@@ -280,7 +281,6 @@ export function App() {
           <main class="core">
             {hero}
             {search}
-            {links}
           </main>
 
           {/* 往下還有一屏。不給提示的話沒人知道要捲。 */}

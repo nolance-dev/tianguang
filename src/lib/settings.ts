@@ -36,7 +36,9 @@ export interface Settings {
   grain: number;
   dim: number;
   blur: number;
-  cards: { todos: boolean; note: boolean; pomodoro: boolean; quote: boolean };
+  cards: { todos: boolean; note: boolean; pomodoro: boolean; quote: boolean; links: boolean };
+  /** 快速連結的呈現：true 是九個一組的九宮格，false 是一個一個排開 */
+  linkGrid: boolean;
   /** 工作區卡片的順序與尺寸。畫之前一律過 desk.normalize()。 */
   desk: Tile[];
   /** 自訂名言。留白就用內建那批隨機抽。 */
@@ -65,7 +67,8 @@ export const DEFAULTS: Settings = {
   grain: 0.055,
   dim: 0,
   blur: 0,
-  cards: { todos: true, note: true, pomodoro: false, quote: true },
+  cards: { todos: true, note: true, pomodoro: false, quote: true, links: true },
+  linkGrid: true,
   desk: DEFAULT_DESK,
   quoteText: "",
   quoteBy: "",
