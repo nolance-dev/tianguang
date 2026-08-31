@@ -35,14 +35,11 @@ body {
   font-family: var(--f-body);
   color: var(--fg);
   /*
-   * 直向可以捲。加了工作區卡片之後，內容在筆電螢幕上撐得過一屏 ——
-   * 原本 overflow: hidden 是直接把下面切掉，使用者連捲都捲不到。
-   * 橫向仍然鎖住，背景層才不會拉出捲軸。
+   * 文件本身不捲。捲動發生在每一屏自己身上（見下面的 .screen），
+   * 內容比一屏高時那一屏自己會捲，捲到底才換頁 —— 不會像早期版本那樣
+   * 被 overflow: hidden 直接切掉。
    */
-  overflow-x: hidden;
-  overflow-y: auto;
-  /* 捲軸藏掉。這頁只有兩屏，底部那個往下的箭頭已經說明了還有東西，
-     再擺一條灰槓在旁邊只是把畫面切開。滾輪、鍵盤、snap 都照常。 */
+  overflow: hidden;
   scrollbar-width: none;
 }
 
@@ -1580,15 +1577,15 @@ body::-webkit-scrollbar {
 
 /*
  * 第一屏是「現在幾點、我要去哪」，第二屏是「我今天要做什麼」。
- * 兩件事分開，中間有一整個換頁的距離 —— 開新分頁時眼睛落在第一屏，
- * 不會被下面的待辦拉走注意力。
- * snap 用 proximity 不用 mandatory：第二屏的卡片在小螢幕上可能比一屏還高，
- * mandatory 會把人卡住。
+ * 兩件事分開，開新分頁時眼睛落在第一屏，不會被下面的待辦拉走注意力。
+ *
+ * 這裡不用瀏覽器的捲動。兩屏是疊起來的兩張牌：第二屏整張從底下插到前面，
+ * 第一屏往後退半步、暗下去。捲動做不出「插到前面」——
+ * 捲動只能做「同一張紙滑過去」。代價是滾輪與鍵盤都得自己收，在 App.tsx。
  */
 html {
-  scroll-snap-type: y proximity;
-  scroll-behavior: smooth;
-  /* 捲軸其實長在 html 上，只藏 body 的沒有用 */
+  /* 文件本身不再捲，捲動發生在每一屏自己身上 */
+  overflow: hidden;
   scrollbar-width: none;
 }
 
@@ -1596,31 +1593,70 @@ html::-webkit-scrollbar {
   display: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-}
-
 .app {
+  position: relative;
   display: block;
+  height: 100dvh;
+  overflow: hidden;
   padding: 0;
 }
 
 .screen {
-  position: relative;
-  min-height: 100dvh;
-  scroll-snap-align: start;
+  position: absolute;
+  inset: 0;
   display: grid;
   grid-template-rows: auto 1fr auto;
   padding: clamp(1.2rem, 3vw, 2.4rem);
+  /* 內容比一屏高時在自己這一層捲；捲到底了才換頁 */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  transition:
+    transform 0.72s cubic-bezier(0.22, 1, 0.28, 1),
+    opacity 0.5s ease,
+    filter 0.72s ease,
+    border-radius 0.72s ease;
 }
 
+.screen::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * 第二屏平常收在畫面底下。
+ * 圓角與上緣陰影是「插到前面」這件事的全部證據 —— 沒有它們，
+ * 一整片半透明滑上來只會像換底色。坐定之後圓角收掉，就是一整屏。
+ * 這裡刻意不用 backdrop-filter：它要在每一格動畫都重算一次背景模糊，
+ * 而背景層是 fixed，Chromium 在這個組合下會留下重繪的殘影。
+ */
 .screen.desk {
-  grid-template-rows: auto 1fr auto;
+  z-index: 2;
+  transform: translateY(100%);
+  border-radius: clamp(14px, 2vw, 26px) clamp(14px, 2vw, 26px) 0 0;
+  box-shadow: 0 -34px 70px -26px rgba(0, 0, 0, 0.62);
+  background: var(--glass-solid, rgba(255, 255, 255, 0.14));
+  border-top: 1px solid var(--glass-line);
   align-content: start;
   gap: clamp(1rem, 3vh, 2.4rem);
   padding-top: clamp(2rem, 8vh, 5rem);
+}
+
+.app[data-page="1"] .screen.desk {
+  transform: none;
+  border-radius: 0;
+}
+
+/* 前一屏不是消失，是退到後面去 */
+.app[data-page="1"] .screen:not(.desk) {
+  transform: translateY(-6%) scale(0.94);
+  opacity: 0.22;
+  filter: saturate(0.75);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen {
+    transition-duration: 0.01ms;
+  }
 }
 
 /* 第一屏底部的往下提示 */
@@ -1638,7 +1674,13 @@ html::-webkit-scrollbar {
   background: none;
   border: 0;
   color: var(--fg-2);
-  transition: color 0.2s;
+  transition: color 0.2s, opacity 0.4s;
+}
+
+/* 已經在第二屏了就沒有「往下」這回事 */
+.app[data-page="1"] .cue {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .cue:hover {

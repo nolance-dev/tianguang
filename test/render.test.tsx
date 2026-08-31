@@ -358,6 +358,44 @@ describe("工作區卡片", () => {
     expect(el.querySelector(".screen:not(.desk) .links")).not.toBeNull();
   });
 
+  it("滾輪一格不換頁，兩格才換，收起來的那屏 Tab 不進去", async () => {
+    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
+    // 滾輪監聽器掛在 effect 裡。--mesh 有值就代表 effect 已經跑完了，
+    // 只等 DOM 出現的話會在監聽器掛上之前就先滾了。
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+
+    const app = el.querySelector<HTMLElement>(".app")!;
+    const desk = el.querySelector<HTMLElement>("#desk")!;
+    const first = el.querySelector<HTMLElement>(".screen:not(.desk)")!;
+    // preact 有 inert 這個屬性就設屬性，沒有就落成 attribute，兩種都算
+    const off = (n: HTMLElement) => n.inert === true || n.hasAttribute("inert");
+    const notch = (dy: number) =>
+      window.dispatchEvent(new WheelEvent("wheel", { deltaY: dy, cancelable: true }));
+
+    expect(app.dataset.page).toBe("0");
+    expect(off(desk), "收在下面的第二屏不該吃到焦點").toBe(true);
+
+    notch(100);
+    await Promise.resolve();
+    expect(app.dataset.page, "一格是「我在看」，不換頁").toBe("0");
+
+    notch(100);
+    await vi.waitFor(() => expect(app.dataset.page).toBe("1"));
+    expect(off(first), "退到後面的第一屏也不該吃到焦點").toBe(true);
+    expect(off(desk)).toBe(false);
+
+    // 冷卻期內再滾也不動，慣性尾巴不該一路翻到底
+    notch(-100);
+    notch(-100);
+    await Promise.resolve();
+    expect(app.dataset.page, "冷卻期內不理會滾輪").toBe("1");
+
+    await vi.advanceTimersByTimeAsync(800);
+    notch(-100);
+    notch(-100);
+    await vi.waitFor(() => expect(app.dataset.page).toBe("0"));
+  });
+
   it("待辦空的時候是一句邀請，不是空框", async () => {
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelector(".cards")).not.toBeNull());

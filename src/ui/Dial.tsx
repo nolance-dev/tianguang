@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { isEnglish, outerRingName, shichenAlt, shichenName, t } from "../lib/i18n";
 import { roman } from "../lib/roman";
-import { dayFraction } from "../lib/shichen";
-import { jieqiFraction, moonFraction, moonIndex, jieqiIndex, sunTimes } from "../lib/solar";
+import { indexAt } from "../lib/shichen";
+import { moonIndex, jieqiIndex, sunTimes } from "../lib/solar";
 
 /**
  * 全屏時辰盤。
@@ -10,8 +10,10 @@ import { jieqiFraction, moonFraction, moonIndex, jieqiIndex, sunTimes } from "..
  * 一個規則貫穿整個盤面：**環一律逆時針飄，把「現在」送到頂端標記下；
  * 只有秒針順時針掃。** 針與環反向，動起來層次才清楚。
  *
- * 時、分、秒三層各跳各的：秒針在走的那六十秒裡，時環與分環完全靜止。
- * 這是刻意的 —— 連續飄移會讓整個盤面一直微微蠕動，看久了很躁。
+ * 每一環只在自己那一格走完時才跳，中間完全靜止：分環整分跳、時環整點跳、
+ * 時辰環兩小時跳一次、節氣環十五天跳一次。連續飄移會讓整個盤面一直微微蠕動，
+ * 看久了很躁；而「跳」這件事本身就說明了「這一格結束了」。
+ * 例外只有兩個：秒針一秒一跳，日照弧跟著分環一分一跳（那是刻度不是格）。
  */
 
 const C = 310; // viewBox 620 的圓心
@@ -98,10 +100,16 @@ export function Dial({ now, lat, lon, onClose }: Props) {
   }
 
   const outerCount = en ? 12 : 24;
-  const outerFrac = en ? moonFraction(now) : jieqiFraction(now);
   const outerActive = en ? moonIndex(now) : jieqiIndex(now);
-  const scFrac = dayFraction(now);
-  const scActive = Math.round(scFrac * 12) % 12;
+  const scActive = indexAt(now);
+
+  // 分段的環一律停在「當下這一格」的正中央，換格才轉。標籤本來就畫在格中央
+  // （下面那個 +0.5），所以角度也要算到格中央，否則會差半格。
+  const outerAngle = useMonotonicAngle((-(outerActive + 0.5) * 360) / outerCount, true);
+  const scAngle = useMonotonicAngle(-scActive * 30, true);
+  // 日照弧不是分段的環，是實際刻度：日出日落那兩點要對得準頂端的「現在」，
+  // 所以跟著分環一分鐘跳一次，不跟時辰環兩小時跳一次。
+  const sunAngle = useMonotonicAngle((-(hour * 60 + minute) / 1440) * 360, true);
 
   const sun = sunTimes(now, lat, lon);
 
@@ -182,7 +190,7 @@ export function Dial({ now, lat, lon, onClose }: Props) {
           </g>
 
           {/* 三環：節氣（中）／月名（英），一年一圈。標籤置於格中央，所以偏移半格 */}
-          <g style={spin(-outerFrac * 360)}>
+          <g style={spin(outerAngle)}>
             {Array.from({ length: outerCount }, (_, i) => (
               <g key={i} transform={`rotate(${((i + 0.5) * 360) / outerCount} ${C} ${C})`}>
                 <text
@@ -199,8 +207,8 @@ export function Dial({ now, lat, lon, onClose }: Props) {
             ))}
           </g>
 
-          {/* 四環：十二時辰／十二光相，一天一圈　五環：日照弧 */}
-          <g style={spin(-scFrac * 360)}>
+          {/* 四環：十二時辰／十二光相，兩小時跳一格 */}
+          <g style={spin(scAngle)}>
             {Array.from({ length: 12 }, (_, k) => (
               <g key={k} transform={`rotate(${k * 30} ${C} ${C})`}>
                 <text
@@ -223,7 +231,10 @@ export function Dial({ now, lat, lon, onClose }: Props) {
                 />
               </g>
             ))}
+          </g>
 
+          {/* 五環：日照弧 */}
+          <g style={spin(sunAngle)}>
             <circle class="nitearc" cx={C} cy={C} r="114" fill="none" stroke-width="3.5" />
             {sun.sunrise !== null && sun.sunset !== null && (
               <>

@@ -20,6 +20,35 @@ import * as ws from "../lib/workspace";
 /** 秒針之外的東西一秒更新一次就夠。時辰環一分鐘才動 0.25 度，看不出來。 */
 const TICK_MS = 1000;
 
+/*
+ * 換頁。
+ *
+ * 兩屏不是一份長文件捲上捲下，是疊起來的兩張牌：第二屏整張從底下插到前面，
+ * 第一屏往後退半步。捲動做不出「插到前面」，只能做「同一張紙滑過去」，
+ * 所以這裡自己收滾輪，不用瀏覽器的捲動。
+ *
+ * 一格滾輪不換頁。一格是「我在看」，兩格才是「我要走了」——
+ * 只認一格的話，手擦過滾輪就翻頁。
+ */
+const NOTCH = 100; // 一格滾輪大約一百像素
+const NEED = 2;
+const RESET_MS = 240; // 手停這麼久就重新算，慢慢刷不該一路累積成換頁
+const COOLDOWN_MS = 700; // 換頁後的冷卻，蓋掉觸控板的慣性尾巴
+
+function wheelPixels(e: WheelEvent): number {
+  if (e.deltaMode === 1) return e.deltaY * 33; // 以行為單位
+  if (e.deltaMode === 2) return e.deltaY * window.innerHeight; // 以頁為單位
+  return e.deltaY;
+}
+
+/** 這一屏自己還捲得動嗎。捲得動就先讓它捲，捲到底了才換頁。 */
+function canScroll(el: HTMLElement | null, dy: number): boolean {
+  if (!el) return false;
+  const max = el.scrollHeight - el.clientHeight;
+  if (max <= 1) return false;
+  return dy > 0 ? el.scrollTop < max - 1 : el.scrollTop > 1;
+}
+
 export function App() {
   const now = useSignal(new Date());
   const settings = useSignal<Settings>(DEFAULTS);
@@ -27,6 +56,7 @@ export function App() {
   const dialOpen = useSignal(false);
   const panelOpen = useSignal(false);
   const palOpen = useSignal(false);
+  const page = useSignal(0);
 
   // Ctrl K（Mac 是 Cmd K）。搜尋列裡也吃，因為那裡才是手停的地方。
   useEffect(() => {
@@ -34,6 +64,14 @@ export function App() {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         palOpen.value = true;
+      } else if (e.key === "PageDown") {
+        // 瀏覽器的捲動被關掉了，換頁的鍵盤路徑得自己補，
+        // 否則只用鍵盤的人到不了第二屏。
+        e.preventDefault();
+        page.value = 1;
+      } else if (e.key === "PageUp") {
+        e.preventDefault();
+        page.value = 0;
       }
     };
     document.addEventListener("keydown", onKey);
@@ -43,6 +81,40 @@ export function App() {
   useEffect(() => {
     const id = setInterval(() => (now.value = new Date()), TICK_MS);
     return () => clearInterval(id);
+  }, []);
+
+  // 滾輪換頁。彈窗開著時完全不收，那時滾輪屬於彈窗。
+  useEffect(() => {
+    let acc = 0;
+    let last = 0;
+    let until = 0;
+
+    const onWheel = (e: WheelEvent) => {
+      if (dialOpen.peek() || palOpen.peek() || panelOpen.peek()) return;
+      const dy = wheelPixels(e);
+      if (!dy) return;
+
+      const at = Date.now();
+      if (at < until) return;
+      if (at - last > RESET_MS || Math.sign(dy) !== Math.sign(acc)) acc = 0;
+      last = at;
+
+      if (canScroll(document.querySelector<HTMLElement>(".screen.on"), dy)) return;
+
+      e.preventDefault();
+      acc += dy;
+      if (Math.abs(acc) < NOTCH * NEED - 20) return;
+
+      const next = page.peek() + (acc > 0 ? 1 : -1);
+      acc = 0;
+      if (next < 0 || next > 1) return;
+      page.value = next;
+      until = at + COOLDOWN_MS;
+    };
+
+    // passive: false 才擋得掉預設捲動
+    window.addEventListener("wheel", onWheel, { passive: false });
+    return () => window.removeEventListener("wheel", onWheel);
   }, []);
 
   useEffect(() => {
@@ -145,8 +217,9 @@ export function App() {
       <div class="dim" />
       <div class="grain" />
 
-      <div class="app">
-        <section class="screen">
+      <div class="app" data-page={page.value}>
+        {/* 收起來的那一屏設 inert：看不到的東西不該還能 Tab 進去 */}
+        <section class={`screen${page.value === 0 ? " on" : ""}`} inert={page.value !== 0}>
           <header class="top">
           <button
             class="badge"
@@ -187,16 +260,18 @@ export function App() {
             class="cue"
             type="button"
             aria-label={t("scroll_down")}
-            onClick={() =>
-              document.getElementById("desk")?.scrollIntoView({ behavior: "smooth" })
-            }
+            onClick={() => (page.value = 1)}
           >
             <span />
           </button>
         </section>
 
         {/* 第二屏：工作區。語錄在最上面，底下是各個功能卡。 */}
-        <section class="screen desk" id="desk">
+        <section
+          class={`screen desk${page.value === 1 ? " on" : ""}`}
+          id="desk"
+          inert={page.value !== 1}
+        >
           {settings.value.cards.quote && <QuoteLine />}
           <Cards value={work.value} onChange={patchWork} show={settings.value.cards} />
           <footer class="bottom">{notice.value && <p class="notice">{notice.value}</p>}</footer>
