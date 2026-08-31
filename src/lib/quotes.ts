@@ -1,8 +1,8 @@
 /**
  * 語錄。內建，不連網。
  *
- * 一天一句，當天固定不變 —— 每次開新分頁換一句會變成吃角子老虎，
- * 人會一直開新分頁想再抽一次。同一句看一整天才有機會真的讀進去。
+ * 中英各二十四句，一個時辰一句的量。兩邊不是互譯 ——
+ * 中文走典籍，英文走它自己的傳統，跟外環（節氣／月名）同一個道理。
  */
 
 export interface Quote {
@@ -31,6 +31,10 @@ const ZH: Quote[] = [
   { text: "大巧若拙，大辯若訥。", by: "老子" },
   { text: "學而不思則罔，思而不學則殆。", by: "論語" },
   { text: "落紅不是無情物，化作春泥更護花。", by: "龔自珍" },
+  { text: "少年易老學難成，一寸光陰不可輕。", by: "朱熹" },
+  { text: "夫學須靜也，才須學也。", by: "諸葛亮" },
+  { text: "海納百川，有容乃大。", by: "林則徐" },
+  { text: "石可破也，而不可奪堅。", by: "呂氏春秋" },
 ];
 
 const EN: Quote[] = [
@@ -54,6 +58,10 @@ const EN: Quote[] = [
   { text: "To pay attention, this is our endless and proper work.", by: "Mary Oliver" },
   { text: "Amateurs sit and wait for inspiration; the rest of us just get up and go to work.", by: "Chuck Close" },
   { text: "Tell me, what is it you plan to do with your one wild and precious life?", by: "Mary Oliver" },
+  { text: "How we spend our days is, of course, how we spend our lives.", by: "Annie Dillard" },
+  { text: "Perfection is attained not when there is nothing more to add, but when there is nothing left to take away.", by: "Antoine de Saint-Exupéry" },
+  { text: "Beware the barrenness of a busy life.", by: "Socrates" },
+  { text: "The way to get started is to quit talking and begin doing.", by: "Walt Disney" },
 ];
 
 /**

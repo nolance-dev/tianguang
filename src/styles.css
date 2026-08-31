@@ -1731,16 +1731,17 @@ html::-webkit-scrollbar {
 }
 
 /*
- * 第二屏的內容整塊置中。
+ * 第二屏的內容：左右置中，上下靠上。
  *
- * 三列都是 auto、align-content 才有空間可以分 —— 留一個 1fr 在中間的話，
+ * 三列都是 auto，align-content 才有空間可以分 —— 留一個 1fr 在中間的話，
  * 那一列會把多出來的高度全部吃掉，align-content 等於沒寫。
  */
 .screen.desk {
   grid-template-rows: auto auto auto;
-  align-content: center;
+  align-content: start;
   justify-items: center;
   gap: clamp(1.2rem, 4vh, 3rem);
+  padding-top: clamp(2rem, 8vh, 5rem);
 }
 
 .screen.desk .quote {
