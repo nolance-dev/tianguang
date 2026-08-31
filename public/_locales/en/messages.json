@@ -469,5 +469,8 @@
   },
   "pal_empty_type": {
     "message": "Start typing. ↑↓ to choose, Enter to open, Esc to close."
+  },
+  "pal_devmode": {
+    "message": "This is the dev server, with no browser APIs. Load dist into Edge as an extension to search tabs, bookmarks and history."
   }
 }

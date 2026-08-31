@@ -505,5 +505,8 @@
   },
   "pal_empty_type": {
     "message": "打字开始找。↑↓ 选择，Enter 打开，Esc 关闭。"
+  },
+  "pal_devmode": {
+    "message": "这里是开发服务器，没有浏览器的 API。要用标签页、书签、历史这些来源，得把 dist 载入 Edge 当扩展运行。"
   }
 }

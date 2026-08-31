@@ -505,5 +505,8 @@
   },
   "pal_empty_type": {
     "message": "入力して検索。↑↓ で選択、Enter で開く、Esc で閉じる。"
+  },
+  "pal_devmode": {
+    "message": "ここは開発サーバーでブラウザー API がありません。タブ・ブックマーク・履歴を使うには dist を拡張機能として Edge に読み込んでください。"
   }
 }

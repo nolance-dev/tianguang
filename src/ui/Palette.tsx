@@ -37,6 +37,9 @@ export function Palette({ engineId, onClose }: Props) {
   const granted = useSignal<SourceId[]>([]);
   const cursor = useSignal(0);
   const input = useRef<HTMLInputElement>(null);
+  // 開發伺服器上根本沒有 chrome.* —— 按了不會有權限對話框，
+  // 給一顆按了沒反應的鈕比不給還糟，所以這裡要分開講。
+  const inExtension = typeof chrome !== "undefined" && !!chrome.permissions;
   const listRef = useRef<HTMLUListElement>(null);
 
   useLayoutEffect(() => input.current?.focus(), []);
@@ -131,7 +134,9 @@ export function Palette({ engineId, onClose }: Props) {
           <span class="kbd">Esc</span>
         </div>
 
-        {SOURCES.some((s) => !granted.value.includes(s)) && (
+        {!inExtension && <p class="pal-note">{t("pal_devmode")}</p>}
+
+        {inExtension && SOURCES.some((s) => !granted.value.includes(s)) && (
           <div class="pal-grants">
             <span>{t("pal_enable")}</span>
             {SOURCES.filter((s) => !granted.value.includes(s)).map((s) => (
@@ -140,8 +145,13 @@ export function Palette({ engineId, onClose }: Props) {
                 type="button"
                 onClick={async () => {
                   // 必須在使用者手勢裡呼叫，所以請求寫在 onClick
-                  const ok = await chrome.permissions.request(SOURCE_PERMISSIONS[s]);
-                  if (ok) await refreshGrants();
+                  try {
+                    if (await chrome.permissions.request(SOURCE_PERMISSIONS[s])) {
+                      await refreshGrants();
+                    }
+                  } catch {
+                    // 使用者取消或被政策擋住。維持原狀，其他來源照常。
+                  }
                 }}
               >
                 {t(`pal_src_${s}`)}
@@ -174,8 +184,10 @@ export function Palette({ engineId, onClose }: Props) {
           </ul>
         ) : (
           <p class="pal-empty">
-            {granted.value.length === 0
-              ? t("pal_empty_nogrant")
+            {!inExtension
+              ? t("pal_devmode")
+              : granted.value.length === 0
+                ? t("pal_empty_nogrant")
               : query.value
                 ? t("pal_empty_search")
                 : t("pal_empty_type")}

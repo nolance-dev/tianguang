@@ -122,6 +122,8 @@ export function App() {
     r.style.setProperty("--fg-2", p.fg2);
     r.style.setProperty("--glass", p.glass);
     r.style.setProperty("--glass-line", p.glassLine);
+    // 搜尋列不吃 backdrop-filter，需要一個自己站得住的半透明底
+    r.style.setProperty("--glass-solid", p.light ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.11)");
     r.style.setProperty("--grain", String(s.grain));
     r.style.setProperty("--dim", String(s.dim));
     // 模糊只對自訂圖有意義，而且只有真的要模糊時才掛濾鏡 ——

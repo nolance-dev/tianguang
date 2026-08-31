@@ -248,15 +248,17 @@ body::-webkit-scrollbar {
   gap: 0.8rem;
   padding: 0.75rem 1.3rem;
   border-radius: 99px;
-  background: var(--glass);
+  /*
+   * 這裡刻意不用 backdrop-filter。
+   *
+   * 背景層是 position: fixed 而頁面會捲，Chromium 對這個組合的毛玻璃
+   * 只重繪可視區的一部分，捲動時會在元件上留下一塊淺色長方形 ——
+   * 就是那個「跳動的格子」。will-change 和 isolation 都壓不住。
+   * 這顆藥丸本來就壓在柔和的漸層上，改用實心半透明看不出差別。
+   */
+  background: var(--glass-solid, rgba(255, 255, 255, 0.14));
   border: 1px solid var(--glass-line);
-  backdrop-filter: blur(14px) saturate(1.25);
-  -webkit-backdrop-filter: blur(14px) saturate(1.25);
   transition: border-color 0.2s, background 0.2s;
-  /* 背景層是 fixed，頁面會捲。玻璃層在捲動時只重繪一部分會留下淺色殘影，
-     提升成獨立合成層可以避掉。 */
-  will-change: backdrop-filter;
-  isolation: isolate;
 }
 
 .search:focus-within {
@@ -1586,6 +1588,12 @@ body::-webkit-scrollbar {
 html {
   scroll-snap-type: y proximity;
   scroll-behavior: smooth;
+  /* 捲軸其實長在 html 上，只藏 body 的沒有用 */
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1846,5 +1854,14 @@ html {
   text-align: center;
   font-size: 0.8rem;
   line-height: 1.8;
+  color: var(--fg-2);
+}
+
+.pal-note {
+  margin: 0;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--glass-line);
+  font-size: 0.74rem;
+  line-height: 1.7;
   color: var(--fg-2);
 }

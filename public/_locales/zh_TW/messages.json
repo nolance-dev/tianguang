@@ -505,5 +505,8 @@
   },
   "pal_empty_type": {
     "message": "打字開始找。↑↓ 選擇，Enter 開啟，Esc 關閉。"
+  },
+  "pal_devmode": {
+    "message": "這裡是開發伺服器，沒有瀏覽器的 API。要用分頁、書籤、歷史這些來源，得把 dist 載進 Edge 當擴充功能跑。"
   }
 }
