@@ -1,0 +1,197 @@
+{
+  "extensionName": {
+    "message": "天光"
+  },
+  "extensionDescription": {
+    "message": "十二辰刻と二十四節気を下敷きにした新しいタブ。背景は一日の光とともに移ろいます。時計、挨拶、検索、ToDo、フォトウォールを自由に配置。アカウント不要、サーバー不要、データはブラウザーの中だけに残ります。"
+  },
+  "sc_suffix": {
+    "message": "の刻"
+  },
+  "sc_0": {
+    "message": "子"
+  },
+  "sc_1": {
+    "message": "丑"
+  },
+  "sc_2": {
+    "message": "寅"
+  },
+  "sc_3": {
+    "message": "卯"
+  },
+  "sc_4": {
+    "message": "辰"
+  },
+  "sc_5": {
+    "message": "巳"
+  },
+  "sc_6": {
+    "message": "午"
+  },
+  "sc_7": {
+    "message": "未"
+  },
+  "sc_8": {
+    "message": "申"
+  },
+  "sc_9": {
+    "message": "酉"
+  },
+  "sc_10": {
+    "message": "戌"
+  },
+  "sc_11": {
+    "message": "亥"
+  },
+  "scalt_0": {
+    "message": "夜半"
+  },
+  "scalt_1": {
+    "message": "雞鳴"
+  },
+  "scalt_2": {
+    "message": "平旦"
+  },
+  "scalt_3": {
+    "message": "日出"
+  },
+  "scalt_4": {
+    "message": "食時"
+  },
+  "scalt_5": {
+    "message": "隅中"
+  },
+  "scalt_6": {
+    "message": "日中"
+  },
+  "scalt_7": {
+    "message": "日昳"
+  },
+  "scalt_8": {
+    "message": "哺時"
+  },
+  "scalt_9": {
+    "message": "日入"
+  },
+  "scalt_10": {
+    "message": "黃昏"
+  },
+  "scalt_11": {
+    "message": "人定"
+  },
+  "jq_0": {
+    "message": "春分"
+  },
+  "jq_1": {
+    "message": "清明"
+  },
+  "jq_2": {
+    "message": "穀雨"
+  },
+  "jq_3": {
+    "message": "立夏"
+  },
+  "jq_4": {
+    "message": "小満"
+  },
+  "jq_5": {
+    "message": "芒種"
+  },
+  "jq_6": {
+    "message": "夏至"
+  },
+  "jq_7": {
+    "message": "小暑"
+  },
+  "jq_8": {
+    "message": "大暑"
+  },
+  "jq_9": {
+    "message": "立秋"
+  },
+  "jq_10": {
+    "message": "処暑"
+  },
+  "jq_11": {
+    "message": "白露"
+  },
+  "jq_12": {
+    "message": "秋分"
+  },
+  "jq_13": {
+    "message": "寒露"
+  },
+  "jq_14": {
+    "message": "霜降"
+  },
+  "jq_15": {
+    "message": "立冬"
+  },
+  "jq_16": {
+    "message": "小雪"
+  },
+  "jq_17": {
+    "message": "大雪"
+  },
+  "jq_18": {
+    "message": "冬至"
+  },
+  "jq_19": {
+    "message": "小寒"
+  },
+  "jq_20": {
+    "message": "大寒"
+  },
+  "jq_21": {
+    "message": "立春"
+  },
+  "jq_22": {
+    "message": "雨水"
+  },
+  "jq_23": {
+    "message": "啓蟄"
+  },
+  "greet_dawn": {
+    "message": "おはよう、$1"
+  },
+  "greet_day": {
+    "message": "こんにちは、$1"
+  },
+  "greet_dusk": {
+    "message": "こんばんは、$1"
+  },
+  "greet_night": {
+    "message": "夜更かしですね、$1"
+  },
+  "greet_dawn_anon": {
+    "message": "おはよう"
+  },
+  "greet_day_anon": {
+    "message": "こんにちは"
+  },
+  "greet_dusk_anon": {
+    "message": "こんばんは"
+  },
+  "greet_night_anon": {
+    "message": "夜更かしですね"
+  },
+  "search_placeholder": {
+    "message": "ウェブを、あるいはブラウザーの中を検索"
+  },
+  "search_label": {
+    "message": "検索"
+  },
+  "dial_open": {
+    "message": "辰刻盤を開く"
+  },
+  "dial_title": {
+    "message": "辰刻盤"
+  },
+  "dial_close": {
+    "message": "辰刻盤を閉じる"
+  },
+  "save_local_fallback": {
+    "message": "設定を同期できないため、このパソコンにのみ保存しました。ほかの機能はそのまま使えます。"
+  }
+}

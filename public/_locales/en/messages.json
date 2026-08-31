@@ -1,0 +1,65 @@
+{
+  "extensionName": { "message": "Aubade" },
+  "extensionDescription": {
+    "message": "A new tab page built on the twelve phases of the day. The background moves with the light, from nautical dawn through zenith to nightfall. Clock, greeting, search, to-dos and a photo wall you can drag anywhere. No account, no server, everything stays in your own browser."
+  },
+
+  "sc_suffix": { "message": "" },
+  "sc_0": { "message": "Small Hours" },
+  "sc_1": { "message": "Deep Night" },
+  "sc_2": { "message": "Nautical Dawn" },
+  "sc_3": { "message": "First Light" },
+  "sc_4": { "message": "Morning Watch" },
+  "sc_5": { "message": "Forenoon" },
+  "sc_6": { "message": "Zenith" },
+  "sc_7": { "message": "Afternoon Watch" },
+  "sc_8": { "message": "Long Light" },
+  "sc_9": { "message": "Golden Hour" },
+  "sc_10": { "message": "Blue Hour" },
+  "sc_11": { "message": "Nightfall" },
+
+  "scalt_0": { "message": "23 – 01" },
+  "scalt_1": { "message": "01 – 03" },
+  "scalt_2": { "message": "03 – 05" },
+  "scalt_3": { "message": "05 – 07" },
+  "scalt_4": { "message": "07 – 09" },
+  "scalt_5": { "message": "09 – 11" },
+  "scalt_6": { "message": "11 – 13" },
+  "scalt_7": { "message": "13 – 15" },
+  "scalt_8": { "message": "15 – 17" },
+  "scalt_9": { "message": "17 – 19" },
+  "scalt_10": { "message": "19 – 21" },
+  "scalt_11": { "message": "21 – 23" },
+
+  "moon_0": { "message": "Wolf Moon" },
+  "moon_1": { "message": "Snow Moon" },
+  "moon_2": { "message": "Worm Moon" },
+  "moon_3": { "message": "Pink Moon" },
+  "moon_4": { "message": "Flower Moon" },
+  "moon_5": { "message": "Strawberry Moon" },
+  "moon_6": { "message": "Buck Moon" },
+  "moon_7": { "message": "Sturgeon Moon" },
+  "moon_8": { "message": "Harvest Moon" },
+  "moon_9": { "message": "Hunter's Moon" },
+  "moon_10": { "message": "Beaver Moon" },
+  "moon_11": { "message": "Cold Moon" },
+
+  "greet_dawn": { "message": "Good morning, $1" },
+  "greet_day": { "message": "Good afternoon, $1" },
+  "greet_dusk": { "message": "Good evening, $1" },
+  "greet_night": { "message": "Still up, $1" },
+  "greet_dawn_anon": { "message": "Good morning" },
+  "greet_day_anon": { "message": "Good afternoon" },
+  "greet_dusk_anon": { "message": "Good evening" },
+  "greet_night_anon": { "message": "Still up" },
+
+  "search_placeholder": { "message": "Search the web, or your browser" },
+  "search_label": { "message": "Search" },
+  "dial_open": { "message": "Open the dial" },
+  "dial_title": { "message": "The dial" },
+  "dial_close": { "message": "Close the dial" },
+
+  "save_local_fallback": {
+    "message": "Settings could not sync, so they are saved on this computer only. Everything else works as usual."
+  }
+}

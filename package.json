@@ -1,0 +1,25 @@
+{
+  "name": "tianguang",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Tianguang / Aubade - a new tab page built on the twelve shichen",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "icons": "node scripts/make-icons.mjs",
+    "test": "vitest run",
+    "zip": "cd dist && powershell Compress-Archive -Path * -DestinationPath ../tianguang.zip -Force"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.2.7",
+    "jsdom": "^29.1.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
+  },
+  "dependencies": {
+    "@preact/signals": "^2.11.1",
+    "preact": "^10.29.8"
+  }
+}
