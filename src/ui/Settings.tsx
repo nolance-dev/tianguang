@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { t } from "../lib/i18n";
 import { ENGINES } from "../lib/search";
 import { MAX_LINKS, suggestFromTopSites } from "../lib/links";
-import { geocode, hasAccess, requestAccess, type Place } from "../lib/weather";
+import { geocode, hasAccess, hasCjk, requestAccess, type Place } from "../lib/weather";
 import { locale } from "../lib/i18n";
 import type { Settings as S } from "../lib/settings";
 import { addImage, deleteImage, listImages, toUrl, type StoredImage } from "../lib/images";
@@ -382,7 +382,11 @@ function WeatherSettings({ value, onChange }: { value: S; onChange: (p: Partial<
     try {
       const found = await geocode(name, locale());
       setPlaces(found);
-      if (found.length === 0) setNote(t("s_city_none"));
+      if (found.length === 0) {
+        // 對照表沒收到的中文地名一定查不到 —— 索引本身只有英文。
+        // 給一句能照做的提示，不要丟一個空清單讓人以為是壞了。
+        setNote(hasCjk(name) ? t("s_city_cjk_hint") : t("s_city_none"));
+      }
     } catch {
       setNote(t("s_city_none"));
     } finally {

@@ -388,5 +388,8 @@
   },
   "s_weather_denied": {
     "message": "接続が許可されなかったため、天気はオフのままです。"
+  },
+  "s_city_cjk_hint": {
+    "message": "地名の索引は英字のみです。ローマ字表記でお試しください（例：Tokyo、Taipei）。"
   }
 }

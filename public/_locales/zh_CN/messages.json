@@ -388,5 +388,8 @@
   },
   "s_weather_denied": {
     "message": "没有取得连接权限，天气没有开启。"
+  },
+  "s_city_cjk_hint": {
+    "message": "这个地名的索引只收英文。试试罗马拼音，例如 Taipei、Tokyo。"
   }
 }

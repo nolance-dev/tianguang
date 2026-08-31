@@ -1,5 +1,5 @@
 import { useSignal } from "@preact/signals";
-import { useRef } from "preact/hooks";
+import { useLayoutEffect, useRef } from "preact/hooks";
 import { t } from "../lib/i18n";
 import { faviconUrl, initial, makeLink, MAX_LINKS, reorder, type Link } from "../lib/links";
 
@@ -109,6 +109,12 @@ function AddForm({ onAdd, onCancel }: { onAdd: (l: Link) => void; onCancel: () =
   const bad = useSignal(false);
   const first = useRef<HTMLInputElement>(null);
 
+  // 只在表單掛上時聚焦一次。
+  // 原本寫在 ref callback 裡 —— 那個 callback 每次 render 都會跑，而整個畫面
+  // 每秒重繪一次（時鐘在走），所以游標每秒被搶回網址欄，名稱根本打不完。
+  // 它連帶會搶走設定面板裡正在輸入的欄位，因為 focus() 是全域的。
+  useLayoutEffect(() => first.current?.focus(), []);
+
   return (
     <form
       class="tile addform"
@@ -124,10 +130,7 @@ function AddForm({ onAdd, onCancel }: { onAdd: (l: Link) => void; onCancel: () =
       }}
     >
       <input
-        ref={(el) => {
-          first.current = el;
-          el?.focus();
-        }}
+        ref={first}
         type="text"
         class={bad.value ? "bad" : undefined}
         value={url.value}

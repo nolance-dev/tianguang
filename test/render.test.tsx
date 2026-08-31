@@ -309,3 +309,28 @@ describe("快速連結與天氣", () => {
     spy.mockRestore();
   });
 });
+
+describe("焦點不該被搶走", () => {
+  it("新增連結表單只在掛上時聚焦一次，時鐘每秒重繪不會把游標拉回網址欄", async () => {
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector(".links.empty")).not.toBeNull());
+    (el.querySelector(".tile.add") as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(el.querySelector(".addform")).not.toBeNull());
+
+    const [urlField, titleField] = Array.from(
+      el.querySelectorAll<HTMLInputElement>(".addform input"),
+    );
+    // 掛上時焦點在第一欄
+    expect(document.activeElement).toBe(urlField);
+
+    // 使用者移到名稱欄開始打字
+    titleField!.focus();
+    expect(document.activeElement).toBe(titleField);
+
+    // 時鐘走三秒，畫面重繪三次
+    await vi.advanceTimersByTimeAsync(3200);
+    await vi.waitFor(() => expect(el.querySelector(".clock")?.textContent).toContain("11:00"));
+
+    expect(document.activeElement, "重繪之後焦點還要留在名稱欄").toBe(titleField);
+  });
+});

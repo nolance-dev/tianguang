@@ -6,7 +6,10 @@ import {
   fetchWeather,
   forecastUrl,
   formatTemp,
+  geocode,
+  hasCjk,
   parseForecast,
+  resolveCityQuery,
 } from "../src/lib/weather";
 
 describe("快速連結", () => {
@@ -137,5 +140,44 @@ describe("天氣降級", () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("offline"));
     expect(await fetchWeather(25, 121, 0)).toBeNull();
     fetchSpy.mockRestore();
+  });
+});
+
+describe("中文城市名", () => {
+  it("對照表把中文換成索引查得到的羅馬拼音", () => {
+    expect(resolveCityQuery("台北")).toBe("Taipei");
+    expect(resolveCityQuery("臺北")).toBe("Taipei");
+    expect(resolveCityQuery("高雄")).toBe("Kaohsiung");
+    expect(resolveCityQuery("東京")).toBe("Tokyo");
+  });
+
+  it("帶後綴也要對得到 —— 使用者會打「台北市」", () => {
+    expect(resolveCityQuery("台北市")).toBe("Taipei");
+    expect(resolveCityQuery("新北市")).toBe("New Taipei");
+    // 長的鍵優先，不能被「台北」搶走
+    expect(resolveCityQuery("台中市")).toBe("Taichung");
+  });
+
+  it("表外的輸入原樣送出", () => {
+    expect(resolveCityQuery("Taipei")).toBe("Taipei");
+    expect(resolveCityQuery("Reykjavik")).toBe("Reykjavik");
+    expect(resolveCityQuery("  Kyoto  ")).toBe("Kyoto");
+  });
+
+  it("認得出中文輸入，才知道要不要給改用英文的提示", () => {
+    expect(hasCjk("烏魯木齊")).toBe(true);
+    expect(hasCjk("Taipei")).toBe(false);
+    expect(hasCjk("台北 101")).toBe(true);
+  });
+
+  it("送出的查詢字串已經換成拼音", async () => {
+    const spy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(JSON.stringify({ results: [] })));
+    await geocode("台北", "zh-TW");
+    expect(decodeURIComponent(String(spy.mock.calls[0]![0]))).toContain("name=Taipei");
+    // language 只取前綴，zh-TW 要變成 zh
+    expect(String(spy.mock.calls[0]![0])).toContain("language=zh");
+    spy.mockRestore();
   });
 });

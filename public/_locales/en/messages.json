@@ -352,5 +352,8 @@
   },
   "s_weather_denied": {
     "message": "Access was not granted, so weather stayed off."
+  },
+  "s_city_cjk_hint": {
+    "message": "The place index is Latin-only. Try the romanised name, for example Taipei or Tokyo."
   }
 }

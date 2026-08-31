@@ -233,7 +233,12 @@ function SearchBar({ engineId }: { engineId: string }) {
 
   // 覆寫新分頁時網址列不會自動聚焦到這裡，所以自己搶。
   // 使用者若想用網址列，一個 Esc 或直接點上去就走掉了。
-  useEffect(() => input.current?.focus(), []);
+  useEffect(() => {
+    // 這是 passive effect，執行時機晚於版面掛載。若使用者已經點進別的欄位
+    // （例如剛開的新增連結表單），硬搶會把游標拉走 —— 有人拿著焦點就不要搶。
+    const active = document.activeElement;
+    if (!active || active === document.body) input.current?.focus();
+  }, []);
 
   const hit = useComputed(() => resolve(value.value, engineId)?.engine ?? null);
 

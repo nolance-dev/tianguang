@@ -120,8 +120,56 @@ export function parseForecast(raw: RawForecast, at = Date.now()): Weather {
   };
 }
 
+/**
+ * Open-Meteo 的地名索引只吃羅馬拼音 —— 送「台北」回零筆，送「Taipei」才有，
+ * 但帶 language=zh 時顯示名稱會回「台北市」。也就是說它支援中文顯示，
+ * 不支援中文搜尋。
+ *
+ * 對一個以繁中為母語的產品來說，「打台北找不到」等於這個功能是壞的。
+ * 所以內建一張常用城市對照表，涵蓋台灣各縣市與鄰近主要城市；
+ * 表外的中文輸入會拿到一句提示，請使用者改打英文，而不是一個空清單。
+ */
+export const CITY_ALIASES: Record<string, string> = {
+  台北: "Taipei", 臺北: "Taipei", 新北: "New Taipei", 桃園: "Taoyuan",
+  台中: "Taichung", 臺中: "Taichung", 台南: "Tainan", 臺南: "Tainan",
+  高雄: "Kaohsiung", 基隆: "Keelung", 新竹: "Hsinchu", 嘉義: "Chiayi",
+  苗栗: "Miaoli", 彰化: "Changhua", 南投: "Nantou", 雲林: "Douliu",
+  屏東: "Pingtung", 宜蘭: "Yilan", 花蓮: "Hualien", 台東: "Taitung",
+  臺東: "Taitung", 澎湖: "Magong", 金門: "Kinmen", 馬祖: "Nangan",
+  東京: "Tokyo", 大阪: "Osaka", 京都: "Kyoto", 札幌: "Sapporo",
+  福岡: "Fukuoka", 名古屋: "Nagoya", 橫濱: "Yokohama", 横浜: "Yokohama",
+  北京: "Beijing", 上海: "Shanghai", 廣州: "Guangzhou", 广州: "Guangzhou",
+  深圳: "Shenzhen", 香港: "Hong Kong", 澳門: "Macau", 澳门: "Macau",
+  成都: "Chengdu", 杭州: "Hangzhou", 南京: "Nanjing", 西安: "Xi'an",
+  首爾: "Seoul", 首尔: "Seoul", 釜山: "Busan",
+  新加坡: "Singapore", 曼谷: "Bangkok", 吉隆坡: "Kuala Lumpur",
+  河內: "Hanoi", 胡志明市: "Ho Chi Minh City", 馬尼拉: "Manila",
+  紐約: "New York", 倫敦: "London", 巴黎: "Paris", 柏林: "Berlin",
+  慕尼黑: "Munich", 羅馬: "Rome", 馬德里: "Madrid", 巴塞隆納: "Barcelona",
+  阿姆斯特丹: "Amsterdam", 洛杉磯: "Los Angeles", 舊金山: "San Francisco",
+  西雅圖: "Seattle", 溫哥華: "Vancouver", 多倫多: "Toronto",
+  雪梨: "Sydney", 墨爾本: "Melbourne", 奧克蘭: "Auckland",
+};
+
+const CJK = /[\u3400-\u9fff\uf900-\ufaff]/u;
+
+export function hasCjk(s: string): boolean {
+  return CJK.test(s);
+}
+
+/** 把中文城市名換成索引查得到的羅馬拼音。表裡沒有就原樣送出。 */
+export function resolveCityQuery(input: string): string {
+  const q = input.trim();
+  // 「台北市」「台北車站」這種也要能對到，所以用前綴比對，長的優先
+  const keys = Object.keys(CITY_ALIASES).sort((a, b) => b.length - a.length);
+  for (const key of keys) {
+    if (q === key || q.startsWith(key)) return CITY_ALIASES[key]!;
+  }
+  return q;
+}
+
 export async function geocode(name: string, language: string): Promise<Place[]> {
-  const res = await fetch(geocodeUrl(name, language));
+  const res = await fetch(geocodeUrl(resolveCityQuery(name), language));
   if (!res.ok) throw new Error(`geocode ${res.status}`);
   const json = (await res.json()) as {
     results?: Array<{
