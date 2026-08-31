@@ -233,6 +233,18 @@
   "s_seconds": {
     "message": "顯示秒數"
   },
+  "s_layout": {
+    "message": "版面"
+  },
+  "s_layout_stage": {
+    "message": "兩張牌"
+  },
+  "s_layout_flow": {
+    "message": "一條直的"
+  },
+  "s_layout_hint": {
+    "message": "兩張牌：時間一屏、工作區一屏，滾輪兩格換頁。一條直的：全部串成一列，往下捲時搜尋列會黏在最上面，時間縮到它左邊。"
+  },
   "s_background": {
     "message": "背景"
   },

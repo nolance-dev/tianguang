@@ -1311,10 +1311,18 @@ body::-webkit-scrollbar {
   gap: 0.55rem;
   padding: 0.8rem 0.9rem;
   border-radius: 14px;
-  background: var(--glass);
+  /*
+   * 卡片要有自己的底，不能只靠毛玻璃。
+   *
+   * backdrop-filter 拿掉了：第二屏整張會位移，濾鏡在每一格都得重算一次
+   * 底下的模糊，而背景層是 fixed —— 就是搜尋列那個「跳動的格子」的成因。
+   * 而且疊了兩層半透明之後，卡片裡的字本來就糊。--card 是實心一點的底，
+   * 亮底暗底各一個值，由 App 下到 :root。
+   */
+  background: var(--card, var(--glass));
   border: 1px solid var(--glass-line);
-  backdrop-filter: blur(14px) saturate(1.2);
-  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  /* 卡片跟它底下那一屏的底色很接近，一道淺影才分得開 */
+  box-shadow: 0 2px 12px -8px rgba(0, 0, 0, 0.55);
   min-height: 7.5rem;
 }
 
@@ -1646,15 +1654,167 @@ html::-webkit-scrollbar {
   border-radius: 0;
 }
 
-/* 前一屏不是消失，是退到後面去 */
+/*
+ * 前一屏退場。
+ *
+ * 一開始留了 0.22 的透明度想做「退到後面」的層次，結果是大時間和快速連結
+ * 從第二屏的卡片底下透出來，字疊字 —— 讀不到的層次不是層次，是雜訊。
+ * 現在退場就退乾淨：位移與縮放留著（那是動的部分），透明度歸零，
+ * 動畫走完再 visibility: hidden，連次像素的殘影都不留。
+ */
 .app[data-page="1"] .screen:not(.desk) {
   transform: translateY(-6%) scale(0.94);
-  opacity: 0.22;
-  filter: saturate(0.75);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    transform 0.72s cubic-bezier(0.22, 1, 0.28, 1),
+    opacity 0.42s ease,
+    visibility 0s linear 0.72s;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .screen {
+    transition-duration: 0.01ms;
+  }
+}
+
+/* ---------- 一條直的 ---------- */
+
+/*
+ * 另一種用法：不是兩張牌，是一列。時間在最上面，往下捲時搜尋列黏在頂端、
+ * 大時間縮進它左邊，接著名言、快速存取、工作區。
+ *
+ * 這個版面用瀏覽器自己的捲動 —— 有 sticky 就夠了，不必自己收滾輪，
+ * 鍵盤的上下鍵、空白鍵、Home/End 也全部照舊能用。
+ */
+:root[data-layout="flow"],
+:root[data-layout="flow"] body {
+  overflow: auto;
+}
+
+.app.flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
+  padding: clamp(1.2rem, 3vw, 2.4rem) clamp(1.2rem, 3vw, 2.4rem) clamp(3rem, 10vh, 7rem);
+}
+
+.app.flow .top {
+  width: 100%;
+}
+
+.app.flow .hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.4rem, 1vw, 0.9rem);
+  padding: clamp(1.5rem, 7vh, 4.5rem) 0 clamp(0.6rem, 2vh, 1.4rem);
+  transition:
+    opacity 0.35s ease,
+    transform 0.45s cubic-bezier(0.22, 1, 0.28, 1);
+}
+
+/* 黏住之後大時間淡掉 —— 時間沒有消失，它在下面那一列裡 */
+.app.flow[data-tight="1"] .hero {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.97);
+}
+
+.app.flow .bar {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  width: min(44rem, 100%);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0;
+}
+
+/*
+ * 黏住的那一列底下要有東西擋，否則名言和連結會從搜尋列後面穿過去。
+ * 拉到 -50vw 是為了整條到邊，下緣用漸層收掉，才不會是一條硬邊的橫幅。
+ */
+.app.flow .bar::before {
+  content: "";
+  position: absolute;
+  left: -50vw;
+  right: -50vw;
+  top: -1.4rem;
+  bottom: -0.7rem;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(var(--veil) 64%, transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.app.flow[data-tight="1"] .bar::before {
+  opacity: 1;
+}
+
+.app.flow .bar .search {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  margin-top: 0;
+}
+
+/* 縮進搜尋列左邊的那顆時間。收起來時寬度為零，撐開才長出來 */
+.clock.mini {
+  font-size: clamp(1.05rem, 2vw, 1.4rem);
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 0;
+  opacity: 0;
+  transition:
+    max-width 0.42s cubic-bezier(0.22, 1, 0.28, 1),
+    opacity 0.3s ease,
+    margin 0.42s cubic-bezier(0.22, 1, 0.28, 1);
+}
+
+.app.flow[data-tight="1"] .clock.mini {
+  max-width: 6rem;
+  opacity: 1;
+  margin-right: 0.35rem;
+}
+
+.app.flow .stream {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(1.2rem, 4vh, 2.8rem);
+  padding-top: clamp(1rem, 3vh, 2rem);
+}
+
+.app.flow .stream .quote,
+.app.flow .stream .links,
+.app.flow .stream .cards {
+  margin-top: 0;
+}
+
+.app.flow .stream .quote {
+  max-width: min(38rem, 88%);
+}
+
+.app.flow .stream .links {
+  max-width: min(52rem, 92%);
+}
+
+.app.flow .stream .cards {
+  width: min(64rem, 96%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app.flow .hero,
+  .clock.mini,
+  .app.flow .bar::before {
     transition-duration: 0.01ms;
   }
 }

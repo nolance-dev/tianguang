@@ -57,6 +57,8 @@ export function App() {
   const panelOpen = useSignal(false);
   const palOpen = useSignal(false);
   const page = useSignal(0);
+  /** 一條直的版面裡，捲過去之後搜尋列黏在頂端、大時間縮進列裡 */
+  const tight = useSignal(false);
 
   // Ctrl K（Mac 是 Cmd K）。搜尋列裡也吃，因為那裡才是手停的地方。
   useEffect(() => {
@@ -64,12 +66,12 @@ export function App() {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         palOpen.value = true;
-      } else if (e.key === "PageDown") {
+      } else if (e.key === "PageDown" && settings.peek().layout === "stage") {
         // 瀏覽器的捲動被關掉了，換頁的鍵盤路徑得自己補，
         // 否則只用鍵盤的人到不了第二屏。
         e.preventDefault();
         page.value = 1;
-      } else if (e.key === "PageUp") {
+      } else if (e.key === "PageUp" && settings.peek().layout === "stage") {
         e.preventDefault();
         page.value = 0;
       }
@@ -83,6 +85,14 @@ export function App() {
     return () => clearInterval(id);
   }, []);
 
+  // 一條直的版面：捲過去之後把搜尋列釘在頂端。門檻放在標題區的高度上，
+  // 太小會在微捲時抖動。
+  useEffect(() => {
+    const onScroll = () => (tight.value = window.scrollY > 72);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   // 滾輪換頁。彈窗開著時完全不收，那時滾輪屬於彈窗。
   useEffect(() => {
     let acc = 0;
@@ -90,6 +100,8 @@ export function App() {
     let until = 0;
 
     const onWheel = (e: WheelEvent) => {
+      // 一條直的版面用瀏覽器自己的捲動，這裡完全不插手
+      if (settings.peek().layout === "flow") return;
       if (dialOpen.peek() || palOpen.peek() || panelOpen.peek()) return;
       const dy = wheelPixels(e);
       if (!dy) return;
@@ -196,6 +208,10 @@ export function App() {
     r.style.setProperty("--glass-line", p.glassLine);
     // 搜尋列不吃 backdrop-filter，需要一個自己站得住的半透明底
     r.style.setProperty("--glass-solid", p.light ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.11)");
+    // 卡片與黏住的搜尋列都得自己站得住：底下有東西在動，不能只是一層半透明。
+    // 暗底用比背景更暗的底做深度，亮底用白 —— 反過來會把字吃掉。
+    r.style.setProperty("--card", p.light ? "rgba(255,255,255,.70)" : "rgba(13,17,27,.50)");
+    r.style.setProperty("--veil", p.light ? "rgba(250,249,246,.90)" : "rgba(8,11,18,.86)");
     r.style.setProperty("--grain", String(s.grain));
     r.style.setProperty("--dim", String(s.dim));
     // 模糊只對自訂圖有意義，而且只有真的要模糊時才掛濾鏡 ——
@@ -208,7 +224,58 @@ export function App() {
     r.style.setProperty("--tint", tinted ? meshCss(colorsAt(decimalHour(now.value))) : "none");
     r.style.setProperty("--tint-opacity", tinted ? "0.34" : "0");
     r.dataset.sc = String(scIndex.value);
+    // 版面決定文件本身捲不捲，那條規則寫在 CSS 裡，靠這個屬性切
+    r.dataset.layout = s.layout;
   });
+
+  const cfg = settings.value;
+  const flow = cfg.layout === "flow";
+
+  // 兩個版面用的是同一批元件，差別只在排法。先把件備好，下面兩條路各自組裝，
+  // 免得同一段 JSX 抄兩遍、改一邊忘一邊。
+  const topBar = (
+    <header class="top">
+      <button
+        class="badge"
+        type="button"
+        aria-label={t("dial_open")}
+        onClick={() => (dialOpen.value = true)}
+      >
+        <Ring index={scIndex.value} fraction={dayFraction(now.value)} size={48} />
+        <span class="t">
+          <b>
+            {shichenName(scIndex.value)}
+            {t("sc_suffix")}
+          </b>
+          <span>{shichenAlt(scIndex.value)}</span>
+        </span>
+      </button>
+
+      {cfg.weatherOn && (
+        <Weather
+          lat={cfg.lat}
+          lon={cfg.lon}
+          place={cfg.placeName || t("s_city")}
+          unit={cfg.unit}
+        />
+      )}
+    </header>
+  );
+
+  const hero = (
+    <>
+      <Greeting now={now.value} name={cfg.name} />
+      <Clock now={now.value} settings={cfg} onOpen={() => (dialOpen.value = true)} />
+      <DateLine now={now.value} />
+    </>
+  );
+  const search = <SearchBar engineId={cfg.searchEngine} />;
+  const links = <Links links={cfg.links} onChange={(l) => patch({ links: l })} />;
+  const quote = cfg.cards.quote ? <QuoteLine /> : null;
+  const cards = <Cards value={work.value} onChange={patchWork} show={cfg.cards} />;
+  const notices = (
+    <footer class="bottom">{notice.value && <p class="notice">{notice.value}</p>}</footer>
+  );
 
   return (
     <>
@@ -217,66 +284,62 @@ export function App() {
       <div class="dim" />
       <div class="grain" />
 
-      <div class="app" data-page={page.value}>
-        {/* 收起來的那一屏設 inert：看不到的東西不該還能 Tab 進去 */}
-        <section class={`screen${page.value === 0 ? " on" : ""}`} inert={page.value !== 0}>
-          <header class="top">
-          <button
-            class="badge"
-            type="button"
-            aria-label={t("dial_open")}
-            onClick={() => (dialOpen.value = true)}
+      {flow ? (
+        <div class="app flow" data-tight={tight.value ? "1" : "0"}>
+          {topBar}
+          <div class="hero">{hero}</div>
+
+          {/*
+            這一列會黏在頂端。黏住之後左邊那個小時間才長出來，同時上面的大時間
+            淡掉 —— 讀起來是「時間縮進了搜尋列」，不是憑空多一個時鐘。
+          */}
+          <div class="bar">
+            <Clock now={now.value} settings={cfg} mini onOpen={() => (dialOpen.value = true)} />
+            {search}
+          </div>
+
+          <div class="stream">
+            {quote}
+            {links}
+            {cards}
+            {notices}
+          </div>
+        </div>
+      ) : (
+        <div class="app" data-page={page.value}>
+          {/* 收起來的那一屏設 inert：看不到的東西不該還能 Tab 進去 */}
+          <section class={`screen${page.value === 0 ? " on" : ""}`} inert={page.value !== 0}>
+            {topBar}
+
+            <main class="core">
+              {hero}
+              {search}
+              {links}
+            </main>
+
+            {/* 往下還有一屏。不給提示的話沒人知道要捲。 */}
+            <button
+              class="cue"
+              type="button"
+              aria-label={t("scroll_down")}
+              onClick={() => (page.value = 1)}
+            >
+              <span />
+            </button>
+          </section>
+
+          {/* 第二屏：工作區。語錄在最上面，底下是各個功能卡。 */}
+          <section
+            class={`screen desk${page.value === 1 ? " on" : ""}`}
+            id="desk"
+            inert={page.value !== 1}
           >
-            <Ring index={scIndex.value} fraction={dayFraction(now.value)} size={48} />
-            <span class="t">
-              <b>
-                {shichenName(scIndex.value)}
-                {t("sc_suffix")}
-              </b>
-              <span>{shichenAlt(scIndex.value)}</span>
-            </span>
-          </button>
-
-            {settings.value.weatherOn && (
-              <Weather
-                lat={settings.value.lat}
-                lon={settings.value.lon}
-                place={settings.value.placeName || t("s_city")}
-                unit={settings.value.unit}
-              />
-            )}
-          </header>
-
-          <main class="core">
-          <Greeting now={now.value} name={settings.value.name} />
-          <Clock now={now.value} settings={settings.value} onOpen={() => (dialOpen.value = true)} />
-          <DateLine now={now.value} />
-          <SearchBar engineId={settings.value.searchEngine} />
-            <Links links={settings.value.links} onChange={(links) => patch({ links })} />
-          </main>
-
-          {/* 往下還有一屏。不給提示的話沒人知道要捲。 */}
-          <button
-            class="cue"
-            type="button"
-            aria-label={t("scroll_down")}
-            onClick={() => (page.value = 1)}
-          >
-            <span />
-          </button>
-        </section>
-
-        {/* 第二屏：工作區。語錄在最上面，底下是各個功能卡。 */}
-        <section
-          class={`screen desk${page.value === 1 ? " on" : ""}`}
-          id="desk"
-          inert={page.value !== 1}
-        >
-          {settings.value.cards.quote && <QuoteLine />}
-          <Cards value={work.value} onChange={patchWork} show={settings.value.cards} />
-          <footer class="bottom">{notice.value && <p class="notice">{notice.value}</p>}</footer>
-        </section>
-      </div>
+            {quote}
+            {cards}
+            {notices}
+          </section>
+        </div>
+      )}
 
       {/* 釘在右下角。放在版面流裡的話會被中間那一列推著跑，位置飄忽不定。 */}
       <button
@@ -325,24 +388,27 @@ function Clock({
   now,
   settings,
   onOpen,
+  mini,
 }: {
   now: Date;
   settings: Settings;
   onOpen: () => void;
+  /** 縮進搜尋列左邊的那一顆。同一個時鐘，只是小一號、不帶秒 */
+  mini?: boolean;
 }) {
   const h = now.getHours();
   const shown = settings.clock24 ? h : h % 12 === 0 ? 12 : h % 12;
   const pad = (n: number) => String(n).padStart(2, "0");
   return (
     <button
-      class="clock"
+      class={mini ? "clock mini" : "clock"}
       type="button"
       aria-haspopup="dialog"
       aria-label={t("dial_open")}
       onClick={onOpen}
     >
       {settings.clock24 ? pad(shown) : shown}:{pad(now.getMinutes())}
-      {settings.showSeconds && <span class="sec">{pad(now.getSeconds())}</span>}
+      {settings.showSeconds && !mini && <span class="sec">{pad(now.getSeconds())}</span>}
     </button>
   );
 }

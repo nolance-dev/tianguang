@@ -20,12 +20,25 @@ export const SCHEMA_VERSION = 1;
 
 export type BackgroundSource = "mesh" | "solid" | "image";
 
+/**
+ * 版面。
+ *
+ * stage：兩張牌。第一屏是「現在幾點、我要去哪」，第二屏整張插到前面來。
+ * flow：一條直的。時間在最上面，往下捲時搜尋列黏在頂端、時間縮小到它左邊，
+ *       接著是名言、快速存取、工作區卡片。
+ *
+ * 兩者不是同一個版面的兩種密度，是兩種用法：stage 給「開分頁看一眼就走」，
+ * flow 給「開分頁當工作台」。所以不做自動判斷，由使用者選。
+ */
+export type LayoutMode = "stage" | "flow";
+
 export interface Settings {
   schemaVersion: number;
   name: string;
   clock24: boolean;
   showSeconds: boolean;
   searchEngine: string;
+  layout: LayoutMode;
   background: BackgroundSource;
   solidColor: string;
   /** 自訂桌布：IndexedDB 裡的圖片 id。background 為 image 時才有意義。 */
@@ -52,6 +65,7 @@ export const DEFAULTS: Settings = {
   clock24: true,
   showSeconds: false,
   searchEngine: "bing",
+  layout: "stage",
   background: "mesh",
   solidColor: "#131C30",
   imageId: null,

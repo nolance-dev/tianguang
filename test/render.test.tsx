@@ -458,6 +458,53 @@ describe("開頁馬上輸入", () => {
   });
 });
 
+describe("一條直的版面", () => {
+  const seed = () =>
+    localStorage.setItem("tg.settings", JSON.stringify({ schemaVersion: 1, layout: "flow" }));
+
+  afterEach(() => {
+    localStorage.removeItem("tg.settings");
+    Object.defineProperty(window, "scrollY", { value: 0, configurable: true });
+  });
+
+  it("全部串成一列，搜尋列黏在頂端、時間縮到它左邊", async () => {
+    seed();
+    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector(".app.flow")).not.toBeNull());
+
+    const app = el.querySelector<HTMLElement>(".app.flow")!;
+    expect(el.querySelectorAll(".screen").length, "這個版面沒有分屏").toBe(0);
+    expect(el.querySelector(".bar .search"), "搜尋列在那一列裡").not.toBeNull();
+    expect(el.querySelector(".bar .clock.mini"), "小時間在搜尋列左邊").not.toBeNull();
+
+    // 名言、快速存取、工作區，順序照使用者要的
+    const stream = el.querySelector(".stream")!;
+    const order = [...stream.children].map((n) => n.className.split(" ")[0]);
+    expect(order.slice(0, 3)).toEqual(["quote", "links", "cards"]);
+
+    // 捲過門檻才收起來
+    expect(app.dataset.tight).toBe("0");
+    Object.defineProperty(window, "scrollY", { value: 200, configurable: true });
+    window.dispatchEvent(new Event("scroll"));
+    await vi.waitFor(() => expect(app.dataset.tight).toBe("1"));
+  });
+
+  it("這個版面不收滾輪，捲動整個交給瀏覽器", async () => {
+    seed();
+    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+    await vi.waitFor(() => expect(el.querySelector(".app.flow")).not.toBeNull());
+
+    const ev = new WheelEvent("wheel", { deltaY: 100, cancelable: true });
+    window.dispatchEvent(ev);
+    window.dispatchEvent(new WheelEvent("wheel", { deltaY: 100, cancelable: true }));
+    await Promise.resolve();
+
+    expect(ev.defaultPrevented, "沒有攔截，瀏覽器照常捲").toBe(false);
+    expect(el.querySelectorAll(".screen").length).toBe(0);
+  });
+});
+
 describe("指令面板", () => {
   it("Ctrl K 打開，Esc 關掉", async () => {
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));

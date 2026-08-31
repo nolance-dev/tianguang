@@ -197,6 +197,18 @@
   "s_seconds": {
     "message": "Show seconds"
   },
+  "s_layout": {
+    "message": "Layout"
+  },
+  "s_layout_stage": {
+    "message": "Two cards"
+  },
+  "s_layout_flow": {
+    "message": "One column"
+  },
+  "s_layout_hint": {
+    "message": "Two cards: the clock on one screen, the desk on the next; two wheel notches turn the page. One column: everything in a single run — scroll down and the search bar sticks to the top with the time shrunk in beside it."
+  },
   "s_background": {
     "message": "Background"
   },

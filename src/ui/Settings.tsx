@@ -94,6 +94,23 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
           </section>
 
           <section>
+            <h3>{t("s_layout")}</h3>
+            <div class="seg" data-seg="layout" role="group" aria-label={t("s_layout")}>
+              {(["stage", "flow"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  aria-pressed={value.layout === mode}
+                  onClick={() => onChange({ layout: mode })}
+                >
+                  {t(`s_layout_${mode}`)}
+                </button>
+              ))}
+            </div>
+            <p class="note">{t("s_layout_hint")}</p>
+          </section>
+
+          <section>
             <h3>{t("s_background")}</h3>
             <div class="seg" data-seg="background" role="group" aria-label={t("s_background")}>
               {(["mesh", "solid", "image"] as const).map((src) => (
