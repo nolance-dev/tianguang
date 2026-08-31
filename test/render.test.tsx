@@ -396,6 +396,33 @@ describe("工作區卡片", () => {
     await vi.waitFor(() => expect(app.dataset.page).toBe("0"));
   });
 
+  it("卡片可以改大小換位置，鍵盤也走得通", async () => {
+    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector(".cards")).not.toBeNull());
+
+    const card = () => el.querySelector<HTMLElement>(".card")!;
+    const todos = () => el.querySelector<HTMLElement>('.card[data-id="todos"]')!;
+    expect(card().dataset.id, "預設待辦排第一").toBe("todos");
+    expect(todos().style.getPropertyValue("--w")).toBe("2");
+
+    const grow = todos().querySelector<HTMLButtonElement>(".grow")!;
+    const key = (k: string, shift = false) =>
+      grow.dispatchEvent(new KeyboardEvent("keydown", { key: k, shiftKey: shift, bubbles: true }));
+
+    key("ArrowRight");
+    await vi.waitFor(() => expect(todos().style.getPropertyValue("--w")).toBe("3"));
+    key("ArrowDown");
+    await vi.waitFor(() => expect(todos().style.getPropertyValue("--h")).toBe("2"));
+
+    // 到頂就停住，不會繞回一欄
+    key("ArrowRight");
+    key("ArrowRight");
+    await vi.waitFor(() => expect(todos().style.getPropertyValue("--w")).toBe("4"));
+
+    key("ArrowRight", true);
+    await vi.waitFor(() => expect(card().dataset.id, "Shift 是換位置").toBe("note"));
+  });
+
   it("待辦空的時候是一句邀請，不是空框", async () => {
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelector(".cards")).not.toBeNull());

@@ -252,7 +252,15 @@ export function App() {
   const search = <SearchBar engineId={cfg.searchEngine} />;
   const links = <Links links={cfg.links} onChange={(l) => patch({ links: l })} />;
   const quote = cfg.cards.quote ? <QuoteLine text={cfg.quoteText} by={cfg.quoteBy} /> : null;
-  const cards = <Cards value={work.value} onChange={patchWork} show={cfg.cards} />;
+  const cards = (
+    <Cards
+      value={work.value}
+      onChange={patchWork}
+      show={cfg.cards}
+      desk={cfg.desk}
+      onDesk={(desk) => patch({ desk })}
+    />
+  );
   const notices = (
     <footer class="bottom">{notice.value && <p class="notice">{notice.value}</p>}</footer>
   );

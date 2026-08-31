@@ -1296,13 +1296,19 @@ body::-webkit-scrollbar {
 
 /* ---------- 工作區卡片 ---------- */
 
+/*
+ * 四欄制。每張卡自己說要佔幾欄幾列（--w / --h，存在 desk.ts 那份版面裡）。
+ * 不用 auto-fit —— auto-fit 自己決定欄數，使用者拖出來的「兩欄寬」
+ * 換個視窗寬度就變成別的東西了。欄數固定，跨距才有意義。
+ */
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: minmax(10rem, auto);
   gap: clamp(0.6rem, 1.2vw, 1rem);
   width: min(58rem, 88%);
   margin-top: clamp(1rem, 2.5vh, 2rem);
-  align-items: start;
+  align-items: stretch;
 }
 
 .card {
@@ -1324,15 +1330,124 @@ body::-webkit-scrollbar {
   /* 卡片跟它底下那一屏的底色很接近，一道淺影才分得開 */
   box-shadow: 0 2px 12px -8px rgba(0, 0, 0, 0.55);
   min-height: 7.5rem;
+  position: relative;
+  grid-column: span var(--w, 2);
+  grid-row: span var(--h, 1);
+  /* 裡面的東西看得到自己這張卡有多寬，才做得出「變寬就多顯示一點」 */
+  container-type: inline-size;
+  transition:
+    opacity 0.2s,
+    box-shadow 0.2s;
 }
 
-.card.focus {
-  grid-column: span 2;
+/* 拖著的那張淡一點、浮起來，才知道現在動的是哪一張 */
+.card.held {
+  opacity: 0.55;
+  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.7);
 }
 
-@media (max-width: 44rem) {
-  .card.focus {
-    grid-column: auto;
+.card > header {
+  cursor: grab;
+  /* 拖標題列時不要順手把標題文字選起來 */
+  user-select: none;
+}
+
+.card.held > header {
+  cursor: grabbing;
+}
+
+/* 右下角的把手。平常不出現，滑到卡片上、或鍵盤停在它上面才長出來 */
+.grow {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 1.15rem;
+  height: 1.15rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fg-2);
+  cursor: nwse-resize;
+  opacity: 0;
+  transition: opacity 0.2s;
+  touch-action: none;
+}
+
+.grow::after {
+  content: "";
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  border-bottom-right-radius: 3px;
+}
+
+.card:hover .grow,
+.grow:focus-visible {
+  opacity: 1;
+}
+
+.grow:focus-visible {
+  color: var(--fg);
+}
+
+/*
+ * 卡片變大，裡面顯示的東西跟著變多。
+ * 寬度用 @container 問這張卡自己有多寬；高度直接讀 --h ——
+ * container-type: size 要求高度不依賴內容，而這裡的列高是 auto。
+ */
+.card .todos {
+  max-height: calc(var(--h, 1) * 9rem);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.card .todos::-webkit-scrollbar {
+  display: none;
+}
+
+.card.note textarea {
+  min-height: calc(var(--h, 1) * 4.5rem);
+}
+
+@container (min-width: 22rem) {
+  /*
+   * 夠寬就分兩欄排待辦。用 grid 不用 columns —— multicol 碰上限高會往旁邊
+   * 長出新欄，變成橫向捲；grid 會乖乖往下疊，限高才管得住。
+   */
+  .todos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 1.4rem;
+    align-content: start;
+  }
+
+  .clockface svg {
+    max-width: 7.5rem;
+  }
+}
+
+/* 窄視窗上跨距要收斂，否則一張兩欄寬的卡會把整排擠爆 */
+@media (max-width: 52rem) {
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .card {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 32rem) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    grid-column: span 1;
   }
 }
 

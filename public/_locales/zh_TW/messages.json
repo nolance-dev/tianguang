@@ -520,5 +520,17 @@
   },
   "pal_devmode": {
     "message": "這裡是開發伺服器，沒有瀏覽器的 API。要用分頁、書籤、歷史這些來源，得把 dist 載進 Edge 當擴充功能跑。"
+  },
+  "c_resize": {
+    "message": "調整這張卡：方向鍵改大小，Shift 加方向鍵換位置"
+  },
+  "s_desk": {
+    "message": "工作區版面"
+  },
+  "s_desk_reset": {
+    "message": "還原成預設排法"
+  },
+  "s_desk_hint": {
+    "message": "拖卡片的標題列換位置，拖右下角改大小。卡片變寬變高之後，裡面顯示的東西也會跟著變多。"
   }
 }

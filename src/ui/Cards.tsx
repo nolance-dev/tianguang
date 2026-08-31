@@ -1,6 +1,15 @@
 import { useSignal } from "@preact/signals";
-import { useEffect } from "preact/hooks";
+import { useEffect, useRef } from "preact/hooks";
 import { t } from "../lib/i18n";
+import {
+  COLS,
+  move,
+  normalize,
+  nudge,
+  resize,
+  type CardId,
+  type Tile,
+} from "../lib/desk";
 import {
   advance,
   formatLeft,
@@ -21,31 +30,159 @@ import {
  *
  * 每張卡都有空狀態 —— 沒東西的時候是一句邀請，不是一個空框。
  * 這是複審抓到的缺漏之一：上線第一天每張卡都是空的，那才是第一印象。
+ *
+ * 版面可以自己排：拖標題列換位置，拖右下角改大小，卡片變大裡面顯示的
+ * 東西也跟著變多（見 styles.css 的 @container 那幾段）。拖曳過程中的排法
+ * 放在 live 這個訊號裡，放手才寫進設定 —— 每動一像素就寫一次的話，
+ * 會一路撞到 chrome.storage.sync 每分鐘 120 次的節流。
  */
 
-interface Props {
+interface Body {
   value: Workspace;
   onChange: (patch: Partial<Workspace>) => void;
-  show: { todos: boolean; note: boolean; pomodoro: boolean };
 }
 
-export function Cards({ value, onChange, show }: Props) {
-  if (!show.todos && !show.note && !show.pomodoro) return null;
+interface Props extends Body {
+  show: { todos: boolean; note: boolean; pomodoro: boolean };
+  desk: Tile[];
+  onDesk: (desk: Tile[]) => void;
+}
+
+const VARIANT: Record<CardId, string> = { todos: "", note: " note", pomodoro: " pomo" };
+
+export function Cards({ value, onChange, show, desk, onDesk }: Props) {
+  const live = useSignal<Tile[] | null>(null);
+  const held = useSignal<CardId | null>(null);
+  const grid = useRef<HTMLDivElement>(null);
+
+  const order = live.value ?? normalize(desk);
+  const tiles = order.filter((tl) => show[tl.id]);
+
+  /** 拖曳結束的共同收尾：放手才落盤 */
+  function commit() {
+    const final = live.peek();
+    live.value = null;
+    held.value = null;
+    if (final) onDesk(final);
+  }
+
+  function startMove(e: PointerEvent, id: CardId) {
+    if (e.button !== 0) return;
+    // 標題列上的按鈕（例如未來加的收合鈕）不該變成拖曳把手
+    if ((e.target as HTMLElement).closest("button, input, textarea, a")) return;
+    e.preventDefault();
+    held.value = id;
+    live.value = order;
+    let over: CardId | null = null;
+
+    const onMove = (ev: PointerEvent) => {
+      const under = document
+        .elementFromPoint(ev.clientX, ev.clientY)
+        ?.closest<HTMLElement>(".card");
+      const to = under?.dataset.id as CardId | undefined;
+      if (!to) return;
+      // 換過去之後游標底下就是自己那張了，這時把記號清掉，才換得回來
+      if (to === id) {
+        over = null;
+        return;
+      }
+      if (to === over) return;
+      over = to;
+      live.value = move(live.peek() ?? order, id, to);
+    };
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener(
+      "pointerup",
+      () => {
+        document.removeEventListener("pointermove", onMove);
+        commit();
+      },
+      { once: true },
+    );
+  }
+
+  function startResize(e: PointerEvent, tile: Tile) {
+    if (e.button !== 0) return;
+    const card = (e.currentTarget as HTMLElement).closest<HTMLElement>(".card");
+    const box = grid.current;
+    if (!card || !box) return;
+    e.preventDefault();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    live.value = order;
+
+    const gap = parseFloat(getComputedStyle(box).columnGap) || 0;
+    // 一格的跨距要含間隙，否則拖到第二欄時會差一個 gap，永遠慢半拍
+    const unitX = (box.getBoundingClientRect().width - gap * (COLS - 1)) / COLS + gap;
+    const unitY = (card.getBoundingClientRect().height + gap) / tile.h;
+    const x0 = e.clientX;
+    const y0 = e.clientY;
+
+    const onMove = (ev: PointerEvent) => {
+      const w = tile.w + Math.round((ev.clientX - x0) / unitX);
+      const h = tile.h + Math.round((ev.clientY - y0) / unitY);
+      live.value = resize(live.peek() ?? order, tile.id, w, h);
+    };
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener(
+      "pointerup",
+      () => {
+        document.removeEventListener("pointermove", onMove);
+        commit();
+      },
+      { once: true },
+    );
+  }
+
+  /** 一個把手同時管大小與位置：方向鍵改大小，Shift 加方向鍵換位置 */
+  function onHandleKey(e: KeyboardEvent, tile: Tile) {
+    const dx = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+    const dy = e.key === "ArrowDown" ? 1 : e.key === "ArrowUp" ? -1 : 0;
+    if (!dx && !dy) return;
+    e.preventDefault();
+    onDesk(
+      e.shiftKey
+        ? nudge(order, tile.id, dx || dy)
+        : resize(order, tile.id, tile.w + dx, tile.h + dy),
+    );
+  }
+
+  if (tiles.length === 0) return null;
+
   return (
-    <div class="cards">
-      {show.todos && <TodoCard value={value} onChange={onChange} />}
-      {show.note && <NoteCard value={value} onChange={onChange} />}
-      {show.pomodoro && <PomodoroCard value={value} onChange={onChange} />}
+    <div class="cards" ref={grid}>
+      {tiles.map((tile) => (
+        <section
+          key={tile.id}
+          class={`card${VARIANT[tile.id]}${held.value === tile.id ? " held" : ""}`}
+          data-id={tile.id}
+          style={{ "--w": String(tile.w), "--h": String(tile.h) }}
+          onPointerDown={(e) => {
+            if ((e.target as HTMLElement).closest("header")) startMove(e, tile.id);
+          }}
+        >
+          {tile.id === "todos" && <TodoCard value={value} onChange={onChange} />}
+          {tile.id === "note" && <NoteCard value={value} onChange={onChange} />}
+          {tile.id === "pomodoro" && <PomodoroCard value={value} onChange={onChange} />}
+
+          <button
+            type="button"
+            class="grow"
+            aria-label={t("c_resize")}
+            onPointerDown={(e) => startResize(e, tile)}
+            onKeyDown={(e) => onHandleKey(e, tile)}
+          />
+        </section>
+      ))}
     </div>
   );
 }
 
-function TodoCard({ value, onChange }: Omit<Props, "show">) {
+function TodoCard({ value, onChange }: Body) {
   const draft = useSignal("");
   const left = value.todos.filter((td) => !td.done).length;
 
   return (
-    <section class="card">
+    <>
       <header>
         <b>{t("c_todos")}</b>
         <span>
@@ -102,13 +239,13 @@ function TodoCard({ value, onChange }: Omit<Props, "show">) {
           onInput={(e) => (draft.value = e.currentTarget.value)}
         />
       </form>
-    </section>
+    </>
   );
 }
 
-function NoteCard({ value, onChange }: Omit<Props, "show">) {
+function NoteCard({ value, onChange }: Body) {
   return (
-    <section class="card note">
+    <>
       <header>
         <b>{t("c_note")}</b>
         <span>{value.note.trim() ? t("c_saved") : ""}</span>
@@ -119,11 +256,11 @@ function NoteCard({ value, onChange }: Omit<Props, "show">) {
         aria-label={t("c_note")}
         onInput={(e) => onChange({ note: e.currentTarget.value })}
       />
-    </section>
+    </>
   );
 }
 
-function PomodoroCard({ value, onChange }: Omit<Props, "show">) {
+function PomodoroCard({ value, onChange }: Body) {
   const p = value.pomodoro;
   const tick = useSignal(Date.now());
 
@@ -143,7 +280,7 @@ function PomodoroCard({ value, onChange }: Omit<Props, "show">) {
   }, [left === 0, p.endsAt]);
 
   return (
-    <section class="card pomo">
+    <>
       <header>
         <b>{t("c_pomodoro")}</b>
         <span>{t(p.mode === "work" ? "c_pomo_work" : "c_pomo_rest")}</span>
@@ -182,6 +319,6 @@ function PomodoroCard({ value, onChange }: Omit<Props, "show">) {
       <p class="rounds">
         {t("c_pomo_rounds")} {roundsToday(value)}
       </p>
-    </section>
+    </>
   );
 }

@@ -15,6 +15,7 @@
 
 import { paletteAt } from "./mesh";
 import type { Link } from "./links";
+import { DEFAULT_DESK, type Tile } from "./desk";
 
 export const SCHEMA_VERSION = 1;
 
@@ -36,6 +37,8 @@ export interface Settings {
   dim: number;
   blur: number;
   cards: { todos: boolean; note: boolean; pomodoro: boolean; quote: boolean };
+  /** 工作區卡片的順序與尺寸。畫之前一律過 desk.normalize()。 */
+  desk: Tile[];
   /** 自訂名言。留白就用內建那批隨機抽。 */
   quoteText: string;
   quoteBy: string;
@@ -63,6 +66,7 @@ export const DEFAULTS: Settings = {
   dim: 0,
   blur: 0,
   cards: { todos: true, note: true, pomodoro: false, quote: true },
+  desk: DEFAULT_DESK,
   quoteText: "",
   quoteBy: "",
   links: [],

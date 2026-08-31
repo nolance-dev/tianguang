@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { t } from "../lib/i18n";
 import { ENGINES } from "../lib/search";
+import { DEFAULT_DESK } from "../lib/desk";
 import { MAX_LINKS, suggestFromTopSites } from "../lib/links";
 import { geocode, hasAccess, hasCjk, requestAccess, type Place } from "../lib/weather";
 import { locale } from "../lib/i18n";
@@ -211,6 +212,14 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
               </label>
             ))}
             <p class="note">{t("s_cards_local")}</p>
+          </section>
+
+          <section>
+            <h3>{t("s_desk")}</h3>
+            <p class="note">{t("s_desk_hint")}</p>
+            <button type="button" class="wide" onClick={() => onChange({ desk: DEFAULT_DESK })}>
+              {t("s_desk_reset")}
+            </button>
           </section>
 
           <section>

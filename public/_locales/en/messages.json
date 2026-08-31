@@ -484,5 +484,17 @@
   },
   "pal_devmode": {
     "message": "This is the dev server, with no browser APIs. Load dist into Edge as an extension to search tabs, bookmarks and history."
+  },
+  "c_resize": {
+    "message": "Resize this card: arrow keys to size, shift and arrow keys to reorder"
+  },
+  "s_desk": {
+    "message": "Desk layout"
+  },
+  "s_desk_reset": {
+    "message": "Reset to the default arrangement"
+  },
+  "s_desk_hint": {
+    "message": "Drag a card by its title row to move it, drag the bottom-right corner to resize. Wider and taller cards show more inside."
   }
 }
