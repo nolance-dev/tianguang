@@ -32,6 +32,13 @@ export interface Settings {
   grain: number;
   dim: number;
   blur: number;
+  /**
+   * 日照弧要用的座標。P2b 接上天氣之後由城市搜尋填入；
+   * 在那之前用台北當預設 —— 弧的形狀跟緯度有關，沒有座標就畫不出來。
+   * ponytail: 先寫死預設值，天氣做好就改成跟著城市走。
+   */
+  lat: number;
+  lon: number;
 }
 
 export const DEFAULTS: Settings = {
@@ -46,6 +53,8 @@ export const DEFAULTS: Settings = {
   grain: 0.055,
   dim: 0,
   blur: 0,
+  lat: 25.033,
+  lon: 121.565,
 };
 
 const KEY = "tg.settings";

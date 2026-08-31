@@ -16,11 +16,21 @@ function julianDay(date: Date): number {
   return date.getTime() / 86400000 + 2440587.5;
 }
 
-/**
- * 太陽視黃經，度，已正規化到 [0, 360)。
- * 章動與光行差只取主項，對日解析度而言遠遠夠用。
- */
-export function apparentLongitude(date: Date): number {
+const norm360 = (d: number) => ((d % 360) + 360) % 360;
+
+interface SunPosition {
+  /** 儒略世紀 */
+  t: number;
+  /** 幾何平黃經，度 */
+  l0: number;
+  /** 視黃經，度，[0, 360) */
+  lambda: number;
+  /** 黃赤交角，度 */
+  epsilon: number;
+}
+
+/** 日出日落也要用到 l0 與黃赤交角，所以中間結果一併回傳，不要算兩次。 */
+function sunPosition(date: Date): SunPosition {
   const t = (julianDay(date) - 2451545) / 36525;
 
   // 幾何平黃經與平近點角
@@ -36,9 +46,67 @@ export function apparentLongitude(date: Date): number {
 
   // 章動主項加光行差
   const omega = (125.04 - 1934.136 * t) * RAD;
-  const lon = l0 + c - 0.00569 - 0.00478 * Math.sin(omega);
+  const lambda = norm360(l0 + c - 0.00569 - 0.00478 * Math.sin(omega));
 
-  return ((lon % 360) + 360) % 360;
+  return { t, l0, lambda, epsilon: 23.439291 - 0.0130042 * t };
+}
+
+/**
+ * 太陽視黃經，度，已正規化到 [0, 360)。
+ * 章動與光行差只取主項，對日解析度而言遠遠夠用。
+ */
+export function apparentLongitude(date: Date): number {
+  return sunPosition(date).lambda;
+}
+
+export interface SunTimes {
+  /**
+   * 當地時鐘的小數小時，已繞回 [0, 24)。極區永晝永夜時為 null。
+   *
+   * 繞回是刻意的 —— 這兩個值是要畫到二十四小時環上的角度。
+   * 代價是日落可能小於日出（跨午夜時），所以算日長要用模減
+   * `(sunset - sunrise + 24) % 24`，不能直接相減。
+   */
+  sunrise: number | null;
+  sunset: number | null;
+}
+
+/**
+ * 日出日落。時辰盤的日照弧要標出今天天光的範圍。
+ *
+ * 用的是標準的太陽赤緯加時角解法，−0.833 度已含大氣折射與日面半徑。
+ * 誤差在幾分鐘之譜，畫一段弧綽綽有餘。
+ *
+ * lat 北緯為正，lon 東經為正。
+ */
+export function sunTimes(date: Date, lat: number, lon: number): SunTimes {
+  // 用當地中午去算，才不會在日界附近取到前後一天的赤緯
+  const noonLocal = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);
+  const { l0, lambda, epsilon } = sunPosition(noonLocal);
+
+  const decl = Math.asin(Math.sin(epsilon * RAD) * Math.sin(lambda * RAD));
+  const ra = Math.atan2(
+    Math.cos(epsilon * RAD) * Math.sin(lambda * RAD),
+    Math.cos(lambda * RAD),
+  ) / RAD;
+
+  // 均時差，分鐘
+  let eot = 4 * (norm360(l0 - 0.0057183) - norm360(ra));
+  if (eot > 720) eot -= 1440;
+  if (eot < -720) eot += 1440;
+
+  const latRad = lat * RAD;
+  const cosH =
+    (Math.cos(90.833 * RAD) - Math.sin(latRad) * Math.sin(decl)) /
+    (Math.cos(latRad) * Math.cos(decl));
+  if (cosH > 1 || cosH < -1) return { sunrise: null, sunset: null }; // 永夜或永晝
+
+  const h = Math.acos(cosH) / RAD;
+  const noonUtcMin = 720 - 4 * lon - eot;
+  // getTimezoneOffset 是「UTC 減本地」的分鐘數，所以要減掉
+  const toLocal = (utcMin: number) => (((utcMin - date.getTimezoneOffset()) / 60) % 24 + 24) % 24;
+
+  return { sunrise: toLocal(noonUtcMin - 4 * h), sunset: toLocal(noonUtcMin + 4 * h) };
 }
 
 /**

@@ -5,8 +5,10 @@ import { decimalHour, dayFraction, greetSlot, indexAt } from "../lib/shichen";
 import { jieqiIndex, moonIndex } from "../lib/solar";
 import { isEnglish, outerRingName, shichenAlt, shichenName, t } from "../lib/i18n";
 import { resolve } from "../lib/search";
-import { DEFAULTS, load, mirrorBoot, type Settings } from "../lib/settings";
+import { DEFAULTS, load, save, type Settings } from "../lib/settings";
 import { Ring } from "./Ring";
+import { Dial } from "./Dial";
+import { SettingsPanel } from "./Settings";
 
 /** 秒針之外的東西一秒更新一次就夠。時辰環一分鐘才動 0.25 度，看不出來。 */
 const TICK_MS = 1000;
@@ -14,7 +16,9 @@ const TICK_MS = 1000;
 export function App() {
   const now = useSignal(new Date());
   const settings = useSignal<Settings>(DEFAULTS);
-  const saveNotice = useSignal<string | null>(null);
+  const notice = useSignal<string | null>(null);
+  const dialOpen = useSignal(false);
+  const panelOpen = useSignal(false);
 
   useEffect(() => {
     const id = setInterval(() => (now.value = new Date()), TICK_MS);
@@ -22,35 +26,50 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    void load().then((s) => {
-      settings.value = s;
-      mirrorBoot(s);
-    });
+    void load().then((s) => (settings.value = s));
   }, []);
+
+  function patch(p: Partial<Settings>) {
+    const next = { ...settings.value, ...p };
+    settings.value = next;
+    save(next, (result) => {
+      notice.value = result === "local-fallback" ? t("save_local_fallback") : null;
+    });
+  }
 
   const palette = useComputed(() => paletteAt(decimalHour(now.value)));
   const scIndex = useComputed(() => indexAt(now.value));
 
   // 顏色全部從這裡下到 :root，元件自己不判斷白天晚上
   useSignalEffect(() => {
+    const s = settings.value;
     const p = palette.value;
     const r = document.documentElement;
-    r.style.setProperty("--mesh", p.css);
+    r.style.setProperty("--mesh", s.background === "solid" ? s.solidColor : p.css);
+    // 純色背景的前景靠使用者自己選色，我們只保證漸層模式一定讀得到
     r.style.setProperty("--fg", p.fg);
     r.style.setProperty("--fg-2", p.fg2);
     r.style.setProperty("--glass", p.glass);
     r.style.setProperty("--glass-line", p.glassLine);
-    r.style.setProperty("--grain", String(settings.value.grain));
+    r.style.setProperty("--grain", String(s.grain));
+    r.style.setProperty("--dim", String(s.dim));
     r.dataset.sc = String(scIndex.value);
   });
 
   return (
     <>
       <div class="mesh" />
+      <div class="dim" />
       <div class="grain" />
+
       <div class="app">
         <header class="top">
-          <button class="badge" type="button" aria-label={t("dial_open")}>
+          <button
+            class="badge"
+            type="button"
+            aria-label={t("dial_open")}
+            onClick={() => (dialOpen.value = true)}
+          >
             <Ring index={scIndex.value} fraction={dayFraction(now.value)} size={48} />
             <span class="t">
               <b>
@@ -64,15 +83,40 @@ export function App() {
 
         <main class="core">
           <Greeting now={now.value} name={settings.value.name} />
-          <Clock now={now.value} settings={settings.value} />
+          <Clock now={now.value} settings={settings.value} onOpen={() => (dialOpen.value = true)} />
           <DateLine now={now.value} />
           <SearchBar engineId={settings.value.searchEngine} />
         </main>
 
         <footer class="bottom">
-          {saveNotice.value && <p class="notice">{saveNotice.value}</p>}
+          {notice.value && <p class="notice">{notice.value}</p>}
+          <button
+            class="icon-btn"
+            type="button"
+            aria-label={t("settings_open")}
+            onClick={() => (panelOpen.value = true)}
+          >
+            ⚙
+          </button>
         </footer>
       </div>
+
+      {dialOpen.value && (
+        <Dial
+          now={now.value}
+          lat={settings.value.lat}
+          lon={settings.value.lon}
+          onClose={() => (dialOpen.value = false)}
+        />
+      )}
+
+      {panelOpen.value && (
+        <SettingsPanel
+          value={settings.value}
+          onChange={patch}
+          onClose={() => (panelOpen.value = false)}
+        />
+      )}
     </>
   );
 }
@@ -83,12 +127,26 @@ function Greeting({ now, name }: { now: Date; name: string }) {
   return <p class="greet">{text}</p>;
 }
 
-function Clock({ now, settings }: { now: Date; settings: Settings }) {
+function Clock({
+  now,
+  settings,
+  onOpen,
+}: {
+  now: Date;
+  settings: Settings;
+  onOpen: () => void;
+}) {
   const h = now.getHours();
   const shown = settings.clock24 ? h : h % 12 === 0 ? 12 : h % 12;
   const pad = (n: number) => String(n).padStart(2, "0");
   return (
-    <button class="clock" type="button" aria-haspopup="dialog" aria-label={t("dial_open")}>
+    <button
+      class="clock"
+      type="button"
+      aria-haspopup="dialog"
+      aria-label={t("dial_open")}
+      onClick={onOpen}
+    >
       {settings.clock24 ? pad(shown) : shown}:{pad(now.getMinutes())}
       {settings.showSeconds && <span class="sec">{pad(now.getSeconds())}</span>}
     </button>
@@ -121,10 +179,7 @@ function SearchBar({ engineId }: { engineId: string }) {
   // 使用者若想用網址列，一個 Esc 或直接點上去就走掉了。
   useEffect(() => input.current?.focus(), []);
 
-  const hit = useComputed(() => {
-    const r = resolve(value.value, engineId);
-    return r?.engine ?? null;
-  });
+  const hit = useComputed(() => resolve(value.value, engineId)?.engine ?? null);
 
   return (
     <form
@@ -149,11 +204,7 @@ function SearchBar({ engineId }: { engineId: string }) {
         spellcheck={false}
         onInput={(e) => (value.value = e.currentTarget.value)}
       />
-      {hit.value ? (
-        <span class="hint">{hit.value.name}</span>
-      ) : (
-        <span class="kbd">Ctrl K</span>
-      )}
+      {hit.value ? <span class="hint">{hit.value.name}</span> : <span class="kbd">Ctrl K</span>}
     </form>
   );
 }

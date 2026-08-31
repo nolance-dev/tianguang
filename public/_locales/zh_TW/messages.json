@@ -1,77 +1,269 @@
 {
-  "extensionName": { "message": "天光" },
+  "extensionName": {
+    "message": "天光"
+  },
   "extensionDescription": {
     "message": "以十二時辰與二十四節氣為底色的新分頁。背景隨天光流轉，時鐘、問候、搜尋、待辦、照片牆都能自由擺放。不用帳號，不連伺服器，資料留在你自己的瀏覽器裡。"
   },
-
-  "sc_suffix": { "message": "時" },
-  "sc_0": { "message": "子" },
-  "sc_1": { "message": "丑" },
-  "sc_2": { "message": "寅" },
-  "sc_3": { "message": "卯" },
-  "sc_4": { "message": "辰" },
-  "sc_5": { "message": "巳" },
-  "sc_6": { "message": "午" },
-  "sc_7": { "message": "未" },
-  "sc_8": { "message": "申" },
-  "sc_9": { "message": "酉" },
-  "sc_10": { "message": "戌" },
-  "sc_11": { "message": "亥" },
-
-  "scalt_0": { "message": "夜半" },
-  "scalt_1": { "message": "雞鳴" },
-  "scalt_2": { "message": "平旦" },
-  "scalt_3": { "message": "日出" },
-  "scalt_4": { "message": "食時" },
-  "scalt_5": { "message": "隅中" },
-  "scalt_6": { "message": "日中" },
-  "scalt_7": { "message": "日昳" },
-  "scalt_8": { "message": "哺時" },
-  "scalt_9": { "message": "日入" },
-  "scalt_10": { "message": "黃昏" },
-  "scalt_11": { "message": "人定" },
-
-  "jq_0": { "message": "春分" },
-  "jq_1": { "message": "清明" },
-  "jq_2": { "message": "穀雨" },
-  "jq_3": { "message": "立夏" },
-  "jq_4": { "message": "小滿" },
-  "jq_5": { "message": "芒種" },
-  "jq_6": { "message": "夏至" },
-  "jq_7": { "message": "小暑" },
-  "jq_8": { "message": "大暑" },
-  "jq_9": { "message": "立秋" },
-  "jq_10": { "message": "處暑" },
-  "jq_11": { "message": "白露" },
-  "jq_12": { "message": "秋分" },
-  "jq_13": { "message": "寒露" },
-  "jq_14": { "message": "霜降" },
-  "jq_15": { "message": "立冬" },
-  "jq_16": { "message": "小雪" },
-  "jq_17": { "message": "大雪" },
-  "jq_18": { "message": "冬至" },
-  "jq_19": { "message": "小寒" },
-  "jq_20": { "message": "大寒" },
-  "jq_21": { "message": "立春" },
-  "jq_22": { "message": "雨水" },
-  "jq_23": { "message": "驚蟄" },
-
-  "greet_dawn": { "message": "早安，$1" },
-  "greet_day": { "message": "午安，$1" },
-  "greet_dusk": { "message": "晚安，$1" },
-  "greet_night": { "message": "夜深了，$1" },
-  "greet_dawn_anon": { "message": "早安" },
-  "greet_day_anon": { "message": "午安" },
-  "greet_dusk_anon": { "message": "晚安" },
-  "greet_night_anon": { "message": "夜深了" },
-
-  "search_placeholder": { "message": "搜尋網頁，或你自己的瀏覽器" },
-  "search_label": { "message": "搜尋" },
-  "dial_open": { "message": "開啟時辰盤" },
-  "dial_title": { "message": "時辰盤" },
-  "dial_close": { "message": "關閉時辰盤" },
-
+  "sc_suffix": {
+    "message": "時"
+  },
+  "sc_0": {
+    "message": "子"
+  },
+  "sc_1": {
+    "message": "丑"
+  },
+  "sc_2": {
+    "message": "寅"
+  },
+  "sc_3": {
+    "message": "卯"
+  },
+  "sc_4": {
+    "message": "辰"
+  },
+  "sc_5": {
+    "message": "巳"
+  },
+  "sc_6": {
+    "message": "午"
+  },
+  "sc_7": {
+    "message": "未"
+  },
+  "sc_8": {
+    "message": "申"
+  },
+  "sc_9": {
+    "message": "酉"
+  },
+  "sc_10": {
+    "message": "戌"
+  },
+  "sc_11": {
+    "message": "亥"
+  },
+  "scalt_0": {
+    "message": "夜半"
+  },
+  "scalt_1": {
+    "message": "雞鳴"
+  },
+  "scalt_2": {
+    "message": "平旦"
+  },
+  "scalt_3": {
+    "message": "日出"
+  },
+  "scalt_4": {
+    "message": "食時"
+  },
+  "scalt_5": {
+    "message": "隅中"
+  },
+  "scalt_6": {
+    "message": "日中"
+  },
+  "scalt_7": {
+    "message": "日昳"
+  },
+  "scalt_8": {
+    "message": "哺時"
+  },
+  "scalt_9": {
+    "message": "日入"
+  },
+  "scalt_10": {
+    "message": "黃昏"
+  },
+  "scalt_11": {
+    "message": "人定"
+  },
+  "jq_0": {
+    "message": "春分"
+  },
+  "jq_1": {
+    "message": "清明"
+  },
+  "jq_2": {
+    "message": "穀雨"
+  },
+  "jq_3": {
+    "message": "立夏"
+  },
+  "jq_4": {
+    "message": "小滿"
+  },
+  "jq_5": {
+    "message": "芒種"
+  },
+  "jq_6": {
+    "message": "夏至"
+  },
+  "jq_7": {
+    "message": "小暑"
+  },
+  "jq_8": {
+    "message": "大暑"
+  },
+  "jq_9": {
+    "message": "立秋"
+  },
+  "jq_10": {
+    "message": "處暑"
+  },
+  "jq_11": {
+    "message": "白露"
+  },
+  "jq_12": {
+    "message": "秋分"
+  },
+  "jq_13": {
+    "message": "寒露"
+  },
+  "jq_14": {
+    "message": "霜降"
+  },
+  "jq_15": {
+    "message": "立冬"
+  },
+  "jq_16": {
+    "message": "小雪"
+  },
+  "jq_17": {
+    "message": "大雪"
+  },
+  "jq_18": {
+    "message": "冬至"
+  },
+  "jq_19": {
+    "message": "小寒"
+  },
+  "jq_20": {
+    "message": "大寒"
+  },
+  "jq_21": {
+    "message": "立春"
+  },
+  "jq_22": {
+    "message": "雨水"
+  },
+  "jq_23": {
+    "message": "驚蟄"
+  },
+  "greet_dawn": {
+    "message": "早安，$1"
+  },
+  "greet_day": {
+    "message": "午安，$1"
+  },
+  "greet_dusk": {
+    "message": "晚安，$1"
+  },
+  "greet_night": {
+    "message": "夜深了，$1"
+  },
+  "greet_dawn_anon": {
+    "message": "早安"
+  },
+  "greet_day_anon": {
+    "message": "午安"
+  },
+  "greet_dusk_anon": {
+    "message": "晚安"
+  },
+  "greet_night_anon": {
+    "message": "夜深了"
+  },
+  "search_placeholder": {
+    "message": "搜尋網頁，或你自己的瀏覽器"
+  },
+  "search_label": {
+    "message": "搜尋"
+  },
+  "dial_open": {
+    "message": "開啟時辰盤"
+  },
+  "dial_title": {
+    "message": "時辰盤"
+  },
+  "dial_close": {
+    "message": "關閉時辰盤"
+  },
   "save_local_fallback": {
     "message": "設定同步不了，已存在這台電腦。換裝置看不到，其餘功能不受影響。"
+  },
+  "sun_rise": {
+    "message": "日出"
+  },
+  "sun_set": {
+    "message": "日落"
+  },
+  "settings_title": {
+    "message": "設定"
+  },
+  "settings_close": {
+    "message": "關閉設定"
+  },
+  "settings_open": {
+    "message": "開啟設定"
+  },
+  "s_general": {
+    "message": "一般"
+  },
+  "s_name": {
+    "message": "稱呼"
+  },
+  "s_name_hint": {
+    "message": "留白就只說早安"
+  },
+  "s_engine": {
+    "message": "搜尋引擎"
+  },
+  "s_engine_hint": {
+    "message": "打字時前面加引擎字母再空一格，可以單次換引擎，例如 g 天光 走 Google。"
+  },
+  "s_clock": {
+    "message": "時鐘"
+  },
+  "s_clock24": {
+    "message": "二十四小時制"
+  },
+  "s_seconds": {
+    "message": "顯示秒數"
+  },
+  "s_background": {
+    "message": "背景"
+  },
+  "s_bg_mesh": {
+    "message": "時辰漸層"
+  },
+  "s_bg_solid": {
+    "message": "純色"
+  },
+  "s_bg_color": {
+    "message": "顏色"
+  },
+  "s_grain": {
+    "message": "顆粒"
+  },
+  "s_dim": {
+    "message": "變暗"
+  },
+  "s_about": {
+    "message": "關於"
+  },
+  "s_restore": {
+    "message": "換回原生新分頁"
+  },
+  "s_restore_body": {
+    "message": "到 edge://extensions 把天光停用即可。停用不會刪掉你的設定，隨時可以開回來。"
+  },
+  "s_credits": {
+    "message": "資料來源"
+  },
+  "s_version": {
+    "message": "版本"
   }
 }

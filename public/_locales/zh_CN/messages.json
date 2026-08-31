@@ -193,5 +193,77 @@
   },
   "save_local_fallback": {
     "message": "设置无法同步，已存在这台电脑。换设备看不到，其余功能不受影响。"
+  },
+  "sun_rise": {
+    "message": "日出"
+  },
+  "sun_set": {
+    "message": "日落"
+  },
+  "settings_title": {
+    "message": "设置"
+  },
+  "settings_close": {
+    "message": "关闭设置"
+  },
+  "settings_open": {
+    "message": "打开设置"
+  },
+  "s_general": {
+    "message": "常规"
+  },
+  "s_name": {
+    "message": "称呼"
+  },
+  "s_name_hint": {
+    "message": "留空就只说早安"
+  },
+  "s_engine": {
+    "message": "搜索引擎"
+  },
+  "s_engine_hint": {
+    "message": "打字时前面加引擎字母再空一格，可以单次换引擎，例如 g 天光 走 Google。"
+  },
+  "s_clock": {
+    "message": "时钟"
+  },
+  "s_clock24": {
+    "message": "二十四小时制"
+  },
+  "s_seconds": {
+    "message": "显示秒数"
+  },
+  "s_background": {
+    "message": "背景"
+  },
+  "s_bg_mesh": {
+    "message": "时辰渐变"
+  },
+  "s_bg_solid": {
+    "message": "纯色"
+  },
+  "s_bg_color": {
+    "message": "颜色"
+  },
+  "s_grain": {
+    "message": "颗粒"
+  },
+  "s_dim": {
+    "message": "变暗"
+  },
+  "s_about": {
+    "message": "关于"
+  },
+  "s_restore": {
+    "message": "换回原生新标签页"
+  },
+  "s_restore_body": {
+    "message": "到 edge://extensions 把天光停用即可。停用不会删掉你的设置，随时可以开回来。"
+  },
+  "s_credits": {
+    "message": "数据来源"
+  },
+  "s_version": {
+    "message": "版本"
   }
 }

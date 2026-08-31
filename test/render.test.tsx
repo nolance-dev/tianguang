@@ -6,6 +6,7 @@ import { DEFAULTS, migrate, SCHEMA_VERSION } from "../src/lib/settings";
 import { isEnglish } from "../src/lib/i18n";
 import { jieqiIndex } from "../src/lib/solar";
 import zhTW from "../public/_locales/zh_TW/messages.json";
+import { ENGINES } from "../src/lib/search";
 
 /**
  * 冒煙測試。不驗長相 —— 那要載進 Edge 用眼睛看。
@@ -114,5 +115,64 @@ describe("設定遷移", () => {
 
   it("壞掉的版本號當成沒有版本號處理", () => {
     expect(migrate({ schemaVersion: "1" }).schemaVersion).toBe(SCHEMA_VERSION);
+  });
+});
+
+describe("時辰盤與設定", () => {
+  it("點時間會展開時辰盤，六個環都畫出來", async () => {
+    const el = mount(new Date(2026, 7, 30, 22, 48, 12));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+    (el.querySelector(".clock") as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(document.querySelector(".dial")).not.toBeNull());
+
+    const dial = document.querySelector(".dial")!;
+    expect(dial.querySelectorAll(".rn").length, "羅馬分刻逢五十二個").toBe(12);
+    expect(dial.querySelectorAll(".ar").length, "其餘四十八個小阿拉伯數字").toBe(48);
+    expect(dial.querySelectorAll(".hr").length, "二十四小時").toBe(24);
+    expect(dial.querySelectorAll(".bch").length, "十二時辰").toBe(12);
+    expect(dial.querySelector(".sunarc"), "日照弧").not.toBeNull();
+    expect(dial.querySelector(".sec-hand"), "秒針").not.toBeNull();
+    // 當下的時與分各亮一個，不多不少
+    expect(dial.querySelectorAll(".hr.on").length).toBe(1);
+    expect(dial.querySelectorAll(":is(.rn,.ar).on").length).toBe(1);
+    expect(dial.querySelector(".dc-time")?.textContent).toBe("22:48");
+  });
+
+  it("Esc 關掉時辰盤", async () => {
+    const el = mount(new Date(2026, 7, 30, 10, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+    (el.querySelector(".clock") as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(document.querySelector(".dial")).not.toBeNull());
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    await vi.waitFor(() => expect(document.querySelector(".dial")).toBeNull());
+  });
+
+  it("設定面板列出所有搜尋引擎，選了會存起來", async () => {
+    const el = mount(new Date(2026, 7, 30, 10, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+    (el.querySelector(".bottom .icon-btn") as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+
+    const select = document.querySelector(".panel select") as HTMLSelectElement;
+    expect(select.options.length).toBe(ENGINES.length);
+    expect(select.value).toBe("bing");
+
+    select.value = "google";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    await vi.waitFor(() =>
+      expect((document.querySelector(".panel select") as HTMLSelectElement).value).toBe("google"),
+    );
+  });
+
+  it("關於區塊講清楚怎麼換回原生新分頁，並標註天氣來源", async () => {
+    const el = mount(new Date(2026, 7, 30, 10, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+    (el.querySelector(".bottom .icon-btn") as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+
+    const about = document.querySelector(".panel .about")!;
+    expect(about.textContent).toContain("edge://extensions");
+    expect(about.querySelector('a[href="https://open-meteo.com/"]')).not.toBeNull();
+    expect(about.textContent).toContain("CC BY 4.0");
   });
 });

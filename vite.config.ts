@@ -1,5 +1,6 @@
 import { defineConfig, type Plugin } from "vite";
 import { bootColorTable } from "./src/lib/mesh.ts";
+import pkg from "./package.json" with { type: "json" };
 
 /**
  * 首屏不能白閃。
@@ -28,6 +29,8 @@ function bootPaint(): Plugin {
 
 export default defineConfig({
   plugins: [bootPaint()],
+  // 版本號只有 package.json 一個來源，設定頁的「關於」直接讀這個
+  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   // Vite 8 走 oxc，不是 esbuild。JSX 直接編到 preact/jsx-runtime，不裝 preset 外掛。
   oxc: { jsx: { runtime: "automatic", importSource: "preact" } },
   build: {

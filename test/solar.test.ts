@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { apparentLongitude, jieqiIndex } from "../src/lib/solar";
+import { apparentLongitude, jieqiIndex, sunTimes } from "../src/lib/solar";
 
 /**
  * 2026 年前十五個節氣的交節時刻（UTC+8），取自香港天文台與漢典曆法表。
@@ -57,5 +57,42 @@ describe("節氣", () => {
       prev = lon;
     }
     expect(wraps).toBe(1);
+  });
+});
+
+describe("日出日落", () => {
+  const TAIPEI: [number, number] = [25.033, 121.565];
+
+  /** 回傳值繞回 [0, 24)，跨午夜時日落會小於日出，所以日長要用模減 */
+  const dayLength = ({ sunrise, sunset }: { sunrise: number | null; sunset: number | null }) =>
+    ((sunset! - sunrise!) % 24 + 24) % 24;
+
+  it("春分前後全球日長都接近十二小時", () => {
+    // 這條是自我驗證：不必去查任何一地的日出表，天文本身就決定了答案
+    const equinox = new Date("2026-03-20T12:00:00Z");
+    for (const lat of [-60, -35, 0, 25, 45, 60]) {
+      const length = dayLength(sunTimes(equinox, lat, 0));
+      expect(length, `緯度 ${lat} 日長 ${length.toFixed(2)}`).toBeGreaterThan(11.7);
+      expect(length, `緯度 ${lat} 日長 ${length.toFixed(2)}`).toBeLessThan(12.3);
+    }
+  });
+
+  it("夏至北半球日長大於冬至", () => {
+    const summer = sunTimes(new Date("2026-06-21T12:00:00+08:00"), ...TAIPEI);
+    const winter = sunTimes(new Date("2026-12-21T12:00:00+08:00"), ...TAIPEI);
+    expect(dayLength(summer)).toBeGreaterThan(dayLength(winter));
+  });
+
+  it("台北八月底的日出日落落在合理範圍", () => {
+    const { sunrise, sunset } = sunTimes(new Date("2026-08-30T12:00:00+08:00"), ...TAIPEI);
+    expect(sunrise!).toBeGreaterThan(5.3);
+    expect(sunrise!).toBeLessThan(5.9);
+    expect(sunset!).toBeGreaterThan(18.0);
+    expect(sunset!).toBeLessThan(18.6);
+  });
+
+  it("極區永晝永夜回傳 null，不要畫出一段假的弧", () => {
+    expect(sunTimes(new Date("2026-06-21T12:00:00Z"), 80, 0).sunrise).toBeNull();
+    expect(sunTimes(new Date("2026-12-21T12:00:00Z"), 80, 0).sunrise).toBeNull();
   });
 });

@@ -193,5 +193,77 @@
   },
   "save_local_fallback": {
     "message": "設定を同期できないため、このパソコンにのみ保存しました。ほかの機能はそのまま使えます。"
+  },
+  "sun_rise": {
+    "message": "日の出"
+  },
+  "sun_set": {
+    "message": "日の入り"
+  },
+  "settings_title": {
+    "message": "設定"
+  },
+  "settings_close": {
+    "message": "設定を閉じる"
+  },
+  "settings_open": {
+    "message": "設定を開く"
+  },
+  "s_general": {
+    "message": "一般"
+  },
+  "s_name": {
+    "message": "呼び名"
+  },
+  "s_name_hint": {
+    "message": "空欄なら挨拶だけ"
+  },
+  "s_engine": {
+    "message": "検索エンジン"
+  },
+  "s_engine_hint": {
+    "message": "入力の先頭にエンジンの文字と空白を置くと、その一回だけ切り替わります。例：g 天光 で Google。"
+  },
+  "s_clock": {
+    "message": "時計"
+  },
+  "s_clock24": {
+    "message": "24時間表示"
+  },
+  "s_seconds": {
+    "message": "秒を表示"
+  },
+  "s_background": {
+    "message": "背景"
+  },
+  "s_bg_mesh": {
+    "message": "辰刻のグラデーション"
+  },
+  "s_bg_solid": {
+    "message": "単色"
+  },
+  "s_bg_color": {
+    "message": "色"
+  },
+  "s_grain": {
+    "message": "粒子"
+  },
+  "s_dim": {
+    "message": "暗さ"
+  },
+  "s_about": {
+    "message": "このアドオンについて"
+  },
+  "s_restore": {
+    "message": "元の新しいタブに戻す"
+  },
+  "s_restore_body": {
+    "message": "edge://extensions を開いて天光を無効にしてください。無効にしても設定は消えないので、いつでも戻せます。"
+  },
+  "s_credits": {
+    "message": "データ提供"
+  },
+  "s_version": {
+    "message": "バージョン"
   }
 }
