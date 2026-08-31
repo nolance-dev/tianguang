@@ -48,7 +48,16 @@ body {
 .mesh {
   z-index: 0;
   background: var(--mesh);
-  transition: background 1.2s linear;
+  transition: background 1.2s linear, filter 0.25s;
+  /*
+   * 濾鏡預設是 none，不是 blur(0)。
+   * filter 只要有值就會讓這一層自成合成層，上面顆粒層的 mix-blend-mode
+   * 就混不到它，整片漸層會被洗成灰的。漸層模式根本不需要模糊，
+   * 所以由 App 只在自訂圖時才把這兩個變數填上。
+   */
+  filter: var(--bg-filter, none);
+  transform: var(--bg-transform, none);
+  transform-origin: center;
 }
 
 .grain {
@@ -130,11 +139,14 @@ body {
 
 /* ---------- 中間 ---------- */
 
+/* 靠上排，不置中。滿版高度下置中會把整塊掉到畫面中段偏下，
+   離視線落點太遠，搜尋列也離手太遠。 */
 .core {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  padding-top: clamp(0.5rem, 4vh, 3rem);
   gap: clamp(0.7rem, 1.4vw, 1.2rem);
 }
 

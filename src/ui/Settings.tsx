@@ -134,6 +134,20 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
               </>
             )}
 
+            {value.background === "image" && (
+              <label class="row">
+                <span>{t("s_blur")}</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="40"
+                  step="1"
+                  value={value.blur}
+                  onInput={(e) => onChange({ blur: Number(e.currentTarget.value) })}
+                />
+              </label>
+            )}
+
             <label class="row">
               <span>{t("s_grain")}</span>
               <input

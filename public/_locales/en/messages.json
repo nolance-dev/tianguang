@@ -256,5 +256,8 @@
   },
   "s_bg_upload_failed": {
     "message": "That photo could not be saved. The format may be unsupported, or the browser is out of storage."
+  },
+  "s_blur": {
+    "message": "Blur"
   }
 }

@@ -292,5 +292,8 @@
   },
   "s_bg_upload_failed": {
     "message": "這張圖存不進去。可能是格式不支援，或瀏覽器的儲存空間滿了。"
+  },
+  "s_blur": {
+    "message": "模糊"
   }
 }

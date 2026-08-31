@@ -225,3 +225,23 @@ describe("背景來源", () => {
     expect(gear.closest(".app"), "齒輪不該在 .app 版面流裡").toBeNull();
   });
 });
+
+describe("背景濾鏡", () => {
+  it("漸層模式不掛濾鏡 —— 掛了會讓背景層自成合成層，顆粒混不到，整片洗成灰的", async () => {
+    mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+    expect(cssVar("--bg-filter")).toBe("none");
+    expect(cssVar("--bg-transform")).toBe("none");
+  });
+
+  it("純色模式也不掛濾鏡", async () => {
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+    (el.querySelector(".gear") as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+    const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>(".seg button"));
+    buttons[1]!.click();
+    await vi.waitFor(() => expect(cssVar("--fg")).toBe("#F4F2EE"));
+    expect(cssVar("--bg-filter")).toBe("none");
+  });
+});

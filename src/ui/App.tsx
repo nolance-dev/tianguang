@@ -85,6 +85,12 @@ export function App() {
     r.style.setProperty("--glass-line", p.glassLine);
     r.style.setProperty("--grain", String(s.grain));
     r.style.setProperty("--dim", String(s.dim));
+    // 模糊只對自訂圖有意義，而且只有真的要模糊時才掛濾鏡 ——
+    // filter 有值就會讓背景層自成合成層，顆粒層混不到它，漸層會被洗成灰的。
+    const blur = s.background === "image" ? s.blur : 0;
+    r.style.setProperty("--bg-filter", blur > 0 ? `blur(${blur}px)` : "none");
+    // 模糊會把邊緣糊出一圈透明，整層放大一點蓋掉
+    r.style.setProperty("--bg-transform", blur > 0 ? `scale(${1 + blur * 0.006})` : "none");
     // 自訂圖上仍依時辰疊一層明暗與色溫 —— 換了桌布，時間感不必跟著消失
     const tinted = s.background === "image" && s.shichenTint && bgImage.value;
     r.style.setProperty("--tint", tinted ? meshCss(colorsAt(decimalHour(now.value))) : "none");
