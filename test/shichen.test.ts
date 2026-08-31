@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { centerHour, dayFraction, greetSlot, indexAt, range } from "../src/lib/shichen";
-import { colorsAt, paletteAt } from "../src/lib/mesh";
+import { ANCHORS, colorsAt, paletteAt } from "../src/lib/mesh";
 
 const at = (h: number, m = 0) => new Date(2026, 7, 30, h, m, 0);
 
@@ -53,8 +53,8 @@ describe("時辰", () => {
 
 describe("背景插值", () => {
   it("整點錨點回傳原色，不因為插值走樣", () => {
-    expect(colorsAt(0)[3]).toBe("#070b14");
-    expect(colorsAt(12)[3]).toBe("#d8e7f3");
+    expect(colorsAt(0)[3].toLowerCase()).toBe("#070b14");
+    expect(colorsAt(12)[3].toLowerCase()).toBe("#d8e7f3");
   });
 
   it("繞一圈回到原點", () => {
@@ -70,15 +70,44 @@ describe("背景插值", () => {
     expect(paletteAt(0).fg).toBe("#F4F2EE");
   });
 
-  it("插值連續，相鄰半小時的底色不會跳", () => {
-    for (let h = 0; h < 24; h += 0.5) {
-      const a = paletteAt(h).boot;
-      const b = paletteAt(h + 0.5).boot;
-      const diff = [1, 3, 5].reduce(
+  it("插值連續，逐分鐘不會跳", () => {
+    // 背景每秒重算一次，所以要測的是「每一格更新之間看不看得出來」，
+    // 不是隔半小時差多少 —— 隔半小時本來就該差很多，那是一天在走。
+    const delta = (a: string, b: string) =>
+      [1, 3, 5].reduce(
         (acc, i) => acc + Math.abs(parseInt(a.slice(i, i + 2), 16) - parseInt(b.slice(i, i + 2), 16)),
         0,
       );
-      expect(diff, `${h} 到 ${h + 0.5} 之間跳了 ${diff}`).toBeLessThan(60);
+    let worst = 0;
+    let worstAt = 0;
+    for (let m = 0; m < 24 * 60; m++) {
+      const d = delta(paletteAt(m / 60).boot, paletteAt((m + 1) / 60).boot);
+      if (d > worst) {
+        worst = d;
+        worstAt = m;
+      }
+    }
+    expect(worst, `最大跳動在第 ${worstAt} 分，跳了 ${worst}`).toBeLessThan(8);
+  });
+
+  it("八個錨點等距分佈，換算後每三小時一組", () => {
+    for (let k = 0; k < ANCHORS.length; k++) {
+      expect(ANCHORS[k]!.hour).toBe(k * 3);
+      // 錨點時刻要原樣回傳，不能被插值動到
+      expect(colorsAt(ANCHORS[k]!.hour)).toEqual(ANCHORS[k]!.c);
+    }
+  });
+
+  it("上午與下午不會塌成灰 —— 這是加密錨點要解決的問題", () => {
+    // 彩度用 max-min 粗估就夠：死灰是三個通道幾乎相等
+    const chroma = (hex: string) => {
+      const v = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+      return Math.max(...v) - Math.min(...v);
+    };
+    for (const h of [8, 9, 10, 14, 15, 16]) {
+      const c = colorsAt(h);
+      const top = chroma(c[3]);
+      expect(top, `${h} 點的天空 ${c[3]} 太灰`).toBeGreaterThan(20);
     }
   });
 });

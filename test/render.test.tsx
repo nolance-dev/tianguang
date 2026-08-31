@@ -231,7 +231,7 @@ describe("背景濾鏡", () => {
     mount(new Date(2026, 7, 30, 11, 0, 0));
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     expect(cssVar("--bg-filter")).toBe("none");
-    expect(cssVar("--bg-transform")).toBe("none");
+    expect(cssVar("--bg-inset")).toBe("0");
   });
 
   it("純色模式也不掛濾鏡", async () => {

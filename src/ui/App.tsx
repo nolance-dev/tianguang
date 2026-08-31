@@ -89,8 +89,8 @@ export function App() {
     // filter 有值就會讓背景層自成合成層，顆粒層混不到它，漸層會被洗成灰的。
     const blur = s.background === "image" ? s.blur : 0;
     r.style.setProperty("--bg-filter", blur > 0 ? `blur(${blur}px)` : "none");
-    // 模糊會把邊緣糊出一圈透明，整層放大一點蓋掉
-    r.style.setProperty("--bg-transform", blur > 0 ? `scale(${1 + blur * 0.006})` : "none");
+    // 把整層往外撐出畫面，蓋掉模糊糊出來的透明邊緣。撐出去的量取兩倍模糊半徑就夠。
+    r.style.setProperty("--bg-inset", blur > 0 ? `${-blur * 2}px` : "0");
     // 自訂圖上仍依時辰疊一層明暗與色溫 —— 換了桌布，時間感不必跟著消失
     const tinted = s.background === "image" && s.shichenTint && bgImage.value;
     r.style.setProperty("--tint", tinted ? meshCss(colorsAt(decimalHour(now.value))) : "none");

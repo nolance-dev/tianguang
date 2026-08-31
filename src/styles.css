@@ -48,7 +48,10 @@ body {
 .mesh {
   z-index: 0;
   background: var(--mesh);
-  transition: background 1.2s linear, filter 0.25s;
+  /* 不要對 background 做過場：從漸層換成圖片時，shorthand 裡的
+     position 與 size 會被當成可動畫屬性插值，圖片就會從角落滑進來。
+     漸層本身每秒只變動一點點，肉眼看不出來，過場也沒有必要。 */
+  transition: filter 0.25s;
   /*
    * 濾鏡預設是 none，不是 blur(0)。
    * filter 只要有值就會讓這一層自成合成層，上面顆粒層的 mix-blend-mode
@@ -56,8 +59,9 @@ body {
    * 所以由 App 只在自訂圖時才把這兩個變數填上。
    */
   filter: var(--bg-filter, none);
-  transform: var(--bg-transform, none);
-  transform-origin: center;
+  /* 模糊會把邊緣糊出一圈透明。用負 inset 把整層往外撐出畫面，
+     不用 scale —— 放大會讓圖看起來被推近，改模糊時整張圖跟著縮放很晃。 */
+  inset: var(--bg-inset, 0);
 }
 
 .grain {
