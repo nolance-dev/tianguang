@@ -433,5 +433,41 @@
   },
   "scroll_down": {
     "message": "Scroll down to the workspace"
+  },
+  "pal_title": {
+    "message": "Command bar"
+  },
+  "pal_hint": {
+    "message": "Search tabs, bookmarks, history, recently closed, downloads…"
+  },
+  "pal_enable": {
+    "message": "Turn on a source"
+  },
+  "pal_src_tabs": {
+    "message": "Tab"
+  },
+  "pal_src_bookmarks": {
+    "message": "Bookmark"
+  },
+  "pal_src_history": {
+    "message": "History"
+  },
+  "pal_src_sessions": {
+    "message": "Closed"
+  },
+  "pal_src_downloads": {
+    "message": "Download"
+  },
+  "pal_src_action": {
+    "message": "Action"
+  },
+  "pal_empty_nogrant": {
+    "message": "No sources are on yet. Pick one above and the browser will ask once; declining changes nothing else."
+  },
+  "pal_empty_search": {
+    "message": "Nothing matches. Press Enter to search the web instead."
+  },
+  "pal_empty_type": {
+    "message": "Start typing. ↑↓ to choose, Enter to open, Esc to close."
   }
 }

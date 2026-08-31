@@ -419,3 +419,33 @@ describe("開頁馬上輸入", () => {
     localStorage.removeItem("tg.workspace");
   });
 });
+
+describe("指令面板", () => {
+  it("Ctrl K 打開，Esc 關掉", async () => {
+    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }));
+    await vi.waitFor(() => expect(document.querySelector(".pal")).not.toBeNull());
+
+    const input = document.querySelector(".pal-head input") as HTMLInputElement;
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    await vi.waitFor(() => expect(document.querySelector(".pal")).toBeNull());
+    expect(el).toBeTruthy();
+  });
+
+  it("Cmd K 也要能開 —— Mac 上沒有 Ctrl 這個習慣", async () => {
+    mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "K", metaKey: true }));
+    await vi.waitFor(() => expect(document.querySelector(".pal")).not.toBeNull());
+  });
+
+  it("一個來源都沒授權時，講清楚要做什麼，不是丟一片空白", async () => {
+    mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }));
+    await vi.waitFor(() => expect(document.querySelector(".pal-empty")).not.toBeNull());
+    expect(document.querySelector(".pal-empty")?.textContent).toBeTruthy();
+  });
+});

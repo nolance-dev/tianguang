@@ -469,5 +469,41 @@
   },
   "scroll_down": {
     "message": "往下看工作区"
+  },
+  "pal_title": {
+    "message": "命令面板"
+  },
+  "pal_hint": {
+    "message": "搜索标签页、书签、历史、最近关闭、下载…"
+  },
+  "pal_enable": {
+    "message": "开启来源"
+  },
+  "pal_src_tabs": {
+    "message": "标签页"
+  },
+  "pal_src_bookmarks": {
+    "message": "书签"
+  },
+  "pal_src_history": {
+    "message": "历史"
+  },
+  "pal_src_sessions": {
+    "message": "最近关闭"
+  },
+  "pal_src_downloads": {
+    "message": "下载"
+  },
+  "pal_src_action": {
+    "message": "动作"
+  },
+  "pal_empty_nogrant": {
+    "message": "还没开启任何来源。上面按一个，浏览器会问你一次；拒绝也不影响其他功能。"
+  },
+  "pal_empty_search": {
+    "message": "没有匹配的。按 Enter 直接拿去搜索。"
+  },
+  "pal_empty_type": {
+    "message": "打字开始找。↑↓ 选择，Enter 打开，Esc 关闭。"
   }
 }

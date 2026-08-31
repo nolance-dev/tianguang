@@ -469,5 +469,41 @@
   },
   "scroll_down": {
     "message": "往下看工作區"
+  },
+  "pal_title": {
+    "message": "指令面板"
+  },
+  "pal_hint": {
+    "message": "搜尋分頁、書籤、歷史、最近關閉、下載…"
+  },
+  "pal_enable": {
+    "message": "開啟來源"
+  },
+  "pal_src_tabs": {
+    "message": "分頁"
+  },
+  "pal_src_bookmarks": {
+    "message": "書籤"
+  },
+  "pal_src_history": {
+    "message": "歷史"
+  },
+  "pal_src_sessions": {
+    "message": "最近關閉"
+  },
+  "pal_src_downloads": {
+    "message": "下載"
+  },
+  "pal_src_action": {
+    "message": "動作"
+  },
+  "pal_empty_nogrant": {
+    "message": "還沒開啟任何來源。上面按一個，瀏覽器會問你一次；拒絕也不影響其他功能。"
+  },
+  "pal_empty_search": {
+    "message": "沒有相符的。按 Enter 直接拿去搜尋。"
+  },
+  "pal_empty_type": {
+    "message": "打字開始找。↑↓ 選擇，Enter 開啟，Esc 關閉。"
   }
 }

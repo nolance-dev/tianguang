@@ -13,6 +13,7 @@ import { SettingsPanel } from "./Settings";
 import { Links } from "./Links";
 import { Weather } from "./Weather";
 import { Cards } from "./Cards";
+import { Palette } from "./Palette";
 import { quoteOfDay } from "../lib/quotes";
 import * as ws from "../lib/workspace";
 
@@ -25,6 +26,19 @@ export function App() {
   const notice = useSignal<string | null>(null);
   const dialOpen = useSignal(false);
   const panelOpen = useSignal(false);
+  const palOpen = useSignal(false);
+
+  // Ctrl K（Mac 是 Cmd K）。搜尋列裡也吃，因為那裡才是手停的地方。
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        palOpen.value = true;
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
 
   useEffect(() => {
     const id = setInterval(() => (now.value = new Date()), TICK_MS);
@@ -206,6 +220,13 @@ export function App() {
         />
       )}
 
+      {palOpen.value && (
+        <Palette
+          engineId={settings.value.searchEngine}
+          onClose={() => (palOpen.value = false)}
+        />
+      )}
+
       {panelOpen.value && (
         <SettingsPanel
           value={settings.value}
@@ -286,6 +307,7 @@ function SearchBar({ engineId }: { engineId: string }) {
     <form
       class="search"
       role="search"
+      autocomplete="off"
       onSubmit={(e) => {
         e.preventDefault();
         const r = resolve(value.value, engineId);
@@ -302,7 +324,10 @@ function SearchBar({ engineId }: { engineId: string }) {
         aria-label={t("search_label")}
         placeholder={t("search_placeholder")}
         autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
         spellcheck={false}
+        enterkeyhint="search"
         onInput={(e) => (value.value = e.currentTarget.value)}
       />
       {hit.value ? <span class="hint">{hit.value.name}</span> : <span class="kbd">Ctrl K</span>}

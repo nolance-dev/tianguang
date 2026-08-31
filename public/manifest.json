@@ -11,10 +11,23 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "chrome_url_overrides": { "newtab": "index.html" },
-  "permissions": ["storage", "topSites", "favicon"],
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "permissions": [
+    "storage",
+    "topSites",
+    "favicon"
+  ],
   "optional_host_permissions": [
     "https://api.open-meteo.com/*",
     "https://geocoding-api.open-meteo.com/*"
+  ],
+  "optional_permissions": [
+    "tabs",
+    "bookmarks",
+    "history",
+    "sessions",
+    "downloads"
   ]
 }

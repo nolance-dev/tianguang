@@ -469,5 +469,41 @@
   },
   "scroll_down": {
     "message": "下のワークスペースへ"
+  },
+  "pal_title": {
+    "message": "コマンドバー"
+  },
+  "pal_hint": {
+    "message": "タブ、ブックマーク、履歴、最近閉じたもの、ダウンロードを検索…"
+  },
+  "pal_enable": {
+    "message": "ソースを有効にする"
+  },
+  "pal_src_tabs": {
+    "message": "タブ"
+  },
+  "pal_src_bookmarks": {
+    "message": "ブックマーク"
+  },
+  "pal_src_history": {
+    "message": "履歴"
+  },
+  "pal_src_sessions": {
+    "message": "最近閉じた"
+  },
+  "pal_src_downloads": {
+    "message": "ダウンロード"
+  },
+  "pal_src_action": {
+    "message": "操作"
+  },
+  "pal_empty_nogrant": {
+    "message": "まだ有効なソースがありません。上から選ぶとブラウザーが一度確認します。断っても他の機能に影響はありません。"
+  },
+  "pal_empty_search": {
+    "message": "一致するものがありません。Enter でウェブ検索に回せます。"
+  },
+  "pal_empty_type": {
+    "message": "入力して検索。↑↓ で選択、Enter で開く、Esc で閉じる。"
   }
 }
