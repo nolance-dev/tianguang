@@ -233,17 +233,17 @@
   "s_seconds": {
     "message": "顯示秒數"
   },
-  "s_layout": {
-    "message": "版面"
+  "s_quote": {
+    "message": "名言"
   },
-  "s_layout_stage": {
-    "message": "兩張牌"
+  "s_quote_text": {
+    "message": "自訂一句"
   },
-  "s_layout_flow": {
-    "message": "收合一屏"
+  "s_quote_by": {
+    "message": "出處"
   },
-  "s_layout_hint": {
-    "message": "兩張牌：時間一屏、工作區一屏，滾輪兩格換頁。收合一屏：滾輪一動，時間那一格收起來、縮進搜尋列左邊，名言、快速存取、工作區整批擠上來，全部在同一屏坐定。"
+  "s_quote_hint": {
+    "message": "留白就從內建的二十句裡隨機抽，每開一次新分頁換一句。填了就固定顯示你這一句。"
   },
   "s_background": {
     "message": "背景"

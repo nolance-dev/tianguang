@@ -57,13 +57,12 @@ const EN: Quote[] = [
 ];
 
 /**
- * 依日期挑一句，當天固定。
- * 用「距離紀元的天數」當索引，不用亂數 —— 同一天不管開幾次都是同一句。
+ * 每開一次新分頁抽一句。
+ *
+ * 原本是依日期固定一天一句。改掉了 —— 一天開二十次新分頁就看同一句話二十次，
+ * 那句話會從「讀到的東西」變成「牆上的花紋」，眼睛直接跳過去。
  */
-export function quoteOfDay(english: boolean, now = new Date()): Quote {
+export function randomQuote(english: boolean): Quote {
   const list = english ? EN : ZH;
-  const days = Math.floor(
-    new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() / 86400000,
-  );
-  return list[((days % list.length) + list.length) % list.length]!;
+  return list[Math.floor(Math.random() * list.length)]!;
 }

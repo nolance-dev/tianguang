@@ -197,17 +197,17 @@
   "s_seconds": {
     "message": "Show seconds"
   },
-  "s_layout": {
-    "message": "Layout"
+  "s_quote": {
+    "message": "Quote"
   },
-  "s_layout_stage": {
-    "message": "Two cards"
+  "s_quote_text": {
+    "message": "Your own line"
   },
-  "s_layout_flow": {
-    "message": "Collapse"
+  "s_quote_by": {
+    "message": "Attribution"
   },
-  "s_layout_hint": {
-    "message": "Two cards: the clock on one screen, the desk on the next; two wheel notches turn the page. Collapse: two notches fold the clock away into the search bar and everything below rises into place, all on one screen."
+  "s_quote_hint": {
+    "message": "Leave it empty and a line is drawn at random from the built-in twenty, fresh on every new tab. Fill it in and yours shows instead."
   },
   "s_background": {
     "message": "Background"

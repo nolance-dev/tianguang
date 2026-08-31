@@ -1615,7 +1615,8 @@ html::-webkit-scrollbar {
   display: grid;
   grid-template-rows: auto 1fr auto;
   padding: clamp(1.2rem, 3vw, 2.4rem);
-  /* 內容比一屏高時在自己這一層捲；捲到底了才換頁 */
+  /* 內容比一屏高時在自己這一層捲；捲到底了才換頁。橫向一律不捲 */
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
@@ -1639,14 +1640,13 @@ html::-webkit-scrollbar {
  */
 .screen.desk {
   z-index: 2;
-  transform: translateY(100%);
+  /* 多推 80px 是為了那道上緣陰影 —— 剛好推到 100% 的話，
+     陰影會往上溢回第一屏的底部，看起來像畫面下方多了一條霧 */
+  transform: translateY(calc(100% + 80px));
   border-radius: clamp(14px, 2vw, 26px) clamp(14px, 2vw, 26px) 0 0;
   box-shadow: 0 -34px 70px -26px rgba(0, 0, 0, 0.62);
   background: var(--glass-solid, rgba(255, 255, 255, 0.14));
   border-top: 1px solid var(--glass-line);
-  align-content: start;
-  gap: clamp(1rem, 3vh, 2.4rem);
-  padding-top: clamp(2rem, 8vh, 5rem);
 }
 
 .app[data-page="1"] .screen.desk {
@@ -1678,186 +1678,95 @@ html::-webkit-scrollbar {
   }
 }
 
-/* ---------- 一條直的 ---------- */
-
-/*
- * 另一種用法。不是把兩張牌接成一份長文件 —— 它一樣不捲。
- *
- * 展開時是「現在幾點」：大時間、日期、搜尋列。滾輪一動，時間那一格的高度
- * 收到零，底下的名言、快速存取、工作區整批擠上來，全部在同一屏坐定，
- * 大時間同時縮進搜尋列左邊。收合用 grid-template-rows 從 1fr 到 0fr，
- * 不必先量高度 —— 量高度那條路遇到換行、換字級、換視窗就會算錯一次。
- */
-.app.flow {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100dvh;
-  /* 展開時鎖住。內容比一屏高不是「可以捲」，是「還沒收起來」 */
-  overflow: hidden;
-  padding: clamp(1.2rem, 3vw, 2.4rem);
-}
-
-/* 收起來之後若內容還是比一屏高（矮螢幕、卡片開滿），才交還捲動 */
-.app.flow[data-tight="1"] {
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: none;
-}
-
-.app.flow::-webkit-scrollbar {
-  display: none;
-}
-
-.app.flow .top {
-  width: 100%;
-  flex: none;
-}
-
-.app.flow .hero-wrap {
-  display: grid;
-  grid-template-rows: 1fr;
-  width: 100%;
-  flex: none;
-  /* 塌到 0fr 時裡面那格的 padding 還在，沒有這道剪裁會留一條空白 */
-  overflow: hidden;
-  transition: grid-template-rows 0.62s cubic-bezier(0.22, 1, 0.28, 1);
-}
-
-.app.flow[data-tight="1"] .hero-wrap {
-  grid-template-rows: 0fr;
-}
-
-.app.flow .hero {
-  /* 0fr 那一格要真的塌下去，min-height 必須歸零 */
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(0.4rem, 1vw, 0.9rem);
-  padding: clamp(1.5rem, 7vh, 4.5rem) 0 clamp(0.6rem, 2vh, 1.4rem);
-  transition: opacity 0.32s ease;
-}
-
-.app.flow[data-tight="1"] .hero {
-  opacity: 0;
-}
-
-.app.flow .bar {
-  position: sticky;
-  top: 0;
-  z-index: 6;
-  flex: none;
-  width: min(44rem, 100%);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.7rem 0;
-}
-
-/*
- * 收起來之後這一列是最上面那一列。若內容還捲得動，底下要有東西擋，
- * 否則名言會從搜尋列後面穿過去。拉到 -50vw 是為了整條到邊，
- * 下緣用漸層收掉，才不會是一條硬邊的橫幅。
- */
-.app.flow .bar::before {
-  content: "";
+/* 第一屏底部的往下提示 */
+.cue {
   position: absolute;
-  left: -50vw;
-  right: -50vw;
-  top: -1.4rem;
-  bottom: -0.7rem;
-  z-index: -1;
-  pointer-events: none;
-  background: linear-gradient(var(--veil) 64%, transparent);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.app.flow[data-tight="1"] .bar::before {
-  opacity: 1;
-}
-
-.app.flow .bar .search {
-  flex: 1;
-  min-width: 0;
-  width: auto;
-  margin-top: 0;
-}
-
-/* 縮進搜尋列左邊的那顆時間。收起來前寬度為零，撐開才長出來 */
-.clock.mini {
-  font-size: clamp(1.05rem, 2vw, 1.4rem);
-  line-height: 1;
-  letter-spacing: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  max-width: 0;
-  opacity: 0;
+  left: 50%;
+  bottom: clamp(1rem, 3vh, 2rem);
+  translate: -50% 0;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  color: var(--fg-2);
   transition:
-    max-width 0.5s cubic-bezier(0.22, 1, 0.28, 1),
-    opacity 0.3s ease 0.12s,
-    margin 0.5s cubic-bezier(0.22, 1, 0.28, 1);
+    color 0.2s,
+    opacity 0.4s;
 }
 
-.app.flow[data-tight="1"] .clock.mini {
-  max-width: 6rem;
-  opacity: 1;
-  margin-right: 0.35rem;
+/* 已經在第二屏了就沒有「往下」這回事 */
+.app[data-page="1"] .cue {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cue:hover {
+  color: var(--fg);
+}
+
+.cue span {
+  display: block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  rotate: 45deg;
+  translate: 0 -0.15rem;
+  animation: nudge 2.4s ease-in-out infinite;
+}
+
+@keyframes nudge {
+  0%,
+  70%,
+  100% {
+    translate: 0 -0.15rem;
+  }
+  35% {
+    translate: 0 0.15rem;
+  }
 }
 
 /*
- * 擠上來的那一疊。展開時它整批在摺線下面，收起來之後往上補進來。
- * 間距在收起來後放寬一點 —— 一屏裡只剩這三塊，密著排反而顯得局促。
+ * 第二屏的內容整塊置中。
+ *
+ * 三列都是 auto、align-content 才有空間可以分 —— 留一個 1fr 在中間的話，
+ * 那一列會把多出來的高度全部吃掉，align-content 等於沒寫。
  */
-.app.flow .stream {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(1rem, 2.5vh, 1.8rem);
-  padding-top: clamp(0.8rem, 2vh, 1.4rem);
-  transition: gap 0.62s cubic-bezier(0.22, 1, 0.28, 1);
+.screen.desk {
+  grid-template-rows: auto auto auto;
+  align-content: center;
+  justify-items: center;
+  gap: clamp(1.2rem, 4vh, 3rem);
 }
 
-.app.flow[data-tight="1"] .stream {
-  gap: clamp(1.3rem, 4vh, 2.8rem);
-  padding-top: clamp(1.2rem, 3.5vh, 2.4rem);
+.screen.desk .quote {
+  margin: 0;
+  max-width: min(40rem, 88%);
+  /* 這一屏上它是主角，不是註腳，字級跟著站起來 */
+  font-size: clamp(1rem, 1.5vw, 1.3rem);
+  line-height: 1.9;
 }
 
-.app.flow .stream .quote,
-.app.flow .stream .links,
-.app.flow .stream .cards {
+:root[lang^="en"] .screen.desk .quote {
+  font-size: clamp(1.05rem, 1.6vw, 1.4rem);
+}
+
+.screen.desk .quote cite {
+  margin-top: 0.7rem;
+  font-size: 0.7rem;
+}
+
+.screen.desk .cards {
+  width: min(64rem, 92%);
   margin-top: 0;
 }
 
-.app.flow .stream .quote {
-  max-width: min(38rem, 88%);
-}
-
-.app.flow .stream .links {
-  max-width: min(52rem, 92%);
-}
-
-.app.flow .stream .cards {
-  width: min(64rem, 96%);
-}
-
-/* 收起來了就沒有「還有東西在下面」這回事 */
-.app.flow[data-tight="1"] .cue {
-  opacity: 0;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .app.flow .hero-wrap,
-  .app.flow .hero,
-  .app.flow .stream,
-  .clock.mini {
-    transition-duration: 0.01ms;
-  }
+.screen.desk .card {
+  min-height: 11rem;
 }
 
 /* ---------- 指令面板 ---------- */

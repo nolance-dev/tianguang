@@ -94,20 +94,24 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
           </section>
 
           <section>
-            <h3>{t("s_layout")}</h3>
-            <div class="seg" data-seg="layout" role="group" aria-label={t("s_layout")}>
-              {(["stage", "flow"] as const).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  aria-pressed={value.layout === mode}
-                  onClick={() => onChange({ layout: mode })}
-                >
-                  {t(`s_layout_${mode}`)}
-                </button>
-              ))}
-            </div>
-            <p class="note">{t("s_layout_hint")}</p>
+            <h3>{t("s_quote")}</h3>
+            <label class="row">
+              <span>{t("s_quote_text")}</span>
+              <input
+                type="text"
+                value={value.quoteText}
+                onInput={(e) => onChange({ quoteText: e.currentTarget.value })}
+              />
+            </label>
+            <label class="row">
+              <span>{t("s_quote_by")}</span>
+              <input
+                type="text"
+                value={value.quoteBy}
+                onInput={(e) => onChange({ quoteBy: e.currentTarget.value })}
+              />
+            </label>
+            <p class="note">{t("s_quote_hint")}</p>
           </section>
 
           <section>

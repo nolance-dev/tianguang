@@ -1,5 +1,5 @@
 import { useComputed, useSignal, useSignalEffect } from "@preact/signals";
-import { useEffect, useRef } from "preact/hooks";
+import { useEffect, useMemo, useRef } from "preact/hooks";
 import { meshCss, colorsAt, paletteAt, paletteForColor, paletteForImage } from "../lib/mesh";
 import { getImage, toUrl } from "../lib/images";
 import { decimalHour, dayFraction, greetSlot, indexAt } from "../lib/shichen";
@@ -14,7 +14,7 @@ import { Links } from "./Links";
 import { Weather } from "./Weather";
 import { Cards } from "./Cards";
 import { Palette } from "./Palette";
-import { quoteOfDay } from "../lib/quotes";
+import { randomQuote } from "../lib/quotes";
 import * as ws from "../lib/workspace";
 
 /** 秒針之外的東西一秒更新一次就夠。時辰環一分鐘才動 0.25 度，看不出來。 */
@@ -57,8 +57,6 @@ export function App() {
   const panelOpen = useSignal(false);
   const palOpen = useSignal(false);
   const page = useSignal(0);
-  /** 一條直的版面裡，捲過去之後搜尋列黏在頂端、大時間縮進列裡 */
-  const tight = useSignal(false);
 
   // Ctrl K（Mac 是 Cmd K）。搜尋列裡也吃，因為那裡才是手停的地方。
   useEffect(() => {
@@ -67,12 +65,10 @@ export function App() {
         e.preventDefault();
         palOpen.value = true;
       } else if (e.key === "PageDown" || e.key === "PageUp") {
-        // 瀏覽器的捲動被關掉了，往下的鍵盤路徑得自己補，
+        // 瀏覽器的捲動被關掉了，換頁的鍵盤路徑得自己補，
         // 否則只用鍵盤的人到不了工作區。
         e.preventDefault();
-        const down = e.key === "PageDown";
-        if (settings.peek().layout === "flow") tight.value = down;
-        else page.value = down ? 1 : 0;
+        page.value = e.key === "PageDown" ? 1 : 0;
       }
     };
     document.addEventListener("keydown", onKey);
@@ -95,34 +91,21 @@ export function App() {
       const dy = wheelPixels(e);
       if (!dy) return;
 
-      // 兩個版面收滾輪的方式一模一樣，差在收完之後動的是哪一格：
-      // 兩張牌動的是「第幾屏」，一條直的動的是「收起來了沒」。
-      const flowing = settings.peek().layout === "flow";
-
       const at = Date.now();
       if (at < until) return;
       if (at - last > RESET_MS || Math.sign(dy) !== Math.sign(acc)) acc = 0;
       last = at;
 
-      // 只有真的捲得動的容器才先讓它捲。一條直的在展開狀態是鎖住的，
-      // 這時內容雖然比一屏高，但那是「還沒收起來」，不是「可以捲」。
-      const scroller = flowing
-        ? tight.peek()
-          ? document.querySelector<HTMLElement>(".app.flow")
-          : null
-        : document.querySelector<HTMLElement>(".screen.on");
-      if (canScroll(scroller, dy)) return;
+      if (canScroll(document.querySelector<HTMLElement>(".screen.on"), dy)) return;
 
       e.preventDefault();
       acc += dy;
       if (Math.abs(acc) < NOTCH * NEED - 20) return;
 
-      const from = flowing ? (tight.peek() ? 1 : 0) : page.peek();
-      const next = from + (acc > 0 ? 1 : -1);
+      const next = page.peek() + (acc > 0 ? 1 : -1);
       acc = 0;
       if (next < 0 || next > 1) return;
-      if (flowing) tight.value = next === 1;
-      else page.value = next;
+      page.value = next;
       until = at + COOLDOWN_MS;
     };
 
@@ -229,10 +212,7 @@ export function App() {
   });
 
   const cfg = settings.value;
-  const flow = cfg.layout === "flow";
 
-  // 兩個版面用的是同一批元件，差別只在排法。先把件備好，下面兩條路各自組裝，
-  // 免得同一段 JSX 抄兩遍、改一邊忘一邊。
   const topBar = (
     <header class="top">
       <button
@@ -271,7 +251,7 @@ export function App() {
   );
   const search = <SearchBar engineId={cfg.searchEngine} />;
   const links = <Links links={cfg.links} onChange={(l) => patch({ links: l })} />;
-  const quote = cfg.cards.quote ? <QuoteLine /> : null;
+  const quote = cfg.cards.quote ? <QuoteLine text={cfg.quoteText} by={cfg.quoteBy} /> : null;
   const cards = <Cards value={work.value} onChange={patchWork} show={cfg.cards} />;
   const notices = (
     <footer class="bottom">{notice.value && <p class="notice">{notice.value}</p>}</footer>
@@ -284,81 +264,39 @@ export function App() {
       <div class="dim" />
       <div class="grain" />
 
-      {flow ? (
-        <div class="app flow" data-tight={tight.value ? "1" : "0"}>
+      <div class="app" data-page={page.value}>
+        {/* 收起來的那一屏設 inert：看不到的東西不該還能 Tab 進去 */}
+        <section class={`screen${page.value === 0 ? " on" : ""}`} inert={page.value !== 0}>
           {topBar}
 
-          {/*
-            滾輪一動，這一格的高度收到零，底下的東西整批擠上來坐定。
-            grid-template-rows 從 1fr 到 0fr 是唯一不必先量出高度就能做的收合 ——
-            量高度那條路遇到換行、換字級、換視窗大小就會算錯一次。
-          */}
-          <div class="hero-wrap">
-            <div class="hero">{hero}</div>
-          </div>
-
-          {/*
-            收起來之後這一列就是最上面那一列：左邊那顆小時間長出來，
-            上面的大時間同時淡掉 —— 讀起來是「時間縮進了搜尋列」，
-            不是憑空多一個時鐘。
-          */}
-          <div class="bar">
-            <Clock now={now.value} settings={cfg} mini onOpen={() => (dialOpen.value = true)} />
+          <main class="core">
+            {hero}
             {search}
-          </div>
-
-          <div class="stream">
-            {quote}
             {links}
-            {cards}
-            {notices}
-          </div>
+          </main>
 
-          {/* 不給提示的話沒人知道滾輪會把版面收起來 */}
+          {/* 往下還有一屏。不給提示的話沒人知道要捲。 */}
           <button
             class="cue"
             type="button"
             aria-label={t("scroll_down")}
-            onClick={() => (tight.value = true)}
+            onClick={() => (page.value = 1)}
           >
             <span />
           </button>
-        </div>
-      ) : (
-        <div class="app" data-page={page.value}>
-          {/* 收起來的那一屏設 inert：看不到的東西不該還能 Tab 進去 */}
-          <section class={`screen${page.value === 0 ? " on" : ""}`} inert={page.value !== 0}>
-            {topBar}
+        </section>
 
-            <main class="core">
-              {hero}
-              {search}
-              {links}
-            </main>
-
-            {/* 往下還有一屏。不給提示的話沒人知道要捲。 */}
-            <button
-              class="cue"
-              type="button"
-              aria-label={t("scroll_down")}
-              onClick={() => (page.value = 1)}
-            >
-              <span />
-            </button>
-          </section>
-
-          {/* 第二屏：工作區。語錄在最上面，底下是各個功能卡。 */}
-          <section
-            class={`screen desk${page.value === 1 ? " on" : ""}`}
-            id="desk"
-            inert={page.value !== 1}
-          >
-            {quote}
-            {cards}
-            {notices}
-          </section>
-        </div>
-      )}
+        {/* 第二屏：工作區。語錄在最上面，底下是各個功能卡。 */}
+        <section
+          class={`screen desk${page.value === 1 ? " on" : ""}`}
+          id="desk"
+          inert={page.value !== 1}
+        >
+          {quote}
+          {cards}
+          {notices}
+        </section>
+      </div>
 
       {/* 釘在右下角。放在版面流裡的話會被中間那一列推著跑，位置飄忽不定。 */}
       <button
@@ -407,27 +345,24 @@ function Clock({
   now,
   settings,
   onOpen,
-  mini,
 }: {
   now: Date;
   settings: Settings;
   onOpen: () => void;
-  /** 縮進搜尋列左邊的那一顆。同一個時鐘，只是小一號、不帶秒 */
-  mini?: boolean;
 }) {
   const h = now.getHours();
   const shown = settings.clock24 ? h : h % 12 === 0 ? 12 : h % 12;
   const pad = (n: number) => String(n).padStart(2, "0");
   return (
     <button
-      class={mini ? "clock mini" : "clock"}
+      class="clock"
       type="button"
       aria-haspopup="dialog"
       aria-label={t("dial_open")}
       onClick={onOpen}
     >
       {settings.clock24 ? pad(shown) : shown}:{pad(now.getMinutes())}
-      {settings.showSeconds && !mini && <span class="sec">{pad(now.getSeconds())}</span>}
+      {settings.showSeconds && <span class="sec">{pad(now.getSeconds())}</span>}
     </button>
   );
 }
@@ -497,12 +432,15 @@ function SearchBar({ engineId }: { engineId: string }) {
   );
 }
 
-function QuoteLine() {
-  const q = quoteOfDay(isEnglish());
+function QuoteLine({ text, by }: { text: string; by: string }) {
+  // 抽籤只抽一次。時鐘每秒重繪整棵樹，寫在 render 裡的話這句話會一秒換一句。
+  const drawn = useMemo(() => randomQuote(isEnglish()), []);
+  const own = text.trim();
+  const q = own ? { text: own, by: by.trim() } : drawn;
   return (
     <p class="quote">
       {q.text}
-      <cite>{q.by}</cite>
+      {q.by && <cite>{q.by}</cite>}
     </p>
   );
 }

@@ -420,16 +420,45 @@ describe("工作區卡片", () => {
     await vi.waitFor(() => expect(el.querySelector(".todos .done")).not.toBeNull());
   });
 
-  it("語錄一天固定一句，不是每次開分頁重抽", async () => {
+  it("語錄每開一次抽一次，不是整天同一句", async () => {
+    // 亂數固定成第一句與最後一句，才驗得出「換了沒」而不是碰運氣
+    const seq = [0, 0.999];
+    let i = 0;
+    const rand = vi.spyOn(Math, "random").mockImplementation(() => seq[i++ % seq.length]!);
+
     const a = mount(new Date(2026, 7, 31, 9, 0, 0));
     await vi.waitFor(() => expect(a.querySelector(".quote")).not.toBeNull());
     const first = a.querySelector(".quote")?.textContent;
 
     render(null, host!);
     host!.remove();
-    const b = mount(new Date(2026, 7, 31, 22, 0, 0));
+    const b = mount(new Date(2026, 7, 31, 9, 0, 0));
     await vi.waitFor(() => expect(b.querySelector(".quote")).not.toBeNull());
-    expect(b.querySelector(".quote")?.textContent, "同一天同一句").toBe(first);
+    expect(b.querySelector(".quote")?.textContent, "重開就換一句").not.toBe(first);
+    rand.mockRestore();
+  });
+
+  it("抽到的那句不會被每秒重繪換掉", async () => {
+    const el = mount(new Date(2026, 7, 31, 9, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector(".quote")).not.toBeNull());
+    const shown = el.querySelector(".quote")?.textContent;
+
+    await vi.advanceTimersByTimeAsync(3200);
+    await vi.waitFor(() => expect(el.querySelector(".clock")?.textContent).toContain("09:00"));
+    expect(el.querySelector(".quote")?.textContent, "時鐘走三秒，名言不該跟著跳").toBe(shown);
+  });
+
+  it("填了自訂名言就固定顯示那一句", async () => {
+    localStorage.setItem(
+      "tg.settings",
+      JSON.stringify({ schemaVersion: 1, quoteText: "早八是一種心境", quoteBy: "我自己" }),
+    );
+    const el = mount(new Date(2026, 7, 31, 9, 0, 0));
+    await vi.waitFor(() =>
+      expect(el.querySelector(".quote")?.textContent).toContain("早八是一種心境"),
+    );
+    expect(el.querySelector(".quote cite")?.textContent).toBe("我自己");
+    localStorage.removeItem("tg.settings");
   });
 });
 
@@ -455,56 +484,6 @@ describe("開頁馬上輸入", () => {
       expect((el.querySelector(".card.note textarea") as HTMLTextAreaElement).value).toBe("我剛打的"),
     );
     localStorage.removeItem("tg.workspace");
-  });
-});
-
-describe("一條直的版面", () => {
-  const seed = () =>
-    localStorage.setItem("tg.settings", JSON.stringify({ schemaVersion: 1, layout: "flow" }));
-
-  afterEach(() => localStorage.removeItem("tg.settings"));
-
-  it("全部串成一列，時間自己一格、搜尋列帶一顆小時間", async () => {
-    seed();
-    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelector(".app.flow")).not.toBeNull());
-
-    expect(el.querySelectorAll(".screen").length, "這個版面沒有分屏").toBe(0);
-    expect(el.querySelector(".hero-wrap .hero .clock"), "大時間在會收合的那一格裡").not.toBeNull();
-    expect(el.querySelector(".bar .search"), "搜尋列在那一列裡").not.toBeNull();
-    expect(el.querySelector(".bar .clock.mini"), "小時間在搜尋列左邊").not.toBeNull();
-    expect(el.querySelector(".cue"), "沒有提示就沒人知道滾輪會收版面").not.toBeNull();
-
-    // 名言、快速存取、工作區，順序照使用者要的
-    const stream = el.querySelector(".stream")!;
-    const order = [...stream.children].map((n) => n.className.split(" ")[0]);
-    expect(order.slice(0, 3)).toEqual(["quote", "links", "cards"]);
-  });
-
-  it("滾輪兩格把時間那一格收掉，下面整批擠上來", async () => {
-    seed();
-    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
-    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
-    await vi.waitFor(() => expect(el.querySelector(".app.flow")).not.toBeNull());
-
-    const app = el.querySelector<HTMLElement>(".app.flow")!;
-    const notch = (dy: number) =>
-      window.dispatchEvent(new WheelEvent("wheel", { deltaY: dy, cancelable: true }));
-
-    expect(app.dataset.tight).toBe("0");
-
-    notch(100);
-    await Promise.resolve();
-    expect(app.dataset.tight, "一格不動，跟兩張牌那邊同一套手感").toBe("0");
-
-    notch(100);
-    await vi.waitFor(() => expect(app.dataset.tight).toBe("1"));
-
-    // 往回滾兩格再展開，冷卻過了才算
-    await vi.advanceTimersByTimeAsync(800);
-    notch(-100);
-    notch(-100);
-    await vi.waitFor(() => expect(app.dataset.tight).toBe("0"));
   });
 });
 
