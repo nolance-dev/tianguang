@@ -10,6 +10,8 @@ import { DEFAULTS, load, save, type Settings } from "../lib/settings";
 import { Ring } from "./Ring";
 import { Dial } from "./Dial";
 import { SettingsPanel } from "./Settings";
+import { Links } from "./Links";
+import { Weather } from "./Weather";
 
 /** 秒針之外的東西一秒更新一次就夠。時辰環一分鐘才動 0.25 度，看不出來。 */
 const TICK_MS = 1000;
@@ -123,6 +125,15 @@ export function App() {
               <span>{shichenAlt(scIndex.value)}</span>
             </span>
           </button>
+
+          {settings.value.weatherOn && (
+            <Weather
+              lat={settings.value.lat}
+              lon={settings.value.lon}
+              place={settings.value.placeName || t("s_city")}
+              unit={settings.value.unit}
+            />
+          )}
         </header>
 
         <main class="core">
@@ -130,6 +141,7 @@ export function App() {
           <Clock now={now.value} settings={settings.value} onOpen={() => (dialOpen.value = true)} />
           <DateLine now={now.value} />
           <SearchBar engineId={settings.value.searchEngine} />
+          <Links links={settings.value.links} onChange={(links) => patch({ links })} />
         </main>
 
         <footer class="bottom">{notice.value && <p class="notice">{notice.value}</p>}</footer>

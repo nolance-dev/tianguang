@@ -888,3 +888,346 @@ body {
 .panel .note.err {
   color: var(--fg);
 }
+
+/* ---------- 快速連結 ---------- */
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(0.5rem, 1vw, 0.9rem);
+  margin-top: clamp(0.8rem, 2vh, 1.6rem);
+  max-width: min(46rem, 82%);
+}
+
+.links.empty {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.links.empty .msg {
+  text-align: center;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: var(--fg-2);
+  margin: 0;
+}
+
+.links.empty .msg b {
+  display: block;
+  color: var(--fg);
+  font-weight: 500;
+}
+
+.slot {
+  position: relative;
+}
+
+.slot.dragging {
+  opacity: 0.35;
+}
+
+.slot.over .tile {
+  border-color: var(--fg-2);
+}
+
+.tile {
+  width: clamp(3.2rem, 5.2vw, 4.2rem);
+  min-height: clamp(3.2rem, 5.2vw, 4.2rem);
+  border-radius: clamp(0.7rem, 1.2vw, 1rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.28rem;
+  padding: 0.4rem 0.3rem;
+  text-decoration: none;
+  color: var(--fg);
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: background 0.18s, border-color 0.18s, transform 0.18s;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.tile:hover {
+  background: var(--glass-line);
+  transform: translateY(-2px);
+}
+
+.tile .fav {
+  width: 1.4rem;
+  height: 1.4rem;
+  display: block;
+}
+
+.tile .glyph {
+  font-family: var(--f-cjk);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.tile .cap {
+  font-size: 0.6rem;
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fg-2);
+}
+
+.tile.add {
+  font-size: 1.1rem;
+  color: var(--fg-2);
+  border-style: dashed;
+}
+
+.slot .rm {
+  position: absolute;
+  top: -0.32rem;
+  right: -0.32rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.55rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--fg);
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.slot:hover .rm,
+.slot:focus-within .rm {
+  opacity: 1;
+}
+
+.tile.addform {
+  width: 13rem;
+  gap: 0.35rem;
+  padding: 0.55rem;
+  cursor: default;
+}
+
+.tile.addform input {
+  width: 100%;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--glass-line);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.1rem;
+  outline: none;
+}
+
+.tile.addform input.bad {
+  border-bottom-color: var(--fg);
+}
+
+.tile.addform .acts {
+  display: flex;
+  gap: 0.35rem;
+  width: 100%;
+  margin-top: 0.2rem;
+}
+
+.tile.addform button {
+  flex: 1;
+  font-family: inherit;
+  font-size: 0.68rem;
+  padding: 0.22rem;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--fg-2);
+  background: none;
+  border: 1px solid var(--glass-line);
+}
+
+.tile.addform button[type="submit"] {
+  color: var(--fg);
+  background: var(--glass-line);
+}
+
+/* ---------- 天氣 ---------- */
+
+.wx {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  margin: -0.4rem -0.6rem;
+  border-radius: 12px;
+  background: none;
+  border: 1px solid transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: right;
+  font-family: inherit;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.wx.open {
+  background: var(--glass);
+  border-color: var(--glass-line);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.wx .now {
+  display: block;
+  line-height: 1.35;
+}
+
+.wx .now b {
+  display: block;
+  font-family: var(--f-latin);
+  font-weight: 400;
+  font-size: clamp(1.4rem, 2.2vw, 1.9rem);
+  line-height: 1;
+}
+
+.wx .meta {
+  display: block;
+  font-family: var(--f-mono);
+  font-size: clamp(0.6rem, 0.8vw, 0.7rem);
+  letter-spacing: 0.08em;
+  color: var(--fg-2);
+}
+
+.wx .off {
+  margin-left: 0.4rem;
+  border: 1px solid var(--glass-line);
+  border-radius: 99px;
+  padding: 0 0.35rem;
+}
+
+.wx .days {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 10rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid var(--glass-line);
+}
+
+.wx .feels,
+.wx .credit {
+  font-family: var(--f-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: var(--fg-2);
+}
+
+.wx .credit {
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--glass-line);
+  opacity: 0.7;
+}
+
+.wx .day {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.72rem;
+}
+
+.wx .day .d {
+  font-family: var(--f-mono);
+  letter-spacing: 0.06em;
+  color: var(--fg-2);
+  flex: 0 0 2.4rem;
+  text-align: left;
+}
+
+.wx .day .c {
+  flex: 1;
+  text-align: left;
+  color: var(--fg-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wx .day .hl {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.wx .day .hl i {
+  font-style: normal;
+  color: var(--fg-2);
+  margin-left: 0.35rem;
+}
+
+/* ---------- 設定裡的城市清單 ---------- */
+
+.panel .wide {
+  flex: 1;
+  padding: 0.42rem 0.6rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: var(--fg);
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+}
+
+.panel .wide:hover {
+  background: var(--glass-line);
+}
+
+.places {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  border: 1px solid var(--glass-line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.places li + li {
+  border-top: 1px solid var(--glass-line);
+}
+
+.places button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  padding: 0.5rem 0.7rem;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  color: var(--fg);
+  font-family: inherit;
+  text-align: left;
+}
+
+.places button:hover {
+  background: var(--glass);
+}
+
+.places b {
+  font-size: 0.84rem;
+  font-weight: 500;
+}
+
+.places span {
+  font-size: 0.68rem;
+  color: var(--fg-2);
+}

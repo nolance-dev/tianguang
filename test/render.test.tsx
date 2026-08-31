@@ -193,9 +193,9 @@ describe("背景來源", () => {
     (el.querySelector(".gear") as HTMLButtonElement).click();
     await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
 
-    const solid = Array.from(document.querySelectorAll<HTMLButtonElement>(".seg button")).find(
-      (b) => b.textContent === zhTW.s_bg_solid.message || b.textContent === "Solid colour",
-    )!;
+    const solid = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[data-seg="background"] button'),
+    ).find((b) => b.textContent === zhTW.s_bg_solid.message || b.textContent === "Solid colour")!;
     solid.click();
     await vi.waitFor(() => expect(cssVar("--fg")).toBe("#F4F2EE"));
   });
@@ -205,7 +205,8 @@ describe("背景來源", () => {
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     (el.querySelector(".gear") as HTMLButtonElement).click();
     await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
-    expect(document.querySelectorAll(".seg button").length).toBe(3);
+    // 用 aria-label 鎖定背景那一組 —— 溫度單位也是 .seg，選擇器不能只看 class
+    expect(document.querySelectorAll('[data-seg="background"] button').length).toBe(3);
   });
 
   it("搜尋引擎下拉只寫引擎名，不塞前綴", async () => {
@@ -238,7 +239,9 @@ describe("背景濾鏡", () => {
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     (el.querySelector(".gear") as HTMLButtonElement).click();
     await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
-    const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>(".seg button"));
+    const buttons = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[data-seg="background"] button'),
+    );
     buttons[1]!.click();
     await vi.waitFor(() => expect(cssVar("--fg")).toBe("#F4F2EE"));
     expect(cssVar("--bg-filter")).toBe("none");
@@ -266,6 +269,43 @@ describe("拖滑桿不該重讀背景圖", () => {
     await vi.waitFor(() => expect(cssVar("--grain")).toBe("0.09"));
 
     expect(spy.mock.calls.length - before, "拖滑桿期間不該產生任何新的 blob 網址").toBe(0);
+    spy.mockRestore();
+  });
+});
+
+describe("快速連結與天氣", () => {
+  it("沒有連結時顯示空狀態，不是一排空格子", async () => {
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector(".links.empty")).not.toBeNull());
+    expect(el.querySelectorAll(".slot").length).toBe(0);
+    expect(el.querySelector(".links.empty .msg")?.textContent).toBeTruthy();
+  });
+
+  it("加一個連結：沒寫協定會補 https，磚上顯示網域", async () => {
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector(".links.empty")).not.toBeNull());
+    (el.querySelector(".tile.add") as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(el.querySelector(".addform")).not.toBeNull());
+
+    const url = el.querySelector(".addform input") as HTMLInputElement;
+    url.value = "github.com";
+    url.dispatchEvent(new Event("input", { bubbles: true }));
+    (el.querySelector(".addform") as HTMLFormElement).dispatchEvent(
+      new Event("submit", { bubbles: true, cancelable: true }),
+    );
+
+    await vi.waitFor(() => expect(el.querySelectorAll(".slot").length).toBe(1));
+    const a = el.querySelector(".slot a") as HTMLAnchorElement;
+    expect(a.getAttribute("href")).toBe("https://github.com/");
+    expect(el.querySelector(".slot .cap")?.textContent).toBe("github.com");
+  });
+
+  it("天氣預設不開，也就不會有任何對外請求", async () => {
+    const spy = vi.spyOn(globalThis, "fetch");
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+    expect(el.querySelector(".wx")).toBeNull();
+    expect(spy, "沒開天氣就不該連外").not.toHaveBeenCalled();
     spy.mockRestore();
   });
 });

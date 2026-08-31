@@ -1,6 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { t } from "../lib/i18n";
 import { ENGINES } from "../lib/search";
+import { MAX_LINKS, suggestFromTopSites } from "../lib/links";
+import { geocode, hasAccess, requestAccess, type Place } from "../lib/weather";
+import { locale } from "../lib/i18n";
 import type { Settings as S } from "../lib/settings";
 import { addImage, deleteImage, listImages, toUrl, type StoredImage } from "../lib/images";
 
@@ -92,7 +95,7 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
 
           <section>
             <h3>{t("s_background")}</h3>
-            <div class="seg" role="group" aria-label={t("s_background")}>
+            <div class="seg" data-seg="background" role="group" aria-label={t("s_background")}>
               {(["mesh", "solid", "image"] as const).map((src) => (
                 <button
                   key={src}
@@ -170,6 +173,16 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
                 onInput={(e) => onChange({ dim: Number(e.currentTarget.value) })}
               />
             </label>
+          </section>
+
+          <section>
+            <h3>{t("s_links")}</h3>
+            <LinkImport value={value} onChange={onChange} />
+          </section>
+
+          <section>
+            <h3>{t("s_weather")}</h3>
+            <WeatherSettings value={value} onChange={onChange} />
           </section>
 
           <section class="about">
@@ -294,5 +307,156 @@ function ImagePicker({
 
       <p class="note">{t("s_bg_local_only")}</p>
     </div>
+  );
+}
+
+
+/**
+ * 從瀏覽器的常用網站帶入。
+ *
+ * topSites 回傳幾筆是瀏覽器決定的，也可能一筆都沒有（剛裝機、剛清過歷史、
+ * 或大多在隱私視窗瀏覽）。所以按下去要有明確回饋，不能靜靜地什麼都不發生。
+ */
+function LinkImport({ value, onChange }: { value: S; onChange: (p: Partial<S>) => void }) {
+  const [msg, setMsg] = useState<string | null>(null);
+
+  return (
+    <>
+      <div class="row">
+        <span>
+          {value.links.length} / {MAX_LINKS}
+        </span>
+        <button
+          type="button"
+          class="wide"
+          onClick={async () => {
+            const found = await suggestFromTopSites(value.links);
+            if (found.length === 0) {
+              setMsg(t("s_links_none"));
+              return;
+            }
+            onChange({ links: [...value.links, ...found] });
+            setMsg(t("s_links_imported", String(found.length)));
+          }}
+        >
+          {t("s_links_import")}
+        </button>
+      </div>
+      {msg && <p class="note">{msg}</p>}
+    </>
+  );
+}
+
+/**
+ * 天氣。
+ *
+ * 網域權限是選用的，而且只有在使用者按下開關那一刻才索取 —— 必須在使用者
+ * 手勢裡呼叫，所以請求寫在 onChange 裡而不是 effect。被拒絕就維持關閉並說明，
+ * 不要留一個開著卻永遠讀不到資料的開關。
+ */
+function WeatherSettings({ value, onChange }: { value: S; onChange: (p: Partial<S>) => void }) {
+  const [query, setQuery] = useState("");
+  const [places, setPlaces] = useState<Place[] | null>(null);
+  const [note, setNote] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function toggle(on: boolean) {
+    if (!on) {
+      onChange({ weatherOn: false });
+      return;
+    }
+    const ok = (await hasAccess()) || (await requestAccess());
+    if (!ok) {
+      setNote(t("s_weather_denied"));
+      return;
+    }
+    setNote(null);
+    onChange({ weatherOn: true });
+  }
+
+  async function search() {
+    const name = query.trim();
+    if (!name) return;
+    setBusy(true);
+    setNote(null);
+    try {
+      const found = await geocode(name, locale());
+      setPlaces(found);
+      if (found.length === 0) setNote(t("s_city_none"));
+    } catch {
+      setNote(t("s_city_none"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <label class="row switch">
+        <span>{t("s_weather_on")}</span>
+        <input
+          type="checkbox"
+          checked={value.weatherOn}
+          onChange={(e) => void toggle(e.currentTarget.checked)}
+        />
+      </label>
+      <p class="note">{t("s_weather_perm")}</p>
+
+      <div class="row">
+        <span>{t("s_unit")}</span>
+        <div class="seg" data-seg="unit" role="group" aria-label={t("s_unit")}>
+          {(["c", "f"] as const).map((u) => (
+            <button
+              key={u}
+              type="button"
+              aria-pressed={value.unit === u}
+              onClick={() => onChange({ unit: u })}
+            >
+              °{u.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div class="row">
+        <span>{t("s_city")}</span>
+        <input
+          type="text"
+          value={query}
+          placeholder={value.placeName || t("s_city_search")}
+          onInput={(e) => setQuery(e.currentTarget.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              void search();
+            }
+          }}
+        />
+      </div>
+      {busy && <p class="note">…</p>}
+      {note && <p class="note">{note}</p>}
+
+      {places && places.length > 0 && (
+        <ul class="places">
+          {places.map((p) => (
+            <li key={`${p.lat},${p.lon}`}>
+              <button
+                type="button"
+                onClick={() => {
+                  // 城市同時決定天氣的座標與時辰盤日照弧的緯度 ——
+                  // 一個來源，之後不會出現天氣在台北、日照弧在別處的怪事
+                  onChange({ placeName: p.name, lat: p.lat, lon: p.lon });
+                  setPlaces(null);
+                  setQuery("");
+                }}
+              >
+                <b>{p.name}</b>
+                <span>{[p.admin, p.country].filter(Boolean).join(" · ")}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   );
 }

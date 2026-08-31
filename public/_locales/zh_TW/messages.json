@@ -295,5 +295,98 @@
   },
   "s_blur": {
     "message": "模糊"
+  },
+  "wx_clear": {
+    "message": "晴"
+  },
+  "wx_partly": {
+    "message": "晴時多雲"
+  },
+  "wx_cloudy": {
+    "message": "陰"
+  },
+  "wx_fog": {
+    "message": "有霧"
+  },
+  "wx_drizzle": {
+    "message": "毛毛雨"
+  },
+  "wx_rain": {
+    "message": "雨"
+  },
+  "wx_snow": {
+    "message": "雪"
+  },
+  "wx_showers": {
+    "message": "陣雨"
+  },
+  "wx_thunder": {
+    "message": "雷雨"
+  },
+  "wx_offline": {
+    "message": "離線"
+  },
+  "wx_feels": {
+    "message": "體感"
+  },
+  "links_empty_title": {
+    "message": "還沒有連結"
+  },
+  "links_empty_body": {
+    "message": "按下面加一個，或到設定裡從常用網站帶入。"
+  },
+  "links_add": {
+    "message": "新增連結"
+  },
+  "links_add_url": {
+    "message": "網址"
+  },
+  "links_add_title": {
+    "message": "名稱（可留白）"
+  },
+  "links_remove": {
+    "message": "移除"
+  },
+  "links_save": {
+    "message": "加入"
+  },
+  "links_cancel": {
+    "message": "取消"
+  },
+  "s_links": {
+    "message": "快速連結"
+  },
+  "s_links_import": {
+    "message": "從常用網站帶入"
+  },
+  "s_links_imported": {
+    "message": "帶入了 $1 個"
+  },
+  "s_links_none": {
+    "message": "瀏覽器沒有可以帶入的常用網站"
+  },
+  "s_weather": {
+    "message": "天氣"
+  },
+  "s_weather_on": {
+    "message": "顯示天氣"
+  },
+  "s_city": {
+    "message": "城市"
+  },
+  "s_city_search": {
+    "message": "搜尋城市…"
+  },
+  "s_city_none": {
+    "message": "找不到這個城市"
+  },
+  "s_unit": {
+    "message": "溫度單位"
+  },
+  "s_weather_perm": {
+    "message": "啟用天氣需要連線到 Open-Meteo。按下開關時瀏覽器會問你一次，拒絕也不影響其他功能。"
+  },
+  "s_weather_denied": {
+    "message": "沒有取得連線權限，天氣沒有開啟。"
   }
 }

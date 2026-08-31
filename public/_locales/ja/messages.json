@@ -295,5 +295,98 @@
   },
   "s_blur": {
     "message": "ぼかし"
+  },
+  "wx_clear": {
+    "message": "晴れ"
+  },
+  "wx_partly": {
+    "message": "晴れ時々くもり"
+  },
+  "wx_cloudy": {
+    "message": "くもり"
+  },
+  "wx_fog": {
+    "message": "霧"
+  },
+  "wx_drizzle": {
+    "message": "霧雨"
+  },
+  "wx_rain": {
+    "message": "雨"
+  },
+  "wx_snow": {
+    "message": "雪"
+  },
+  "wx_showers": {
+    "message": "にわか雨"
+  },
+  "wx_thunder": {
+    "message": "雷雨"
+  },
+  "wx_offline": {
+    "message": "オフライン"
+  },
+  "wx_feels": {
+    "message": "体感"
+  },
+  "links_empty_title": {
+    "message": "リンクはまだありません"
+  },
+  "links_empty_body": {
+    "message": "下から追加するか、設定でよく見るサイトから取り込めます。"
+  },
+  "links_add": {
+    "message": "リンクを追加"
+  },
+  "links_add_url": {
+    "message": "アドレス"
+  },
+  "links_add_title": {
+    "message": "名前（任意）"
+  },
+  "links_remove": {
+    "message": "削除"
+  },
+  "links_save": {
+    "message": "追加"
+  },
+  "links_cancel": {
+    "message": "キャンセル"
+  },
+  "s_links": {
+    "message": "クイックリンク"
+  },
+  "s_links_import": {
+    "message": "よく見るサイトから取り込む"
+  },
+  "s_links_imported": {
+    "message": "$1 件取り込みました"
+  },
+  "s_links_none": {
+    "message": "取り込めるサイトがありません"
+  },
+  "s_weather": {
+    "message": "天気"
+  },
+  "s_weather_on": {
+    "message": "天気を表示"
+  },
+  "s_city": {
+    "message": "都市"
+  },
+  "s_city_search": {
+    "message": "都市を検索…"
+  },
+  "s_city_none": {
+    "message": "その都市は見つかりません"
+  },
+  "s_unit": {
+    "message": "温度の単位"
+  },
+  "s_weather_perm": {
+    "message": "天気の表示には Open-Meteo への接続が必要です。オンにするとブラウザーが一度だけ確認します。断っても他の機能に影響はありません。"
+  },
+  "s_weather_denied": {
+    "message": "接続が許可されなかったため、天気はオフのままです。"
   }
 }

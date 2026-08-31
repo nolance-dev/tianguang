@@ -295,5 +295,98 @@
   },
   "s_blur": {
     "message": "模糊"
+  },
+  "wx_clear": {
+    "message": "晴"
+  },
+  "wx_partly": {
+    "message": "晴间多云"
+  },
+  "wx_cloudy": {
+    "message": "阴"
+  },
+  "wx_fog": {
+    "message": "有雾"
+  },
+  "wx_drizzle": {
+    "message": "毛毛雨"
+  },
+  "wx_rain": {
+    "message": "雨"
+  },
+  "wx_snow": {
+    "message": "雪"
+  },
+  "wx_showers": {
+    "message": "阵雨"
+  },
+  "wx_thunder": {
+    "message": "雷雨"
+  },
+  "wx_offline": {
+    "message": "离线"
+  },
+  "wx_feels": {
+    "message": "体感"
+  },
+  "links_empty_title": {
+    "message": "还没有链接"
+  },
+  "links_empty_body": {
+    "message": "按下面加一个，或到设置里从常用网站导入。"
+  },
+  "links_add": {
+    "message": "新增链接"
+  },
+  "links_add_url": {
+    "message": "网址"
+  },
+  "links_add_title": {
+    "message": "名称（可留空）"
+  },
+  "links_remove": {
+    "message": "移除"
+  },
+  "links_save": {
+    "message": "加入"
+  },
+  "links_cancel": {
+    "message": "取消"
+  },
+  "s_links": {
+    "message": "快速链接"
+  },
+  "s_links_import": {
+    "message": "从常用网站导入"
+  },
+  "s_links_imported": {
+    "message": "导入了 $1 个"
+  },
+  "s_links_none": {
+    "message": "浏览器没有可以导入的常用网站"
+  },
+  "s_weather": {
+    "message": "天气"
+  },
+  "s_weather_on": {
+    "message": "显示天气"
+  },
+  "s_city": {
+    "message": "城市"
+  },
+  "s_city_search": {
+    "message": "搜索城市…"
+  },
+  "s_city_none": {
+    "message": "找不到这个城市"
+  },
+  "s_unit": {
+    "message": "温度单位"
+  },
+  "s_weather_perm": {
+    "message": "启用天气需要连接 Open-Meteo。按下开关时浏览器会问你一次，拒绝也不影响其他功能。"
+  },
+  "s_weather_denied": {
+    "message": "没有取得连接权限，天气没有开启。"
   }
 }

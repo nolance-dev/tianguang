@@ -14,6 +14,7 @@
  */
 
 import { paletteAt } from "./mesh";
+import type { Link } from "./links";
 
 export const SCHEMA_VERSION = 1;
 
@@ -34,11 +35,12 @@ export interface Settings {
   grain: number;
   dim: number;
   blur: number;
-  /**
-   * 日照弧要用的座標。P2b 接上天氣之後由城市搜尋填入；
-   * 在那之前用台北當預設 —— 弧的形狀跟緯度有關，沒有座標就畫不出來。
-   * ponytail: 先寫死預設值，天氣做好就改成跟著城市走。
-   */
+  links: Link[];
+  weatherOn: boolean;
+  unit: "c" | "f";
+  /** 城市名。空字串代表還沒選過，預設用台北的座標把日照弧畫出來。 */
+  placeName: string;
+  /** 日照弧與天氣共用的座標，由城市搜尋填入 */
   lat: number;
   lon: number;
 }
@@ -56,6 +58,10 @@ export const DEFAULTS: Settings = {
   grain: 0.055,
   dim: 0,
   blur: 0,
+  links: [],
+  weatherOn: false,
+  unit: "c",
+  placeName: "",
   lat: 25.033,
   lon: 121.565,
 };

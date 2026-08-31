@@ -259,5 +259,98 @@
   },
   "s_blur": {
     "message": "Blur"
+  },
+  "wx_clear": {
+    "message": "Clear"
+  },
+  "wx_partly": {
+    "message": "Partly cloudy"
+  },
+  "wx_cloudy": {
+    "message": "Overcast"
+  },
+  "wx_fog": {
+    "message": "Fog"
+  },
+  "wx_drizzle": {
+    "message": "Drizzle"
+  },
+  "wx_rain": {
+    "message": "Rain"
+  },
+  "wx_snow": {
+    "message": "Snow"
+  },
+  "wx_showers": {
+    "message": "Showers"
+  },
+  "wx_thunder": {
+    "message": "Thunderstorms"
+  },
+  "wx_offline": {
+    "message": "offline"
+  },
+  "wx_feels": {
+    "message": "Feels like"
+  },
+  "links_empty_title": {
+    "message": "No links yet"
+  },
+  "links_empty_body": {
+    "message": "Add one below, or import your most visited sites from settings."
+  },
+  "links_add": {
+    "message": "Add a link"
+  },
+  "links_add_url": {
+    "message": "Address"
+  },
+  "links_add_title": {
+    "message": "Name (optional)"
+  },
+  "links_remove": {
+    "message": "Remove"
+  },
+  "links_save": {
+    "message": "Add"
+  },
+  "links_cancel": {
+    "message": "Cancel"
+  },
+  "s_links": {
+    "message": "Quick links"
+  },
+  "s_links_import": {
+    "message": "Import most visited"
+  },
+  "s_links_imported": {
+    "message": "Imported $1"
+  },
+  "s_links_none": {
+    "message": "The browser has no most-visited sites to import"
+  },
+  "s_weather": {
+    "message": "Weather"
+  },
+  "s_weather_on": {
+    "message": "Show weather"
+  },
+  "s_city": {
+    "message": "City"
+  },
+  "s_city_search": {
+    "message": "Search for a city…"
+  },
+  "s_city_none": {
+    "message": "No city by that name"
+  },
+  "s_unit": {
+    "message": "Units"
+  },
+  "s_weather_perm": {
+    "message": "Weather needs to reach Open-Meteo. The browser will ask once when you turn this on; declining changes nothing else."
+  },
+  "s_weather_denied": {
+    "message": "Access was not granted, so weather stayed off."
   }
 }
