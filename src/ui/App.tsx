@@ -260,6 +260,10 @@ export function App() {
       links={cfg.links}
       onLinks={(l) => patch({ links: l })}
       linkGrid={cfg.linkGrid}
+      wallpaper={cfg.background === "image" ? cfg.imageId : null}
+      onWallpaper={(id) =>
+        patch(id ? { background: "image", imageId: id } : { background: "mesh" })
+      }
     />
   );
   const notices = (

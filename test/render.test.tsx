@@ -474,6 +474,27 @@ describe("工作區卡片", () => {
     localStorage.removeItem("tg.settings");
   });
 
+  it("照片牆預設關著，開了才出現在第二屏", async () => {
+    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector(".cards")).not.toBeNull());
+    expect(el.querySelector(".card.photocard"), "剛裝好一張圖都沒有，不該擺一個空框").toBeNull();
+
+    render(null, host!);
+    host!.remove();
+    localStorage.setItem(
+      "tg.settings",
+      JSON.stringify({
+        schemaVersion: 1,
+        cards: { todos: true, note: true, pomodoro: false, quote: true, links: true, photos: true },
+      }),
+    );
+    const on = mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(on.querySelector(".card.photocard")).not.toBeNull());
+    // 跟設定抽屜共用同一個圖庫元件
+    expect(on.querySelector(".card.photocard .picker.wall")).not.toBeNull();
+    localStorage.removeItem("tg.settings");
+  });
+
   it("待辦空的時候是一句邀請，不是空框", async () => {
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelector(".cards")).not.toBeNull());

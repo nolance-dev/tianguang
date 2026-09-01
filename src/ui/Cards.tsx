@@ -2,6 +2,7 @@ import { useSignal } from "@preact/signals";
 import { useEffect, useRef } from "preact/hooks";
 import { t } from "../lib/i18n";
 import { Links } from "./Links";
+import { ImagePicker } from "./ImagePicker";
 import type { Link } from "../lib/links";
 import {
   COLS,
@@ -51,6 +52,9 @@ interface Props extends Body {
   links: Link[];
   onLinks: (links: Link[]) => void;
   linkGrid: boolean;
+  /** 目前當桌布的那張圖，沒有就是 null */
+  wallpaper: string | null;
+  onWallpaper: (id: string | null) => void;
 }
 
 /**
@@ -108,6 +112,7 @@ const VARIANT: Record<CardId, string> = {
   note: " note",
   pomodoro: " pomo",
   links: " linkcard",
+  photos: " photocard",
 };
 
 export function Cards({
@@ -119,6 +124,8 @@ export function Cards({
   links,
   onLinks,
   linkGrid,
+  wallpaper,
+  onWallpaper,
 }: Props) {
   const live = useSignal<Tile[] | null>(null);
   const held = useSignal<CardId | null>(null);
@@ -239,6 +246,19 @@ export function Cards({
           {tile.id === "todos" && <TodoCard value={value} onChange={onChange} />}
           {tile.id === "note" && <NoteCard value={value} onChange={onChange} />}
           {tile.id === "pomodoro" && <PomodoroCard value={value} onChange={onChange} />}
+          {tile.id === "photos" && (
+            <>
+              <header>
+                <b>{t("c_photos")}</b>
+              </header>
+              {/* 設定抽屜裡那個圖庫的放大版。點一張就換桌布，再點一次換回漸層 */}
+              <ImagePicker
+                wall
+                selected={wallpaper}
+                onSelect={(id) => onWallpaper(id === wallpaper ? null : id)}
+              />
+            </>
+          )}
           {tile.id === "links" && (
             <>
               <header>

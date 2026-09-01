@@ -511,5 +511,11 @@
   },
   "s_link_style_flat": {
     "message": "One by one"
+  },
+  "c_photos": {
+    "message": "Photos"
+  },
+  "s_card_photos": {
+    "message": "Photos"
   }
 }

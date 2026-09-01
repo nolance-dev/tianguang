@@ -36,7 +36,14 @@ export interface Settings {
   grain: number;
   dim: number;
   blur: number;
-  cards: { todos: boolean; note: boolean; pomodoro: boolean; quote: boolean; links: boolean };
+  cards: {
+    todos: boolean;
+    note: boolean;
+    pomodoro: boolean;
+    quote: boolean;
+    links: boolean;
+    photos: boolean;
+  };
   /** 快速連結的呈現：true 是九個一組的九宮格，false 是一個一個排開 */
   linkGrid: boolean;
   /** 工作區卡片的順序與尺寸。畫之前一律過 desk.normalize()。 */
@@ -67,7 +74,8 @@ export const DEFAULTS: Settings = {
   grain: 0.055,
   dim: 0,
   blur: 0,
-  cards: { todos: true, note: true, pomodoro: false, quote: true, links: true },
+  // 照片牆預設關著 —— 剛裝好一張圖都沒有，開著就是一個空框
+  cards: { todos: true, note: true, pomodoro: false, quote: true, links: true, photos: false },
   linkGrid: true,
   desk: DEFAULT_DESK,
   quoteText: "",

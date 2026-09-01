@@ -547,5 +547,11 @@
   },
   "s_link_style_flat": {
     "message": "單獨排開"
+  },
+  "c_photos": {
+    "message": "照片牆"
+  },
+  "s_card_photos": {
+    "message": "照片牆"
   }
 }

@@ -1427,6 +1427,41 @@ body::-webkit-scrollbar {
 }
 
 /*
+ * 照片牆。設定抽屜那個圖庫的放大版 —— 同一個元件，格子大一號、鋪滿整張卡。
+ * 上傳那塊釘在最上面，縮圖在下面自己捲，卡片拉高就看到更多張。
+ */
+.card.photocard .picker {
+  margin-top: 0;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.card.photocard .drop {
+  padding: 0.55rem 0.8rem;
+  flex: none;
+}
+
+.card.photocard .thumbs {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  align-content: start;
+}
+
+.card.photocard .thumbs::-webkit-scrollbar {
+  display: none;
+}
+
+/* 「圖只存在這台電腦」那句話在設定裡要講，卡片上每天看就是雜訊 */
+.card.photocard .picker > .note {
+  display: none;
+}
+
+/*
  * 快速存取這張卡。
  *
  * 九宮格：九個一組切塊。十幾個圖示排成一長條時，找東西得從頭掃到尾；

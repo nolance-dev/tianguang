@@ -6,7 +6,7 @@ import { MAX_LINKS, suggestFromTopSites } from "../lib/links";
 import { geocode, hasAccess, hasCjk, requestAccess, type Place } from "../lib/weather";
 import { locale } from "../lib/i18n";
 import type { Settings as S } from "../lib/settings";
-import { addImage, deleteImage, listImages, toUrl, type StoredImage } from "../lib/images";
+import { ImagePicker } from "./ImagePicker";
 
 /**
  * 設定抽屜。
@@ -199,7 +199,7 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
 
           <section>
             <h3>{t("s_cards")}</h3>
-            {(["links", "todos", "note", "pomodoro", "quote"] as const).map((k) => (
+            {(["links", "todos", "note", "pomodoro", "photos", "quote"] as const).map((k) => (
               <label class="row switch" key={k}>
                 <span>{t(`s_card_${k}`)}</span>
                 <input
@@ -273,103 +273,6 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
  * 圖存在 IndexedDB，只在這台電腦 —— storage.sync 每項 8KB，圖片塞不進去，
  * 而我們沒有伺服器。這件事直接寫在下面那行小字裡，不要讓使用者以為傳丟了。
  */
-function ImagePicker({
-  selected,
-  onSelect,
-}: {
-  selected: string | null;
-  onSelect: (id: string | null) => void;
-}) {
-  const [images, setImages] = useState<StoredImage[]>([]);
-  const [urls, setUrls] = useState<Record<string, string>>({});
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function refresh() {
-    const list = await listImages();
-    setImages(list);
-    setUrls((old) => {
-      // 舊的縮圖網址要收掉，不然每次重整都漏一批 blob
-      for (const url of Object.values(old)) URL.revokeObjectURL(url);
-      return Object.fromEntries(list.map((img) => [img.id, toUrl(img)]));
-    });
-  }
-
-  useEffect(() => {
-    void refresh();
-    return () => {
-      for (const url of Object.values(urls)) URL.revokeObjectURL(url);
-    };
-  }, []);
-
-  async function onFiles(files: FileList | null) {
-    if (!files?.length) return;
-    setBusy(true);
-    setError(null);
-    try {
-      let last = "";
-      for (const file of Array.from(files)) {
-        if (!file.type.startsWith("image/")) continue;
-        last = (await addImage(file)).id;
-      }
-      await refresh();
-      if (last) onSelect(last);
-    } catch {
-      // 配額滿、檔案壞掉、或格式解不開都會走到這裡。講清楚發生什麼事就好。
-      setError(t("s_bg_upload_failed"));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div class="picker">
-      <label class="drop">
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={(e) => void onFiles(e.currentTarget.files)}
-        />
-        <span>{busy ? t("s_bg_working") : t("s_bg_pick")}</span>
-      </label>
-
-      {error && <p class="note err">{error}</p>}
-
-      {images.length > 0 && (
-        <div class="thumbs">
-          {images.map((img) => (
-            <div key={img.id} class={`thumb${img.id === selected ? " on" : ""}`}>
-              <button
-                type="button"
-                style={{ backgroundImage: `url("${urls[img.id]}")` }}
-                aria-pressed={img.id === selected}
-                aria-label={t("s_bg_use")}
-                onClick={() => onSelect(img.id)}
-              />
-              <button
-                type="button"
-                class="rm"
-                aria-label={t("s_bg_remove")}
-                onClick={async () => {
-                  await deleteImage(img.id);
-                  if (img.id === selected) onSelect(null);
-                  await refresh();
-                }}
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <p class="note">{t("s_bg_local_only")}</p>
-    </div>
-  );
-}
-
-
 /**
  * 從瀏覽器的常用網站帶入。
  *
