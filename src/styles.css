@@ -458,6 +458,36 @@ body::-webkit-scrollbar {
   transition: transform 0.15s cubic-bezier(0.34, 1.62, 0.58, 1);
 }
 
+/*
+ * 開盤那五秒。
+ *
+ * 每一環先自轉一段再落回現在：起點是各自的 --spin（圈數不同，所以頻率不同），
+ * 終點一律是零 —— 也就是 transform 已經擺好的那個「現在」。
+ * 曲線幾乎全部的角度在前兩秒轉完，最後一秒只剩幾度在爬，所以是「越轉越慢，
+ * 慢慢停在現在」而不是勻速轉五圈然後急停。
+ *
+ * 動的是 rotate 不是 transform。transform 每分每秒都在被改寫，動畫接管它就等於
+ * 把時間定位吃掉；rotate 是獨立的變換屬性，跟 transform 各算各的再相乘。
+ */
+@keyframes ringspin {
+  from {
+    rotate: var(--spin);
+  }
+  to {
+    rotate: 0deg;
+  }
+}
+
+.dial g[style*="--spin"] {
+  animation: ringspin var(--dur, 5s) cubic-bezier(0.07, 0.78, 0.14, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dial g[style*="--spin"] {
+    animation: none;
+  }
+}
+
 .dial text {
   fill: currentColor;
   transition: fill-opacity 0.3s, font-size 0.3s;
