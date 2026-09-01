@@ -25,6 +25,10 @@ export function MediaCard() {
   const list = useSignal<Playing[]>([]);
   const allowed = useSignal<boolean | null>(null);
   const windowId = useSignal<number | null>(null);
+  const refused = useSignal(false);
+  // 開發伺服器上沒有 chrome.permissions。按了不會有任何事，
+  // 而一顆按了沒反應的鈕比不給還糟 —— 直接講明白為什麼。
+  const inExtension = typeof chrome !== "undefined" && !!chrome.permissions;
 
   useEffect(() => {
     void hasMediaAccess().then((ok) => (allowed.value = ok));
@@ -59,16 +63,23 @@ export function MediaCard() {
           <b>{t("c_media")}</b>
         </header>
         <div class="media-ask">
-          <p>{t("c_media_ask")}</p>
-          <button
-            type="button"
-            onClick={() => {
-              // 權限必須在使用者手勢裡要
-              void requestMediaAccess().then((ok) => (allowed.value = ok));
-            }}
-          >
-            {t("c_media_allow")}
-          </button>
+          <p>{t(inExtension ? "c_media_ask" : "c_media_devmode")}</p>
+          {inExtension && (
+            <button
+              type="button"
+              onClick={() => {
+                // 權限必須在使用者手勢裡要，所以請求就寫在 onClick
+                void requestMediaAccess().then((ok) => {
+                  allowed.value = ok;
+                  // 被拒絕也要有回音。按了什麼都沒變會讓人以為按壞了
+                  refused.value = !ok;
+                });
+              }}
+            >
+              {t("c_media_allow")}
+            </button>
+          )}
+          {refused.value && <p class="err">{t("c_media_refused")}</p>}
         </div>
       </div>
     );

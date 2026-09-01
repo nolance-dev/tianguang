@@ -816,5 +816,11 @@
   },
   "c_media_allow": {
     "message": "允許"
+  },
+  "c_media_devmode": {
+    "message": "這裡是開發伺服器，沒有瀏覽器的分頁 API。要用這張卡，得把 dist 載進 Edge 當擴充功能跑。"
+  },
+  "c_media_refused": {
+    "message": "沒有拿到權限。可以再按一次，或到 edge://extensions 裡開。"
   }
 }

@@ -780,5 +780,11 @@
   },
   "c_media_allow": {
     "message": "Allow"
+  },
+  "c_media_devmode": {
+    "message": "This is the dev server — no tabs API here. Load dist into Edge as an extension to use this card."
+  },
+  "c_media_refused": {
+    "message": "Permission was not granted. Try again, or turn it on in edge://extensions."
   }
 }

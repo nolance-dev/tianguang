@@ -3001,6 +3001,12 @@ body::-webkit-scrollbar {
   border-color: var(--fg-2);
 }
 
+/* 被拒絕的回音。沒有它的話「按了沒反應」跟「按了被拒絕」長得一樣 */
+.media-ask .err {
+  color: var(--holi, #c2453d);
+  font-size: 0.72rem;
+}
+
 /*
  * 快速存取這張卡。
  *
