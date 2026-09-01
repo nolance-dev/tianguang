@@ -722,5 +722,29 @@
         "content": "$1"
       }
     }
+  },
+  "c_weather": {
+    "message": "天氣"
+  },
+  "s_card_weather": {
+    "message": "天氣"
+  },
+  "wx_loading": {
+    "message": "讀取中…"
+  },
+  "wx_zoom_in": {
+    "message": "放大"
+  },
+  "wx_zoom_out": {
+    "message": "縮小"
+  },
+  "wx_radar_ask": {
+    "message": "雷達圖要連到 RainViewer 取得回波資料。"
+  },
+  "wx_radar_allow": {
+    "message": "允許"
+  },
+  "wx_radar_none": {
+    "message": "現在取不到回波，先顯示底圖"
   }
 }

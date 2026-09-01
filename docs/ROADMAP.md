@@ -27,14 +27,17 @@
 - 統計圖自己畫 SVG，不裝圖表套件 —— 一根長條加一條基線，
   套件的體積比這件事本身大十倍。
 
-## 3. 天氣元件
+## 3. 天氣元件 ← 完成
 
 預設大小只顯示現在的天氣（等於現在右上角那塊，改成一張卡）。
 拉大之後顯示所在城市的雷達回波圖。
 
-- **Open-Meteo 沒有雷達圖。** 現有的天氣來源只給數值，圖磚要另外找 ——
-  RainViewer 有免費的公開 API 和圖磚，需要標註來源，也要多一個
-  optional host permission。
+- **Open-Meteo 沒有雷達圖。** 圖磚接 RainViewer，索引 JSON 要一個
+  optional host permission；圖磚本身是 `<img>`，不需要權限。
+- **底圖踩過一個坑**：原本用 CARTO 的 `basemaps.cartocdn.com`，
+  沒有 API key 時它回 HTTP 200、回一張真的 PNG、大小也正常 ——
+  但圖上印著「API KEY REQUIRED」的浮水印。用眼睛看才看得出來。
+  改成 Esri 的灰階 canvas，免金鑰、無浮水印，標註 Esri／HERE／OSM。
 - 地圖不裝 Leaflet。雷達圖就是一格一格的圖磚，自己算 x/y/z 再擺
   `<img>` 就好，一個地圖套件比整個擴充功能還大。
 - 拉大才載圖磚。預設大小一張圖都不該抓 —— 那是每開一個新分頁都要付的網路成本。

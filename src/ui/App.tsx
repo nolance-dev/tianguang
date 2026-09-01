@@ -269,6 +269,13 @@ export function App() {
       linkGrid={cfg.linkGrid}
       now={now.value}
       onExpand={(id) => (sheet.value = id)}
+      weather={{
+        lat: cfg.lat,
+        lon: cfg.lon,
+        place: cfg.placeName || t("s_city"),
+        unit: cfg.unit,
+        dark: !palette.value.light,
+      }}
       photo={{ id: cfg.photoId, rotate: cfg.photoRotate }}
       onPhoto={(p) =>
         patch({

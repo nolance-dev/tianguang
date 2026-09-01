@@ -4,6 +4,7 @@ import { t } from "../lib/i18n";
 import { Links } from "./Links";
 import { PhotoWall } from "./PhotoWall";
 import { CalendarCard } from "./Calendar";
+import { WeatherCard } from "./WeatherCard";
 import type { Link } from "../lib/links";
 import {
   COLS,
@@ -57,6 +58,8 @@ interface Props extends Body {
   onPhoto: (patch: Partial<{ id: string | null; rotate: number }>) => void;
   now: Date;
   onExpand: (id: CardId) => void;
+  /** 天氣卡要的座標與單位。亮暗由呼叫端判斷，卡片自己不看時間 */
+  weather: { lat: number; lon: number; place: string; unit: "c" | "f"; dark: boolean };
 }
 
 /**
@@ -116,6 +119,7 @@ const VARIANT: Record<CardId, string> = {
   links: " linkcard",
   photos: " photocard",
   calendar: " calcard",
+  weather: " wxcardwrap",
 };
 
 /** 有整屏詳細畫面的卡。沒列在這裡的就不長那顆展開鈕。 */
@@ -134,6 +138,7 @@ export function Cards({
   onPhoto,
   now,
   onExpand,
+  weather,
 }: Props) {
   const live = useSignal<Tile[] | null>(null);
   const held = useSignal<CardId | null>(null);
@@ -257,6 +262,7 @@ export function Cards({
           {tile.id === "pomodoro" && <PomodoroCard value={value} onChange={onChange} />}
           {tile.id === "photos" && <PhotoWall photo={photo} onPhoto={onPhoto} />}
           {tile.id === "calendar" && <CalendarCard events={value.events} now={now} />}
+          {tile.id === "weather" && <WeatherCard {...weather} />}
           {tile.id === "links" && (
             <>
               <header>

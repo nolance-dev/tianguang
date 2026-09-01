@@ -2376,6 +2376,236 @@ body::-webkit-scrollbar {
 }
 
 /*
+ * 天氣這張卡。
+ *
+ * 小的時候是溫度加三天；夠大才長出雷達。「夠大」看的是元素的實際尺寸，
+ * 不是 --w／--h —— 同樣兩欄寬，在窄視窗上可能只有三百像素，
+ * 那個寬度放雷達只是一團看不出在哪裡的色塊。
+ */
+.wxcard {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: grab;
+  user-select: none;
+}
+
+.card.held .wxcard {
+  cursor: grabbing;
+}
+
+.wx-now {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.8rem 0.9rem 0.5rem;
+  /* 疊在雷達上時要讀得到，所以自己帶一層由上往下的暗角 */
+  position: relative;
+  z-index: 2;
+}
+
+.wx-now b {
+  font-family: var(--f-latin);
+  font-size: clamp(1.6rem, 14cqw, 3rem);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.wx-now .meta {
+  font-family: var(--f-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.09em;
+  color: var(--fg-2);
+}
+
+.wx-now .stale {
+  font-family: var(--f-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  color: var(--fg-2);
+  opacity: 0.7;
+}
+
+.wx-days {
+  margin-top: auto;
+  display: flex;
+  gap: 0.9rem;
+  padding: 0 0.9rem 0.8rem;
+  font-family: var(--f-latin);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.wx-days span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.wx-days i {
+  font-style: normal;
+  font-family: var(--f-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.1em;
+  color: var(--fg-2);
+}
+
+/*
+ * 雷達。
+ *
+ * 底圖與回波用同一組 z/x/y 圖磚，所以對齊不必靠調整 —— 兩邊本來就在
+ * 同一套座標上。位置由 cover() 依容器實際尺寸算出來，城市剛好在正中央。
+ */
+.radar {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: inherit;
+  background: var(--glass);
+}
+
+.radar .tile {
+  position: absolute;
+  width: 256px;
+  height: 256px;
+  display: block;
+  /* 圖磚之間的接縫在某些縮放比例下會露出一條白線 */
+  image-rendering: auto;
+}
+
+/*
+ * 回波壓在底圖上要看得見底下的海岸線，所以降一點透明度。
+ * 不用 mix-blend-mode：RainViewer 的圖磚本來就是為了疊在底圖上而畫的
+ * 半透明色塊，再套一次混色模式在亮底圖上會把弱回波整個洗掉。
+ */
+.radar .tile.echo {
+  opacity: 0.8;
+}
+
+/* 中心的準星。沒有它就不知道這張圖是對著哪裡畫的 */
+.radar .pin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: rgba(0, 0, 0, 0.55);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.radar .here {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, 0.7rem);
+  font-family: var(--f-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.radar .zoom {
+  position: absolute;
+  right: 0.4rem;
+  top: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.radar .zoom button {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 0;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  transition: opacity 0.18s;
+}
+
+.radar .zoom button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.radar-ask {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1rem;
+  text-align: center;
+  background: var(--veil, rgba(8, 11, 18, 0.86));
+  font-size: 0.74rem;
+  line-height: 1.6;
+  color: var(--fg-2);
+}
+
+.radar-ask button {
+  border: 1px solid var(--glass-line);
+  background: none;
+  color: var(--fg);
+  border-radius: 8px;
+  padding: 0.3rem 1rem;
+  font-family: inherit;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.radar-note {
+  position: absolute;
+  left: 50%;
+  bottom: 1.8rem;
+  transform: translateX(-50%);
+  margin: 0;
+  font-family: var(--f-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+/* 兩個來源都要求標註。這是授權條件，不是禮貌 */
+.radar-credit {
+  position: absolute;
+  left: 0.5rem;
+  bottom: 0.35rem;
+  font-family: var(--f-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.06em;
+  color: #fff;
+  opacity: 0.75;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+}
+
+.radar-credit b {
+  font-weight: 400;
+  margin-right: 0.35em;
+}
+
+/*
  * 快速存取這張卡。
  *
  * 九宮格：九個一組切塊。十幾個圖示排成一長條時，找東西得從頭掃到尾；

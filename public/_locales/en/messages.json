@@ -686,5 +686,29 @@
         "content": "$1"
       }
     }
+  },
+  "c_weather": {
+    "message": "Weather"
+  },
+  "s_card_weather": {
+    "message": "Weather"
+  },
+  "wx_loading": {
+    "message": "Loading…"
+  },
+  "wx_zoom_in": {
+    "message": "Zoom in"
+  },
+  "wx_zoom_out": {
+    "message": "Zoom out"
+  },
+  "wx_radar_ask": {
+    "message": "The radar needs to reach RainViewer for echo data."
+  },
+  "wx_radar_allow": {
+    "message": "Allow"
+  },
+  "wx_radar_none": {
+    "message": "No echo data right now — showing the base map"
   }
 }
