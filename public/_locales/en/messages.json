@@ -710,5 +710,54 @@
   },
   "wx_radar_none": {
     "message": "No echo data right now — showing the base map"
+  },
+  "cal_week": {
+    "message": "Wk"
+  },
+  "s_second_cal": {
+    "message": "Second calendar"
+  },
+  "s_cal_none": {
+    "message": "None"
+  },
+  "s_cal_chinese": {
+    "message": "Chinese lunar"
+  },
+  "s_cal_roc": {
+    "message": "Minguo"
+  },
+  "s_cal_japanese": {
+    "message": "Japanese era"
+  },
+  "s_cal_islamic": {
+    "message": "Hijri"
+  },
+  "s_cal_hebrew": {
+    "message": "Hebrew"
+  },
+  "s_holidays": {
+    "message": "Show local holidays"
+  },
+  "s_holidays_allow": {
+    "message": "Allow fetching holidays"
+  },
+  "s_holidays_hint": {
+    "message": "Follows the country of the city you set (currently $1). Change the city and these change with it.",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "s_holidays_unsupported": {
+    "message": "No holiday calendar is available for this country ($1).",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "s_holidays_devmode": {
+    "message": "Holidays cannot be fetched on the dev server — Google's calendar sends no CORS headers. Load dist into Edge as an extension to see them."
   }
 }

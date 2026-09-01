@@ -2,6 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { t } from "../lib/i18n";
 import { ENGINES } from "../lib/search";
 import { DEFAULT_DESK } from "../lib/desk";
+import { SECOND_CALS } from "../lib/secondcal";
+import { hasHolidayAccess, requestHolidayAccess, supported } from "../lib/holidays";
 import { MAX_LINKS, suggestFromTopSites } from "../lib/links";
 import { geocode, hasAccess, hasCjk, requestAccess, type Place } from "../lib/weather";
 import { locale } from "../lib/i18n";
@@ -92,6 +94,26 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
                 onChange={(e) => onChange({ showSeconds: e.currentTarget.checked })}
               />
             </label>
+          </section>
+
+          <section>
+            <h3>{t("c_calendar")}</h3>
+            <label class="row">
+              <span>{t("s_second_cal")}</span>
+              <select
+                value={value.secondCal}
+                onChange={(e) =>
+                  onChange({ secondCal: e.currentTarget.value as S["secondCal"] })
+                }
+              >
+                {SECOND_CALS.map((c) => (
+                  <option key={c} value={c}>
+                    {t(`s_cal_${c}`)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <Holidays value={value} onChange={onChange} />
           </section>
 
           <section>
@@ -276,6 +298,60 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
  * 而我們沒有伺服器。這件事直接寫在下面那行小字裡，不要讓使用者以為傳丟了。
  */
 /**
+ * 當地節日的開關。
+ *
+ * 三件事要分開講：使用者要不要、這個國家有沒有行事曆、以及有沒有連線權限。
+ * 混成一個開關的話，關掉之後使用者不知道是自己關的還是根本沒支援。
+ */
+function Holidays({ value, onChange }: { value: S; onChange: (p: Partial<S>) => void }) {
+  const [allowed, setAllowed] = useState<boolean | null>(null);
+  // 開發伺服器上沒有 chrome.permissions，那顆「允許」按了不會有任何事
+  const inExtension = typeof chrome !== "undefined" && !!chrome.permissions;
+
+  useEffect(() => {
+    void hasHolidayAccess().then(setAllowed);
+  }, []);
+
+  const known = supported(value.countryCode);
+
+  return (
+    <>
+      <label class="row switch">
+        <span>{t("s_holidays")}</span>
+        <input
+          type="checkbox"
+          checked={value.holidaysOn}
+          onChange={(e) => onChange({ holidaysOn: e.currentTarget.checked })}
+        />
+      </label>
+
+      {value.holidaysOn && !known && (
+        <p class="note">{t("s_holidays_unsupported", value.countryCode || "—")}</p>
+      )}
+
+      {value.holidaysOn && known && allowed === false && inExtension ? (
+        <button
+          type="button"
+          class="wide"
+          onClick={() => {
+            // 權限必須在使用者手勢裡要
+            void requestHolidayAccess().then(setAllowed);
+          }}
+        >
+          {t("s_holidays_allow")}
+        </button>
+      ) : null}
+
+      {value.holidaysOn && known && !inExtension && (
+        <p class="note">{t("s_holidays_devmode")}</p>
+      )}
+
+      <p class="note">{t("s_holidays_hint", value.countryCode || "—")}</p>
+    </>
+  );
+}
+
+/**
  * 從瀏覽器的常用網站帶入。
  *
  * topSites 回傳幾筆是瀏覽器決定的，也可能一筆都沒有（剛裝機、剛清過歷史、
@@ -413,7 +489,7 @@ function WeatherSettings({ value, onChange }: { value: S; onChange: (p: Partial<
                 onClick={() => {
                   // 城市同時決定天氣的座標與時辰盤日照弧的緯度 ——
                   // 一個來源，之後不會出現天氣在台北、日照弧在別處的怪事
-                  onChange({ placeName: p.name, lat: p.lat, lon: p.lon });
+                  onChange({ placeName: p.name, countryCode: p.countryCode ?? "", lat: p.lat, lon: p.lon });
                   setPlaces(null);
                   setQuery("");
                 }}

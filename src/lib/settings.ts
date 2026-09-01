@@ -16,6 +16,7 @@
 import { paletteAt } from "./mesh";
 import type { Link } from "./links";
 import { DEFAULT_DESK, type Tile } from "./desk";
+import type { SecondCal } from "./secondcal";
 
 export const SCHEMA_VERSION = 1;
 
@@ -62,6 +63,12 @@ export interface Settings {
   unit: "c" | "f";
   /** 城市名。空字串代表還沒選過，預設用台北的座標把日照弧畫出來。 */
   placeName: string;
+  /** 選城市時一併記下來的 ISO 國碼。節日看它，不看座標 */
+  countryCode: string;
+  /** 月曆格子裡的第二套曆法 */
+  secondCal: SecondCal;
+  /** 月曆上要不要標當地節日 */
+  holidaysOn: boolean;
   /** 日照弧與天氣共用的座標，由城市搜尋填入 */
   lat: number;
   lon: number;
@@ -101,6 +108,9 @@ export const DEFAULTS: Settings = {
   weatherOn: false,
   unit: "c",
   placeName: "",
+  countryCode: "TW",
+  secondCal: "chinese",
+  holidaysOn: true,
   lat: 25.033,
   lon: 121.565,
 };

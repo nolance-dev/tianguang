@@ -13,6 +13,7 @@ import { SettingsPanel } from "./Settings";
 import { Weather } from "./Weather";
 import { Cards } from "./Cards";
 import { CalendarDetail } from "./Calendar";
+import { around, byDate, hasHolidayAccess, loadHolidays, supported } from "../lib/holidays";
 import { Focus } from "./Focus";
 import { Palette } from "./Palette";
 import { randomQuote } from "../lib/quotes";
@@ -42,12 +43,30 @@ function wheelPixels(e: WheelEvent): number {
   return e.deltaY;
 }
 
-/** 這一屏自己還捲得動嗎。捲得動就先讓它捲，捲到底了才換頁。 */
+/** 這個元素自己還捲得動嗎。內容比框高還不夠 —— 得真的是個捲動容器才算。 */
 function canScroll(el: HTMLElement | null, dy: number): boolean {
   if (!el) return false;
   const max = el.scrollHeight - el.clientHeight;
   if (max <= 1) return false;
+  const oy = getComputedStyle(el).overflowY;
+  if (oy !== "auto" && oy !== "scroll") return false;
   return dy > 0 ? el.scrollTop < max - 1 : el.scrollTop > 1;
+}
+
+/**
+ * 從游標底下往上找第一個還捲得動的祖先。
+ *
+ * 本來只問「這一屏捲得動嗎」。屏本身通常剛好放得下，於是回答永遠是不行，
+ * 滾輪就被換頁吃掉了 —— 卡片裡面那些會捲的東西（照片牆的縮圖、待辦清單、
+ * 日曆的行程）全部捲不動，第三張之後的照片根本拿不到。
+ */
+function scrollableUnder(from: EventTarget | null, dy: number): HTMLElement | null {
+  let el: HTMLElement | null = from instanceof Element ? (from as HTMLElement) : null;
+  while (el) {
+    if (canScroll(el, dy)) return el;
+    el = el.parentElement;
+  }
+  return null;
 }
 
 export function App() {
@@ -59,6 +78,8 @@ export function App() {
   const palOpen = useSignal(false);
   /** 展開成整屏的那張卡。null 是沒有展開 */
   const sheet = useSignal<string | null>(null);
+  /** 當地節日，日期 → 名字。抓不到就是空的，月曆照常畫 */
+  const holidays = useSignal<Map<string, string[]>>(new Map());
   const page = useSignal(0);
 
   // Ctrl K（Mac 是 Cmd K）。搜尋列裡也吃，因為那裡才是手停的地方。
@@ -83,6 +104,27 @@ export function App() {
     return () => clearInterval(id);
   }, []);
 
+  /*
+   * 當地節日。
+   *
+   * 只在有權限、有支援的國碼、而且使用者要顯示時才抓。抓不到不擋任何事 ——
+   * 月曆本來就畫得出來，節日是加分不是前提。
+   */
+  useSignalEffect(() => {
+    const s = settings.value;
+    if (!s.holidaysOn || !supported(s.countryCode)) {
+      holidays.value = new Map();
+      return;
+    }
+    const lang = isEnglish() ? "en" : "zh-tw";
+    void hasHolidayAccess().then((ok) => {
+      if (!ok) return;
+      void loadHolidays(s.countryCode, lang).then((list) => {
+        holidays.value = byDate(around(list));
+      });
+    });
+  });
+
   // 滾輪。彈窗開著時完全不收，那時滾輪屬於彈窗。
   useEffect(() => {
     let acc = 0;
@@ -99,7 +141,7 @@ export function App() {
       if (at - last > RESET_MS || Math.sign(dy) !== Math.sign(acc)) acc = 0;
       last = at;
 
-      if (canScroll(document.querySelector<HTMLElement>(".screen.on"), dy)) return;
+      if (scrollableUnder(e.target, dy)) return;
 
       e.preventDefault();
       acc += dy;
@@ -203,6 +245,8 @@ export function App() {
     // 壓在 --fg 那個色塊上的字。它是 --fg 的反面，不是背景色 ——
     // 用半透明的 --card 當字色會糊成灰的。
     r.style.setProperty("--fg-ink", p.light ? "#F7F5F1" : "#12161F");
+    // 節日與星期天的紅。亮底要深一點才咬得住，暗底要淺一點才不會糊成褐色
+    r.style.setProperty("--holi", p.light ? "#B3382F" : "#E8776C");
     r.style.setProperty("--grain", String(s.grain));
     r.style.setProperty("--dim", String(s.dim));
     // 模糊只對自訂圖有意義，而且只有真的要模糊時才掛濾鏡 ——
@@ -269,6 +313,10 @@ export function App() {
       linkGrid={cfg.linkGrid}
       now={now.value}
       onExpand={(id) => (sheet.value = id)}
+      calendar={{
+        secondCal: cfg.secondCal,
+        todayHoliday: holidays.value.get(ws.today())?.[0] ?? null,
+      }}
       weather={{
         lat: cfg.lat,
         lon: cfg.lon,
@@ -344,6 +392,8 @@ export function App() {
           events={work.value.events}
           onChange={(events) => patchWork({ events })}
           now={now.value}
+          secondCal={cfg.secondCal}
+          holidays={holidays.value}
           onClose={() => (sheet.value = null)}
         />
       )}

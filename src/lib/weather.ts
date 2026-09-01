@@ -24,6 +24,8 @@ export interface Place {
   name: string;
   admin?: string;
   country?: string;
+  /** ISO 3166-1 alpha-2。節日要用它挑行事曆 */
+  countryCode?: string;
   lat: number;
   lon: number;
 }
@@ -184,6 +186,7 @@ export async function geocode(name: string, language: string): Promise<Place[]> 
       name: string;
       admin1?: string;
       country?: string;
+      country_code?: string;
       latitude: number;
       longitude: number;
     }>;
@@ -192,6 +195,7 @@ export async function geocode(name: string, language: string): Promise<Place[]> 
     name: r.name,
     admin: r.admin1,
     country: r.country,
+    countryCode: r.country_code?.toUpperCase(),
     lat: r.latitude,
     lon: r.longitude,
   }));

@@ -22,7 +22,8 @@
   "optional_host_permissions": [
     "https://api.open-meteo.com/*",
     "https://geocoding-api.open-meteo.com/*",
-    "https://api.rainviewer.com/*"
+    "https://api.rainviewer.com/*",
+    "https://calendar.google.com/*"
   ],
   "optional_permissions": [
     "tabs",

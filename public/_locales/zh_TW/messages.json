@@ -746,5 +746,54 @@
   },
   "wx_radar_none": {
     "message": "現在取不到回波，先顯示底圖"
+  },
+  "cal_week": {
+    "message": "週"
+  },
+  "s_second_cal": {
+    "message": "第二曆法"
+  },
+  "s_cal_none": {
+    "message": "不顯示"
+  },
+  "s_cal_chinese": {
+    "message": "農曆"
+  },
+  "s_cal_roc": {
+    "message": "民國"
+  },
+  "s_cal_japanese": {
+    "message": "日本年號"
+  },
+  "s_cal_islamic": {
+    "message": "伊斯蘭曆"
+  },
+  "s_cal_hebrew": {
+    "message": "希伯來曆"
+  },
+  "s_holidays": {
+    "message": "顯示當地節日"
+  },
+  "s_holidays_allow": {
+    "message": "允許連線取得節日"
+  },
+  "s_holidays_hint": {
+    "message": "依照你設定的城市所在國家（目前 $1）。換城市就跟著換。",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "s_holidays_unsupported": {
+    "message": "目前這個國家（$1）沒有可用的節日行事曆。",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "s_holidays_devmode": {
+    "message": "開發伺服器抓不到節日：Google 的行事曆不給跨網域讀，要載進 Edge 當擴充功能才拿得到。"
   }
 }

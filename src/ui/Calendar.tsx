@@ -1,7 +1,17 @@
 import { useSignal } from "@preact/signals";
 import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
 import { isEnglish, t } from "../lib/i18n";
-import { byDay, makeEvent, monthGrid, onDay, shiftMonth, ymd, type Event } from "../lib/agenda";
+import {
+  byDay,
+  isoWeek,
+  makeEvent,
+  monthGrid,
+  onDay,
+  shiftMonth,
+  ymd,
+  type Event,
+} from "../lib/agenda";
+import { subDate, type SecondCal } from "../lib/secondcal";
 
 /**
  * 日曆。
@@ -20,19 +30,26 @@ const PER_CELL = 2;
 interface CardProps {
   events: Event[];
   now: Date;
+  secondCal: SecondCal;
+  holiday: string | null;
 }
 
-export function CalendarCard({ events, now }: CardProps) {
+export function CalendarCard({ events, now, secondCal, holiday }: CardProps) {
   const en = isEnglish();
   const busy = onDay(events, ymd(now)).length;
+  const sub = subDate(now, secondCal);
   const fmt = (opts: Intl.DateTimeFormatOptions) =>
     new Intl.DateTimeFormat(en ? "en-GB" : undefined, opts).format(now);
 
   return (
-    <div class="calface" data-grab>
+    <div class={`calface${now.getDay() === 0 ? " sun" : ""}`} data-grab>
       <span class="cal-wd">{fmt({ weekday: "long" })}</span>
       <b class="cal-day">{now.getDate()}</b>
-      <span class="cal-mo">{fmt({ month: "long" })}</span>
+      <span class="cal-mo">
+        {fmt({ month: "long" })}
+        {sub && <i>{sub.text}</i>}
+      </span>
+      {holiday && <span class="cal-holi">{holiday}</span>}
       {busy > 0 && <span class="cal-busy">{t("cal_today_count", String(busy))}</span>}
     </div>
   );
@@ -42,10 +59,20 @@ interface DetailProps {
   events: Event[];
   onChange: (events: Event[]) => void;
   now: Date;
+  secondCal: SecondCal;
+  /** 日期 → 那天的節日名 */
+  holidays: Map<string, string[]>;
   onClose: () => void;
 }
 
-export function CalendarDetail({ events, onChange, now, onClose }: DetailProps) {
+export function CalendarDetail({
+  events,
+  onChange,
+  now,
+  secondCal,
+  holidays,
+  onClose,
+}: DetailProps) {
   const en = isEnglish();
   const year = useSignal(now.getFullYear());
   const month = useSignal(now.getMonth());
@@ -117,25 +144,41 @@ export function CalendarDetail({ events, onChange, now, onClose }: DetailProps) 
       <div class="full-body">
         <section class="cal-main">
           <div class="cal-grid">
+            <span class="cal-head wk">{t("cal_week")}</span>
             {cells.slice(0, 7).map((d) => (
-              <span key={`h${d.getDay()}`} class="cal-head">
+              <span key={`h${d.getDay()}`} class={`cal-head${d.getDay() === 0 ? " sun" : ""}`}>
                 {label(d, { weekday: "short" })}
               </span>
             ))}
-            {cells.map((d) => {
+            {cells.map((d, i) => {
               const key = ymd(d);
               const mine = grouped.get(key) ?? [];
-              return (
+              const holi = holidays.get(key);
+              const sub = subDate(d, secondCal);
+              // 每一列開頭插一格週數。星期一起算，所以每七格一次
+              const week =
+                i % 7 === 0 ? (
+                  <span key={`w${key}`} class="cal-wk">
+                    {isoWeek(d)}
+                  </span>
+                ) : null;
+              const cell = (
                 <button
                   key={key}
                   type="button"
                   class={`cal-cell${d.getMonth() !== month.value ? " out" : ""}${
                     key === todayKey ? " today" : ""
-                  }${key === picked.value ? " on" : ""}`}
+                  }${key === picked.value ? " on" : ""}${d.getDay() === 0 ? " sun" : ""}${
+                    holi ? " holi" : ""
+                  }`}
                   aria-current={key === todayKey ? "date" : undefined}
                   onClick={() => (picked.value = key)}
                 >
-                  <span class="num">{d.getDate()}</span>
+                  <span class="row1">
+                    <span class="num">{d.getDate()}</span>
+                    {sub && <i class={sub.lead ? "sub lead" : "sub"}>{sub.text}</i>}
+                  </span>
+                  {holi && <span class="holiname">{holi[0]}</span>}
                   {mine.slice(0, PER_CELL).map((e) => (
                     <span key={e.id} class="chip">
                       {e.time && <i>{e.time}</i>}
@@ -147,6 +190,7 @@ export function CalendarDetail({ events, onChange, now, onClose }: DetailProps) 
                   )}
                 </button>
               );
+              return week ? [week, cell] : cell;
             })}
           </div>
         </section>
@@ -160,6 +204,12 @@ export function CalendarDetail({ events, onChange, now, onClose }: DetailProps) 
               weekday: "long",
             })}
           </b>
+
+          {(holidays.get(picked.value) ?? []).map((name) => (
+            <span key={name} class="cal-holiday">
+              {name}
+            </span>
+          ))}
 
           <AddEvent date={picked.value} onAdd={(e) => onChange([...events, e])} />
 

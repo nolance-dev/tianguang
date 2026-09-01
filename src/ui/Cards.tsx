@@ -4,6 +4,7 @@ import { t } from "../lib/i18n";
 import { Links } from "./Links";
 import { PhotoWall } from "./PhotoWall";
 import { CalendarCard } from "./Calendar";
+import type { SecondCal } from "../lib/secondcal";
 import { WeatherCard } from "./WeatherCard";
 import type { Link } from "../lib/links";
 import {
@@ -58,6 +59,8 @@ interface Props extends Body {
   onPhoto: (patch: Partial<{ id: string | null; rotate: number }>) => void;
   now: Date;
   onExpand: (id: CardId) => void;
+  /** 月曆卡要的：第二套曆法，以及今天的節日 */
+  calendar: { secondCal: SecondCal; todayHoliday: string | null };
   /** 天氣卡要的座標與單位。亮暗由呼叫端判斷，卡片自己不看時間 */
   weather: { lat: number; lon: number; place: string; unit: "c" | "f"; dark: boolean };
 }
@@ -139,6 +142,7 @@ export function Cards({
   now,
   onExpand,
   weather,
+  calendar,
 }: Props) {
   const live = useSignal<Tile[] | null>(null);
   const held = useSignal<CardId | null>(null);
@@ -157,8 +161,9 @@ export function Cards({
 
   function startMove(e: PointerEvent, id: CardId) {
     if (e.button !== 0) return;
-    // 標題列上的按鈕（例如未來加的收合鈕）不該變成拖曳把手
-    if ((e.target as HTMLElement).closest("button, input, textarea, a")) return;
+    // 標題列上的控制項不該變成拖曳把手。select 漏掉的話，
+    // 按下去是開始拖卡片，下拉選單永遠打不開。
+    if ((e.target as HTMLElement).closest("button, input, textarea, select, a, label")) return;
     e.preventDefault();
     held.value = id;
     live.value = order;
@@ -261,7 +266,14 @@ export function Cards({
           {tile.id === "note" && <NoteCard value={value} onChange={onChange} />}
           {tile.id === "pomodoro" && <PomodoroCard value={value} onChange={onChange} />}
           {tile.id === "photos" && <PhotoWall photo={photo} onPhoto={onPhoto} />}
-          {tile.id === "calendar" && <CalendarCard events={value.events} now={now} />}
+          {tile.id === "calendar" && (
+            <CalendarCard
+              events={value.events}
+              now={now}
+              secondCal={calendar.secondCal}
+              holiday={calendar.todayHoliday}
+            />
+          )}
           {tile.id === "weather" && <WeatherCard {...weather} />}
           {tile.id === "links" && (
             <>

@@ -73,6 +73,21 @@ export function monthGrid(year: number, month: number): Date[] {
   return Array.from({ length: 42 }, (_, i) => new Date(year, month, 1 - lead + i));
 }
 
+/**
+ * ISO 週數。週一起算，含當年第一個週四的那一週是第一週。
+ *
+ * 不自己用「一月一日算第一週」那套 —— 跨年那幾天會算出第五十三或第零週，
+ * 而月曆左邊那一欄寫著 0 比不寫還糟。
+ */
+export function isoWeek(date: Date): number {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  // 挪到那一週的星期四：ISO 規定一週屬於它星期四所在的那一年
+  d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
+  const first = new Date(d.getFullYear(), 0, 4);
+  first.setDate(first.getDate() + 3 - ((first.getDay() + 6) % 7));
+  return 1 + Math.round((d.getTime() - first.getTime()) / (7 * 86400000));
+}
+
 /** 往前或往後 n 個月。用 1 號當基準，才不會在 1/31 往後跳成 3/3。 */
 export function shiftMonth(year: number, month: number, delta: number): [number, number] {
   const d = new Date(year, month + delta, 1);
