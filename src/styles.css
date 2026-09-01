@@ -1940,15 +1940,6 @@ html::-webkit-scrollbar {
   min-height: 11rem;
 }
 
-/*
- * 卡片換位置、改大小時的過場。時間跟第二屏插上來那一下同一組曲線，
- * 只是短一半 —— 換頁是「翻到另一件事」，挪一張卡不是。
- */
-::view-transition-group(*) {
-  animation-duration: 0.3s;
-  animation-timing-function: cubic-bezier(0.22, 1, 0.28, 1);
-}
-
 /* ---------- 指令面板 ---------- */
 
 .pal {
