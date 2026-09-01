@@ -2415,15 +2415,37 @@ body::-webkit-scrollbar {
   cursor: grabbing;
 }
 
+/*
+ * 溫度那一塊。
+ *
+ * pointer-events: none 是必要的 —— 它是一整條橫跨卡片的區塊，而且疊在
+ * 雷達上面。不關掉的話，雷達上緣的東西（縮放鈕）通通點不到：
+ * 看得見、按不下去，因為手指按到的是這片看不見的文字區。
+ */
 .wx-now {
   flex: none;
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
   padding: 0.8rem 0.9rem 0.5rem;
-  /* 疊在雷達上時要讀得到，所以自己帶一層由上往下的暗角 */
   position: relative;
   z-index: 2;
+  pointer-events: none;
+}
+
+/*
+ * 壓在地圖上就要有底。雷達的色塊什麼顏色都有，單靠 --fg 跟底圖對比
+ * 在回波正好蓋過城市時就讀不到了。由上往下收掉，不做成一條硬邊的橫幅。
+ */
+.wxcard:has(.radar) .wx-now {
+  padding-bottom: 1.6rem;
+  background: linear-gradient(180deg, var(--veil, rgba(8, 11, 18, 0.86)) 12%, transparent);
+}
+
+/* 城市與天況在地圖上比在卡片上難讀，這裡把它拉回主色 */
+.wxcard:has(.radar) .wx-now .meta {
+  color: var(--fg);
+  opacity: 0.78;
 }
 
 .wx-now b {
@@ -2523,6 +2545,21 @@ body::-webkit-scrollbar {
   pointer-events: none;
 }
 
+/*
+ * 壓在地圖上的字一律用 --fg 加一圈 --veil 的光暈，不寫死成白字。
+ *
+ * 底圖是跟著主題換的：亮色主題配亮色底圖，白字在上面等於沒有。
+ * --veil 是同一個主題的頁面底色，拿它當外框剛好就是那個主題的對比色。
+ */
+.radar .here,
+.radar-note,
+.radar-credit {
+  color: var(--fg);
+  text-shadow:
+    0 0 3px var(--veil, rgba(8, 11, 18, 0.86)),
+    0 1px 2px var(--veil, rgba(8, 11, 18, 0.86));
+}
+
 .radar .here {
   position: absolute;
   left: 50%;
@@ -2531,17 +2568,19 @@ body::-webkit-scrollbar {
   font-family: var(--f-mono);
   font-size: 0.6rem;
   letter-spacing: 0.1em;
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
   pointer-events: none;
   white-space: nowrap;
 }
 
-/* 放左上角。右上角是卡片的展開鈕，右下角是改大小的把手 */
+/*
+ * 右上角。左上角是溫度，右下角是改大小的把手 —— 天氣這張卡沒有展開鈕，
+ * 所以右上角是空的，而那也是地圖縮放鍵本來就該在的地方。
+ */
 .radar .zoom {
   position: absolute;
-  left: 0.4rem;
+  right: 0.4rem;
   top: 0.4rem;
+  z-index: 3;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -2604,21 +2643,17 @@ body::-webkit-scrollbar {
   font-family: var(--f-mono);
   font-size: 0.58rem;
   letter-spacing: 0.08em;
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
-/* 兩個來源都要求標註。這是授權條件，不是禮貌 */
+/* 兩個來源都要求標註。這是授權條件，不是禮貌 —— 所以它要讀得到 */
 .radar-credit {
   position: absolute;
   left: 0.5rem;
   bottom: 0.35rem;
   font-family: var(--f-mono);
-  font-size: 0.5rem;
+  font-size: 0.52rem;
   letter-spacing: 0.06em;
-  color: #fff;
-  opacity: 0.75;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  opacity: 0.9;
   pointer-events: none;
 }
 
