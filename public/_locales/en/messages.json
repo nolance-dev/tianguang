@@ -858,5 +858,29 @@
   },
   "sx_stars_3": {
     "message": "Well, Ghost, Willow, Star, Extended Net, Wings, Chariot"
+  },
+  "sx_dir_0": {
+    "message": "East"
+  },
+  "sx_dir_1": {
+    "message": "North"
+  },
+  "sx_dir_2": {
+    "message": "West"
+  },
+  "sx_dir_3": {
+    "message": "South"
+  },
+  "sx_season_0": {
+    "message": "Spring"
+  },
+  "sx_season_1": {
+    "message": "Winter"
+  },
+  "sx_season_2": {
+    "message": "Autumn"
+  },
+  "sx_season_3": {
+    "message": "Summer"
   }
 }

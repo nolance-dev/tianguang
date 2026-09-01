@@ -6,7 +6,7 @@
  * 否則會出現「弧上寫日落 18:13、旁邊那欄寫 18:07」這種自己打自己的事。
  */
 
-import { apparentLongitude } from "./solar";
+import { apparentLongitude, jieqiIndex } from "./solar";
 import { CN_DAY } from "./secondcal";
 
 /**
@@ -35,6 +35,17 @@ export function houIndex(date: Date): number {
 export function daysToNextJieqi(date: Date): number {
   const rest = 15 - (apparentLongitude(date) % 15);
   return Math.max(1, Math.round(rest / 0.9856));
+}
+
+/**
+ * 當令的是哪一象：0 青龍、1 玄武、2 白虎、3 朱雀 —— 順序照 FourSymbols 裡的排法。
+ *
+ * 二十八宿分四象本來就是分四季的。節氣索引 0 是春分，立春在 315 度也就是索引 21，
+ * 所以春天是 21、22、23、0、1、2 這六個節氣，其後每六個換一季。
+ */
+export function seasonSymbol(date: Date): number {
+  const season = Math.floor((((jieqiIndex(date) + 3) % 24) / 6)); // 0 春 1 夏 2 秋 3 冬
+  return [0, 3, 2, 1][season]; // 春青龍、夏朱雀、秋白虎、冬玄武
 }
 
 let fmt: Intl.DateTimeFormat | null = null;

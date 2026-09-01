@@ -574,5 +574,29 @@
   },
   "sx_stars_3": {
     "message": "井 鬼 柳 星 張 翼 軫"
+  },
+  "sx_dir_0": {
+    "message": "東"
+  },
+  "sx_dir_1": {
+    "message": "北"
+  },
+  "sx_dir_2": {
+    "message": "西"
+  },
+  "sx_dir_3": {
+    "message": "南"
+  },
+  "sx_season_0": {
+    "message": "春"
+  },
+  "sx_season_1": {
+    "message": "冬"
+  },
+  "sx_season_2": {
+    "message": "秋"
+  },
+  "sx_season_3": {
+    "message": "夏"
   }
 }

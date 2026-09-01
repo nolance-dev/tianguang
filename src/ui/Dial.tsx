@@ -303,7 +303,7 @@ export function Dial({ now, lat, lon, onClose }: Props) {
           <path class="dial-mark" d={`M${C} 6 l8 15 h-16 z`} />
         </svg>
 
-        <FourSymbols />
+        <FourSymbols now={now} />
 
         <div class="dial-center">
           <div class="dc-time">

@@ -524,9 +524,40 @@ body::-webkit-scrollbar {
   animation: hubbreathe 5s ease-in-out infinite;
 }
 
+/*
+ * 呼吸往外走完最後兩段。
+ *
+ * 盤心 0、三圈導線 0.5 / 0.85 / 1.2 秒，四象在角上（比最外圈還遠）1.5 秒，
+ * 曆書欄在盤外 1.85 秒 —— 同一口氣一路推到畫面邊緣。
+ *
+ * 起伏的下限各自帶（--blo）：四象壓到 0.5 那一口氣才看得出來，
+ * 曆書欄只到 0.75，那是要讀的字，閃太兇會讀不下去。
+ */
+@keyframes outbreathe {
+  0%,
+  100% {
+    opacity: var(--blo, 0.6);
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.dial .sx g {
+  --blo: 0.5;
+  animation: outbreathe 5s ease-in-out 1.5s infinite;
+}
+
+.dial .marg .mrow {
+  --blo: 0.75;
+  animation: outbreathe 5s ease-in-out 1.85s infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dial g[style*="--spin"],
-  .dial .lite {
+  .dial .lite,
+  .dial .sx g,
+  .dial .marg .mrow {
     animation: none;
   }
 }
@@ -718,21 +749,26 @@ body::-webkit-scrollbar {
 
 .sx-line {
   stroke: var(--sx);
-  stroke-opacity: 0.34;
-  stroke-width: 0.9;
+  stroke-opacity: 0.32;
+  stroke-width: 1.15;
+  stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.sx-dot {
-  fill: var(--sx);
-  fill-opacity: 0.5;
+/* 當令的那一象亮起來。盤上正走到哪一季，角上就該是誰 */
+.sx .on .sx-line {
+  stroke-opacity: 0.62;
+}
+
+.sx .on .sx-lab {
+  fill-opacity: 0.8;
 }
 
 .sx-lab {
   fill: var(--sx);
-  fill-opacity: 0.42;
+  fill-opacity: 0.4;
   font-family: var(--f-cjk);
-  font-size: 11px;
+  font-size: 9.5px;
   letter-spacing: 0.24em;
   /* 字距推到右邊會讓兩個字看起來偏心，補回半格 */
   transform: translateX(0.12em);
@@ -740,7 +776,7 @@ body::-webkit-scrollbar {
 
 :root[lang^="en"] .sx-lab {
   font-family: var(--f-latin);
-  font-size: 8.5px;
+  font-size: 7px;
   letter-spacing: 0.08em;
   transform: none;
 }

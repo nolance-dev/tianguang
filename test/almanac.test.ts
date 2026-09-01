@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { daylight, daysToNextJieqi, houIndex, lunarDate } from "../src/lib/almanac";
+import {
+  daylight,
+  daysToNextJieqi,
+  houIndex,
+  lunarDate,
+  seasonSymbol,
+} from "../src/lib/almanac";
 
 describe("almanac", () => {
   it("晝長跨午夜也算得出來", () => {
@@ -23,6 +29,14 @@ describe("almanac", () => {
       expect(n).toBeGreaterThanOrEqual(1);
       expect(n).toBeLessThanOrEqual(16);
     }
+  });
+
+  it("四季各對一象", () => {
+    // 春青龍、夏朱雀、秋白虎、冬玄武；索引照 FourSymbols 的排法
+    expect(seasonSymbol(new Date(2026, 3, 15, 12))).toBe(0);
+    expect(seasonSymbol(new Date(2026, 6, 15, 12))).toBe(3);
+    expect(seasonSymbol(new Date(2026, 9, 15, 12))).toBe(2);
+    expect(seasonSymbol(new Date(2026, 0, 15, 12))).toBe(1);
   });
 
   it("農曆寫成月加日", () => {
