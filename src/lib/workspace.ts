@@ -9,6 +9,9 @@
  * 計時仍然是對的 —— 不需要 service worker，也就不必多要一個權限。
  */
 
+/** 行程的型別住在 agenda.ts；這裡只負責存它，重複宣告會變成兩邊各改一次。 */
+import type { Event as AgendaEvent } from "./agenda";
+
 export const WORKSPACE_VERSION = 1;
 
 export interface Todo {
@@ -36,6 +39,8 @@ export interface Workspace {
   todos: Todo[];
   note: string;
   pomodoro: Pomodoro;
+  /** 日曆上的行程。型別在 agenda.ts，這裡只負責存。 */
+  events: AgendaEvent[];
 }
 
 export const WORK_MS = 25 * 60 * 1000;
@@ -46,6 +51,7 @@ export const EMPTY: Workspace = {
   todos: [],
   note: "",
   pomodoro: { mode: "work", endsAt: null, pausedLeft: null, rounds: 0, roundsDate: "" },
+  events: [],
 };
 
 /** 當地日期。用 UTC 會讓「今天」在台灣早上八點前算成昨天。 */
@@ -121,6 +127,9 @@ export function migrate(raw: Record<string, unknown>): Workspace {
     ...EMPTY,
     ...raw,
     pomodoro: { ...EMPTY.pomodoro, ...((raw.pomodoro as Pomodoro) ?? {}) },
+    // 陣列要自己補：展開運算子只在鍵不存在時才用預設，
+    // 舊資料裡沒有 events 這個鍵，但存成 null 的話也得接住
+    events: Array.isArray(raw.events) ? (raw.events as AgendaEvent[]) : [],
     schemaVersion: WORKSPACE_VERSION,
   } as Workspace;
 }

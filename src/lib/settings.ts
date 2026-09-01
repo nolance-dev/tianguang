@@ -43,6 +43,7 @@ export interface Settings {
     quote: boolean;
     links: boolean;
     photos: boolean;
+    calendar: boolean;
   };
   /** 快速連結的呈現：true 是九個一組的九宮格，false 是一個一個排開 */
   linkGrid: boolean;
@@ -79,7 +80,15 @@ export const DEFAULTS: Settings = {
   dim: 0,
   blur: 0,
   // 照片牆預設關著 —— 剛裝好一張圖都沒有，開著就是一個空框
-  cards: { todos: true, note: true, pomodoro: false, quote: true, links: true, photos: false },
+  cards: {
+    todos: true,
+    note: true,
+    pomodoro: false,
+    quote: true,
+    links: true,
+    photos: false,
+    calendar: true,
+  },
   linkGrid: true,
   desk: DEFAULT_DESK,
   photoId: null,

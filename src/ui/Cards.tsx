@@ -3,6 +3,7 @@ import { useEffect, useRef } from "preact/hooks";
 import { t } from "../lib/i18n";
 import { Links } from "./Links";
 import { PhotoWall } from "./PhotoWall";
+import { CalendarCard } from "./Calendar";
 import type { Link } from "../lib/links";
 import {
   COLS,
@@ -55,6 +56,8 @@ interface Props extends Body {
   /** 照片牆的狀態。跟桌布無關 */
   photo: { id: string | null; rotate: number };
   onPhoto: (patch: Partial<{ id: string | null; rotate: number }>) => void;
+  now: Date;
+  onExpand: (id: CardId) => void;
 }
 
 /**
@@ -113,7 +116,11 @@ const VARIANT: Record<CardId, string> = {
   pomodoro: " pomo",
   links: " linkcard",
   photos: " photocard",
+  calendar: " calcard",
 };
+
+/** 有整屏詳細畫面的卡。沒列在這裡的就不長那顆展開鈕。 */
+const EXPANDS: CardId[] = ["calendar"];
 
 export function Cards({
   value,
@@ -126,6 +133,8 @@ export function Cards({
   linkGrid,
   photo,
   onPhoto,
+  now,
+  onExpand,
 }: Props) {
   const live = useSignal<Tile[] | null>(null);
   const held = useSignal<CardId | null>(null);
@@ -247,6 +256,7 @@ export function Cards({
           {tile.id === "note" && <NoteCard value={value} onChange={onChange} />}
           {tile.id === "pomodoro" && <PomodoroCard value={value} onChange={onChange} />}
           {tile.id === "photos" && <PhotoWall photo={photo} onPhoto={onPhoto} />}
+          {tile.id === "calendar" && <CalendarCard events={value.events} now={now} />}
           {tile.id === "links" && (
             <>
               <header>
@@ -255,6 +265,17 @@ export function Cards({
               </header>
               <Links links={links} onChange={onLinks} grid={linkGrid} />
             </>
+          )}
+
+          {EXPANDS.includes(tile.id) && (
+            <button
+              type="button"
+              class="expand"
+              aria-label={t("card_expand")}
+              onClick={() => onExpand(tile.id)}
+            >
+              ⤢
+            </button>
           )}
 
           <button

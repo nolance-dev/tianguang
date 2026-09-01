@@ -12,6 +12,7 @@ import { Dial } from "./Dial";
 import { SettingsPanel } from "./Settings";
 import { Weather } from "./Weather";
 import { Cards } from "./Cards";
+import { CalendarDetail } from "./Calendar";
 import { Palette } from "./Palette";
 import { randomQuote } from "../lib/quotes";
 import * as ws from "../lib/workspace";
@@ -55,6 +56,8 @@ export function App() {
   const dialOpen = useSignal(false);
   const panelOpen = useSignal(false);
   const palOpen = useSignal(false);
+  /** 展開成整屏的那張卡。null 是沒有展開 */
+  const sheet = useSignal<string | null>(null);
   const page = useSignal(0);
 
   // Ctrl K（Mac 是 Cmd K）。搜尋列裡也吃，因為那裡才是手停的地方。
@@ -260,6 +263,8 @@ export function App() {
       links={cfg.links}
       onLinks={(l) => patch({ links: l })}
       linkGrid={cfg.linkGrid}
+      now={now.value}
+      onExpand={(id) => (sheet.value = id)}
       photo={{ id: cfg.photoId, rotate: cfg.photoRotate }}
       onPhoto={(p) =>
         patch({
@@ -322,6 +327,15 @@ export function App() {
       >
         ⚙
       </button>
+
+      {sheet.value === "calendar" && (
+        <CalendarDetail
+          events={work.value.events}
+          onChange={(events) => patchWork({ events })}
+          now={now.value}
+          onClose={() => (sheet.value = null)}
+        />
+      )}
 
       {dialOpen.value && (
         <Dial

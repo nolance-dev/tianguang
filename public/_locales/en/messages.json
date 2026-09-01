@@ -537,5 +537,64 @@
         "content": "$1"
       }
     }
+  },
+  "c_calendar": {
+    "message": "Calendar"
+  },
+  "s_card_calendar": {
+    "message": "Calendar"
+  },
+  "cal_view": {
+    "message": "View"
+  },
+  "cal_month": {
+    "message": "Month"
+  },
+  "cal_agenda": {
+    "message": "Agenda"
+  },
+  "cal_today": {
+    "message": "Today"
+  },
+  "cal_prev": {
+    "message": "Previous month"
+  },
+  "cal_next": {
+    "message": "Next month"
+  },
+  "cal_add": {
+    "message": "Add"
+  },
+  "cal_add_hint": {
+    "message": "What happens that day"
+  },
+  "cal_time": {
+    "message": "Time"
+  },
+  "cal_allday": {
+    "message": "All day"
+  },
+  "cal_remove": {
+    "message": "Delete this entry"
+  },
+  "cal_none": {
+    "message": "Nothing on this day"
+  },
+  "cal_none_ahead": {
+    "message": "Nothing scheduled ahead"
+  },
+  "cal_today_count": {
+    "message": "$1 today",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "sheet_back": {
+    "message": "Back to the new tab"
+  },
+  "card_expand": {
+    "message": "Expand"
   }
 }

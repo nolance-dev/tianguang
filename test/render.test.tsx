@@ -337,13 +337,15 @@ describe("焦點不該被搶走", () => {
 });
 
 describe("工作區卡片", () => {
-  it("預設開快速存取、待辦、隨手記，番茄鐘預設關閉", async () => {
+  it("預設開快速存取、日曆、待辦、隨手記，番茄鐘與照片牆預設關閉", async () => {
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelector(".cards")).not.toBeNull());
     expect(el.querySelector(".card.note")).not.toBeNull();
     expect(el.querySelector(".card.linkcard")).not.toBeNull();
-    expect(el.querySelectorAll(".card").length).toBe(3);
+    expect(el.querySelector(".card.calcard")).not.toBeNull();
+    expect(el.querySelectorAll(".card").length).toBe(4);
     expect(el.querySelector(".card.pomo"), "番茄鐘預設不開").toBeNull();
+    expect(el.querySelector(".card.photocard"), "照片牆預設不開").toBeNull();
   });
 
   it("第二屏在下面，第一屏有往下的提示", async () => {
@@ -405,7 +407,7 @@ describe("工作區卡片", () => {
 
     const order = () => [...el.querySelectorAll<HTMLElement>(".card")].map((c) => c.dataset.id);
     const todos = () => el.querySelector<HTMLElement>('.card[data-id="todos"]')!;
-    expect(order()).toEqual(["links", "todos", "note"]);
+    expect(order()).toEqual(["links", "todos", "note", "calendar"]);
     expect(todos().style.getPropertyValue("--w")).toBe("2");
 
     const grow = todos().querySelector<HTMLButtonElement>(".grow")!;
@@ -424,7 +426,7 @@ describe("工作區卡片", () => {
 
     key("ArrowRight", true);
     await vi.waitFor(() =>
-      expect(order(), "Shift 是換位置").toEqual(["links", "note", "todos"]),
+      expect(order(), "Shift 是換位置").toEqual(["links", "note", "todos", "calendar"]),
     );
   });
 

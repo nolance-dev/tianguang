@@ -573,5 +573,64 @@
         "content": "$1"
       }
     }
+  },
+  "c_calendar": {
+    "message": "日曆"
+  },
+  "s_card_calendar": {
+    "message": "日曆"
+  },
+  "cal_view": {
+    "message": "檢視"
+  },
+  "cal_month": {
+    "message": "月"
+  },
+  "cal_agenda": {
+    "message": "議程"
+  },
+  "cal_today": {
+    "message": "今天"
+  },
+  "cal_prev": {
+    "message": "上個月"
+  },
+  "cal_next": {
+    "message": "下個月"
+  },
+  "cal_add": {
+    "message": "新增"
+  },
+  "cal_add_hint": {
+    "message": "這一天要做什麼"
+  },
+  "cal_time": {
+    "message": "時間"
+  },
+  "cal_allday": {
+    "message": "整天"
+  },
+  "cal_remove": {
+    "message": "刪掉這筆"
+  },
+  "cal_none": {
+    "message": "這一天沒有事件"
+  },
+  "cal_none_ahead": {
+    "message": "接下來沒有排程"
+  },
+  "cal_today_count": {
+    "message": "今天 $1 件",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "sheet_back": {
+    "message": "回到新分頁"
+  },
+  "card_expand": {
+    "message": "展開"
   }
 }
