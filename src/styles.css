@@ -470,16 +470,29 @@ body::-webkit-scrollbar {
  * 把時間定位吃掉；rotate 是獨立的變換屬性，跟 transform 各算各的再相乘。
  */
 @keyframes ringspin {
-  from {
+  /* 前兩秒等速 —— 盤面就是穩穩在轉，不是一放手就在剎車 */
+  0% {
     rotate: var(--spin);
+    animation-timing-function: linear;
   }
-  to {
+  /*
+   * 兩秒整（五秒的 40%）交棒，此時已經走掉三分之二的角度。
+   * 三分之二配三分之一不是隨便取的：easeOutCubic 起手的斜率是 3.03，
+   * 剩下三分之一的角度攤在三秒裡，起始角速度剛好接回等速段那一段，
+   * 交棒處看不出接縫。
+   */
+  40% {
+    rotate: calc(var(--spin) / 3);
+    animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  100% {
     rotate: 0deg;
   }
 }
 
+/* 六環同時長：等速段要正好兩秒，就不能各給各的時長 */
 .dial g[style*="--spin"] {
-  animation: ringspin var(--dur, 5s) cubic-bezier(0.24, 0.66, 0.18, 1) both;
+  animation: ringspin 5s both;
 }
 
 /*
