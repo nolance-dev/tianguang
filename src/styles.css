@@ -1415,35 +1415,6 @@ body::-webkit-scrollbar {
   flex: 1;
 }
 
-@container (min-width: 22rem) {
-  /*
-   * 夠寬就分兩欄排待辦。用 grid 不用 columns —— multicol 碰上限高會往旁邊
-   * 長出新欄，變成橫向捲；grid 會乖乖往下疊，限高才管得住。
-   */
-  .todos {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    column-gap: 1.4rem;
-    align-content: start;
-  }
-
-  /*
-   * 夠寬就換成橫排：錶面在左，開始／重設與今日輪數在右。
-   * 這一段本來是把錶面 max-width 壓成 7.5rem —— 那等於「卡片越寬，圓越小」，
-   * 剛好反了。
-   */
-  .pomo-body {
-    flex-direction: row;
-    gap: clamp(0.8rem, 3cqw, 1.8rem);
-  }
-
-  .pomo-side {
-    width: auto;
-    flex: 1;
-    max-width: 18rem;
-  }
-}
-
 /*
  * 快速存取這張卡。
  *
@@ -1694,19 +1665,29 @@ body::-webkit-scrollbar {
   text-align: center;
 }
 
+/*
+ * align-items 一定要是 stretch。
+ *
+ * 這裡本來寫 center，橫排時就壞了：center 的意思是「不要拉滿」，
+ * 所以錶面外框的高度變成由內容決定，而裡面那個 svg 的 height: 100%
+ * 是對著一個 auto 高度算百分比 —— 算不出來就退回去用寬度撐，
+ * 於是卡片拉得越寬圓就越大，看起來就是「整體放大」而不是「橫向排開」。
+ *
+ * 拉滿之後外框的高度是確定的（.card 是格線項目，高度由跨列數決定），
+ * svg 的 height: 100% 才有東西可以算，圓的大小就只跟高度有關。
+ */
 .pomo-body {
   flex: 1;
   min-height: 0;
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   gap: 0.7rem;
 }
 
 .pomo-side {
-  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
@@ -1729,11 +1710,17 @@ body::-webkit-scrollbar {
   place-items: center;
 }
 
+/*
+ * svg 直接吃滿整個外框，圓由 preserveAspectRatio 自己置中縮放。
+ *
+ * 原本是 height: 100% + width: auto + aspect-ratio: 1 + max-width: 100%，
+ * 那四個會互相打架：高度是確定的，寬度由比例推出來，然後 max-width 又把
+ * 寬度夾掉 —— 高度不會跟著縮，於是框變成長方形。反正框裡只有這個圓，
+ * 讓 svg 佔滿、由它自己維持圓形最省事。
+ */
 .clockface svg {
+  width: 100%;
   height: 100%;
-  width: auto;
-  max-width: 100%;
-  aspect-ratio: 1;
 }
 
 .clockface circle:last-of-type {
@@ -1778,6 +1765,49 @@ body::-webkit-scrollbar {
   font-size: 0.6rem;
   letter-spacing: 0.12em;
   color: var(--fg-2);
+}
+
+/*
+ * 尺寸分階一律放在這裡，也就是所有基礎規則的後面。
+ *
+ * 這一段本來寫在卡片區的開頭 —— 而 .todos、.pomo-body 的基礎規則在它後面
+ * 好幾百行。同樣的權重，後面的贏，所以整段等於沒作用：待辦從來沒分過兩欄，
+ * 番茄鐘也從來沒有橫排過。@container 不會提高權重，它只是加一個條件。
+ */
+@container (min-width: 22rem) {
+  /*
+   * 夠寬就分兩欄排待辦。用 grid 不用 columns —— multicol 碰上限高會往旁邊
+   * 長出新欄，變成橫向捲；grid 會乖乖往下疊，限高才管得住。
+   */
+  .todos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 1.4rem;
+    align-content: start;
+  }
+
+  /*
+   * 夠寬就換成橫排：錶面在左，開始／重設與今日輪數在右。
+   * 這一段本來是把錶面 max-width 壓成 7.5rem —— 那等於「卡片越寬，圓越小」，
+   * 剛好反了。
+   */
+  .pomo-body {
+    flex-direction: row;
+    gap: clamp(0.8rem, 3cqw, 1.8rem);
+  }
+
+  /* 橫排時錶面只佔它畫得下的那個正方形，剩下的寬度全給右邊那欄 ——
+     讓它跟著 flex: 1 一起長的話，圓不會變大，只會在一大片空白裡置中 */
+  .clockface {
+    flex: 0 0 auto;
+    width: auto;
+    aspect-ratio: 1;
+  }
+
+  .pomo-side {
+    flex: 1;
+    min-width: 0;
+  }
 }
 
 /* ---------- 兩屏 ---------- */
