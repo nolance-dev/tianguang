@@ -544,12 +544,12 @@ body::-webkit-scrollbar {
 }
 
 .dial .sx g {
-  --blo: 0.5;
+  --blo: 0.3;
   animation: outbreathe 5s ease-in-out 1.5s infinite;
 }
 
 .dial .marg .mrow {
-  --blo: 0.75;
+  --blo: 0.55;
   animation: outbreathe 5s ease-in-out 1.85s infinite;
 }
 
@@ -749,15 +749,36 @@ body::-webkit-scrollbar {
 
 .sx-line {
   stroke: var(--sx);
-  stroke-opacity: 0.32;
-  stroke-width: 1.15;
+  stroke-opacity: 0.3;
+  stroke-width: 1;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
+.sx-dot {
+  fill: var(--sx);
+  fill-opacity: 0.55;
+}
+
+/* 宿名。一宿一個字，推到宿點的外側，永遠不往盤裡擠 */
+.sx-star {
+  fill: var(--sx);
+  fill-opacity: 0.34;
+  font-family: var(--f-cjk);
+  font-size: 8.5px;
+}
+
 /* 當令的那一象亮起來。盤上正走到哪一季，角上就該是誰 */
 .sx .on .sx-line {
-  stroke-opacity: 0.62;
+  stroke-opacity: 0.55;
+}
+
+.sx .on .sx-dot {
+  fill-opacity: 0.9;
+}
+
+.sx .on .sx-star {
+  fill-opacity: 0.62;
 }
 
 .sx .on .sx-lab {
