@@ -147,10 +147,14 @@ export function baseTile(dark: boolean, z: number, x: number, y: number): string
  * 雷達圖磚。
  *
  * 路徑格式是 {base}/{size}/{z}/{x}/{y}/{colour}/{smooth}_{snow}.png。
- * 色階 4 是通用的那組，平滑開、雪的分色開。
+ * 色階 4 是通用的那組，雪的分色開著。
+ *
+ * 平滑關掉。開著比較好看，但那個平滑是「一張圖磚自己平滑自己」——
+ * 相鄰兩張各自算各自的，接縫兩側對不起來，畫面上就是一條筆直的斷線，
+ * 而且剛好落在圖磚邊界上。回波糊一點沒關係，一條不存在的直線不行。
  */
 export function radarTile(frame: Frame, z: number, x: number, y: number): string {
-  return `${frame.base}/${TILE}/${z}/${x}/${y}/4/1_1.png`;
+  return `${frame.base}/${TILE}/${z}/${x}/${y}/4/0_1.png`;
 }
 
 /**

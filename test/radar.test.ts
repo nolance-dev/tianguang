@@ -76,9 +76,10 @@ describe("鋪滿一塊區域", () => {
 });
 
 describe("圖磚網址", () => {
-  it("雷達是 {base}/{size}/{z}/{x}/{y}/{色階}/{平滑}_{雪}.png", () => {
+  it("雷達是 {base}/{size}/{z}/{x}/{y}/{色階}/{平滑}_{雪}.png，平滑要關", () => {
     const url = radarTile({ base: "https://tilecache.rainviewer.com/v2/radar/abc", time: 1 }, 6, 53, 27);
-    expect(url).toBe("https://tilecache.rainviewer.com/v2/radar/abc/256/6/53/27/4/1_1.png");
+    // 結尾的 0 是平滑關閉。開著的話每張圖磚自己平滑自己，接縫會變成一條直線
+    expect(url).toBe("https://tilecache.rainviewer.com/v2/radar/abc/256/6/53/27/4/0_1.png");
   });
 
   it("底圖跟著亮暗換，而且是 /tile/{z}/{y}/{x} —— 列在前，跟 XYZ 相反", () => {
