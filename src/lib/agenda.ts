@@ -6,7 +6,7 @@
  * 時間另外存 `HH:MM`，空字串代表整天的事。
  */
 
-import { today } from "./workspace";
+import { today } from "./day";
 
 export interface Event {
   id: string;

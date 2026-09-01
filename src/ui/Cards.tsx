@@ -24,10 +24,9 @@ import {
   reset,
   roundsToday,
   start,
-  WORK_MS,
-  REST_MS,
   type Workspace,
 } from "../lib/workspace";
+import { durationMs } from "../lib/focus";
 
 /**
  * 工作區的卡片。
@@ -120,7 +119,7 @@ const VARIANT: Record<CardId, string> = {
 };
 
 /** 有整屏詳細畫面的卡。沒列在這裡的就不長那顆展開鈕。 */
-const EXPANDS: CardId[] = ["calendar"];
+const EXPANDS: CardId[] = ["calendar", "pomodoro"];
 
 export function Cards({
   value,
@@ -385,8 +384,8 @@ function PomodoroCard({ value, onChange }: Body) {
     return () => clearInterval(id);
   }, [p.endsAt, p.pausedLeft]);
 
-  const left = remaining(p, tick.value);
-  const total = p.mode === "work" ? WORK_MS : REST_MS;
+  const total = durationMs(p.mode, value.durations);
+  const left = remaining(p, tick.value, total);
 
   // 跑完就換邊。放在 render 裡判斷，因為狀態只是「結束時刻」——
   // 分頁關著的時候沒人跑計時器，重開時同樣要能發現已經跑完了。
@@ -398,7 +397,7 @@ function PomodoroCard({ value, onChange }: Body) {
     <>
       <header>
         <b>{t("c_pomodoro")}</b>
-        <span>{t(p.mode === "work" ? "c_pomo_work" : "c_pomo_rest")}</span>
+        <span>{t(`fo_${p.mode}`)}</span>
       </header>
 
       {/* 錶面與控制項包成一組，卡片拉寬時這一組從直排換成橫排 ——
@@ -430,7 +429,13 @@ function PomodoroCard({ value, onChange }: Body) {
           <div class="acts">
             <button
               type="button"
-              onClick={() => onChange({ pomodoro: isRunning(p) ? pause(p) : start(p) })}
+              onClick={() =>
+            onChange({
+              pomodoro: isRunning(p)
+                ? pause(p, Date.now(), total)
+                : start(p, Date.now(), total),
+            })
+          }
             >
               {t(isRunning(p) ? "c_pomo_pause" : "c_pomo_start")}
             </button>

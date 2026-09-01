@@ -476,6 +476,41 @@ describe("工作區卡片", () => {
     localStorage.removeItem("tg.settings");
   });
 
+  it("番茄鐘和日曆有展開鈕，其他卡沒有", async () => {
+    localStorage.setItem(
+      "tg.settings",
+      JSON.stringify({
+        schemaVersion: 1,
+        cards: {
+          todos: true,
+          note: true,
+          pomodoro: true,
+          quote: true,
+          links: true,
+          photos: false,
+          calendar: true,
+        },
+      }),
+    );
+    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector(".card.pomo")).not.toBeNull());
+
+    const has = (id: string) =>
+      el.querySelector(`.card[data-id="${id}"] .expand`) !== null;
+    expect(has("pomodoro")).toBe(true);
+    expect(has("calendar")).toBe(true);
+    expect(has("todos"), "沒有詳細畫面的卡不長那顆鈕").toBe(false);
+
+    // 按下去出現整屏
+    el.querySelector<HTMLButtonElement>('.card[data-id="pomodoro"] .expand')!.click();
+    await vi.waitFor(() => expect(document.querySelector(".sheet")).not.toBeNull());
+    // 用返回鍵關，不用 Esc —— Esc 的監聽掛在 effect 裡，
+    // 而 .sheet 一出現在畫面上時那個 effect 還沒跑
+    document.querySelector<HTMLButtonElement>(".sheet .icon-btn")!.click();
+    await vi.waitFor(() => expect(document.querySelector(".sheet")).toBeNull());
+    localStorage.removeItem("tg.settings");
+  });
+
   it("照片牆預設關著，開了才出現在第二屏", async () => {
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelector(".cards")).not.toBeNull());

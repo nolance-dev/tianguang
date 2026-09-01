@@ -404,12 +404,6 @@
   "c_pomodoro": {
     "message": "Pomodoro"
   },
-  "c_pomo_work": {
-    "message": "Focus"
-  },
-  "c_pomo_rest": {
-    "message": "Break"
-  },
   "c_pomo_start": {
     "message": "Start"
   },
@@ -587,6 +581,106 @@
   },
   "cal_more": {
     "message": "$1 more",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "fo_work": {
+    "message": "Focus"
+  },
+  "fo_short": {
+    "message": "Short break"
+  },
+  "fo_long": {
+    "message": "Long break"
+  },
+  "fo_power": {
+    "message": "Deep"
+  },
+  "fo_mode": {
+    "message": "Session"
+  },
+  "fo_commit": {
+    "message": "Log it"
+  },
+  "fo_round": {
+    "message": "Round"
+  },
+  "fo_ready": {
+    "message": "Ready"
+  },
+  "fo_running": {
+    "message": "Running"
+  },
+  "fo_project": {
+    "message": "Project"
+  },
+  "fo_no_project": {
+    "message": "No project"
+  },
+  "fo_task": {
+    "message": "Task"
+  },
+  "fo_no_task": {
+    "message": "None"
+  },
+  "fo_projects": {
+    "message": "Projects"
+  },
+  "fo_project_name": {
+    "message": "Project name"
+  },
+  "fo_project_remove": {
+    "message": "Delete this project"
+  },
+  "fo_no_projects": {
+    "message": "No projects yet"
+  },
+  "fo_use": {
+    "message": "Use"
+  },
+  "fo_using": {
+    "message": "In use"
+  },
+  "fo_stats": {
+    "message": "Stats"
+  },
+  "fo_today": {
+    "message": "Today"
+  },
+  "fo_sets": {
+    "message": "Sets"
+  },
+  "fo_total": {
+    "message": "All time"
+  },
+  "fo_min": {
+    "message": " min"
+  },
+  "fo_span": {
+    "message": "Range"
+  },
+  "fo_week": {
+    "message": "Week"
+  },
+  "fo_month": {
+    "message": "Month"
+  },
+  "fo_all_projects": {
+    "message": "All projects"
+  },
+  "fo_chart": {
+    "message": "Focus time over the last $1 days",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "fo_peak": {
+    "message": "Peak $1 min",
     "placeholders": {
       "1": {
         "content": "$1"

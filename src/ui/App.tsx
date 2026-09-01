@@ -13,6 +13,7 @@ import { SettingsPanel } from "./Settings";
 import { Weather } from "./Weather";
 import { Cards } from "./Cards";
 import { CalendarDetail } from "./Calendar";
+import { Focus } from "./Focus";
 import { Palette } from "./Palette";
 import { randomQuote } from "../lib/quotes";
 import * as ws from "../lib/workspace";
@@ -338,6 +339,10 @@ export function App() {
           now={now.value}
           onClose={() => (sheet.value = null)}
         />
+      )}
+
+      {sheet.value === "pomodoro" && (
+        <Focus work={work.value} onChange={patchWork} onClose={() => (sheet.value = null)} />
       )}
 
       {dialOpen.value && (

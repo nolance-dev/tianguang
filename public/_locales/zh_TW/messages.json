@@ -440,12 +440,6 @@
   "c_pomodoro": {
     "message": "番茄鐘"
   },
-  "c_pomo_work": {
-    "message": "專注"
-  },
-  "c_pomo_rest": {
-    "message": "休息"
-  },
   "c_pomo_start": {
     "message": "開始"
   },
@@ -623,6 +617,106 @@
   },
   "cal_more": {
     "message": "還有 $1 件",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "fo_work": {
+    "message": "專注"
+  },
+  "fo_short": {
+    "message": "短休"
+  },
+  "fo_long": {
+    "message": "長休"
+  },
+  "fo_power": {
+    "message": "強力"
+  },
+  "fo_mode": {
+    "message": "時段"
+  },
+  "fo_commit": {
+    "message": "提交"
+  },
+  "fo_round": {
+    "message": "回合"
+  },
+  "fo_ready": {
+    "message": "就緒"
+  },
+  "fo_running": {
+    "message": "進行中"
+  },
+  "fo_project": {
+    "message": "專案"
+  },
+  "fo_no_project": {
+    "message": "不分專案"
+  },
+  "fo_task": {
+    "message": "任務"
+  },
+  "fo_no_task": {
+    "message": "沒有指定"
+  },
+  "fo_projects": {
+    "message": "專案"
+  },
+  "fo_project_name": {
+    "message": "專案名稱"
+  },
+  "fo_project_remove": {
+    "message": "刪掉這個專案"
+  },
+  "fo_no_projects": {
+    "message": "還沒有專案"
+  },
+  "fo_use": {
+    "message": "使用"
+  },
+  "fo_using": {
+    "message": "使用中"
+  },
+  "fo_stats": {
+    "message": "統計"
+  },
+  "fo_today": {
+    "message": "今天"
+  },
+  "fo_sets": {
+    "message": "組數"
+  },
+  "fo_total": {
+    "message": "總計"
+  },
+  "fo_min": {
+    "message": " 分鐘"
+  },
+  "fo_span": {
+    "message": "區間"
+  },
+  "fo_week": {
+    "message": "週"
+  },
+  "fo_month": {
+    "message": "月"
+  },
+  "fo_all_projects": {
+    "message": "所有專案"
+  },
+  "fo_chart": {
+    "message": "最近 $1 天的專注時間",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
+  },
+  "fo_peak": {
+    "message": "最高 $1 分鐘",
     "placeholders": {
       "1": {
         "content": "$1"

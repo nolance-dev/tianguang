@@ -2025,6 +2025,357 @@ body::-webkit-scrollbar {
 }
 
 /*
+ * 專注的整屏畫面。
+ *
+ * 左邊是「現在」：時間、四顆鈕、這一段算在哪。右邊是「累積」：專案與統計。
+ * 兩邊共用 .sheet-body 那個兩欄格線，跟日曆同一套 —— 展開的畫面長得一樣，
+ * 使用者才不用每開一張卡就重新找一次返回鍵在哪。
+ */
+.fo-modes {
+  margin-left: auto;
+}
+
+.fo-main {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.8rem, 2vh, 1.6rem);
+  padding: clamp(0.8rem, 1.6vw, 1.2rem);
+  border-radius: 16px;
+  background: var(--card, var(--glass));
+  border: 1px solid var(--glass-line);
+}
+
+.fo-time {
+  font-family: var(--f-latin);
+  font-size: clamp(3.5rem, 13vw, 9rem);
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.fo-acts {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.fo-acts button {
+  border: 1px solid var(--glass-line);
+  background: none;
+  color: var(--fg-2);
+  border-radius: 10px;
+  padding: 0.4rem 1.3rem;
+  font-family: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition:
+    color 0.18s,
+    border-color 0.18s,
+    opacity 0.18s;
+}
+
+.fo-acts button:hover:not(:disabled) {
+  color: var(--fg);
+  border-color: var(--fg-2);
+}
+
+/* 主要動作一顆就好。三顆都做重點等於沒有重點 */
+.fo-acts button.key {
+  color: var(--fg);
+  background: var(--glass-line);
+}
+
+.fo-acts button:disabled {
+  opacity: 0.32;
+  cursor: default;
+}
+
+.fo-chips {
+  display: flex;
+  gap: 0.5rem;
+  font-family: var(--f-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  color: var(--fg-2);
+}
+
+.fo-chips span {
+  border: 1px solid var(--glass-line);
+  border-radius: 999px;
+  padding: 0.18rem 0.7rem;
+}
+
+.fo-pick {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.2rem;
+}
+
+.fo-pick label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--f-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  color: var(--fg-2);
+}
+
+.fo-pick select,
+.fo-filter select {
+  background: none;
+  border: 1px solid var(--glass-line);
+  border-radius: 8px;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 0.74rem;
+  padding: 0.22rem 0.4rem;
+  cursor: pointer;
+  max-width: 11rem;
+}
+
+.fo-pick option,
+.fo-filter option {
+  color: #1b2230;
+}
+
+.fo-side {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.7rem, 1.6vh, 1.1rem);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.fo-side::-webkit-scrollbar {
+  display: none;
+}
+
+.fo-projects,
+.fo-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: clamp(0.7rem, 1.4vw, 1rem);
+  border-radius: 16px;
+  background: var(--card, var(--glass));
+  border: 1px solid var(--glass-line);
+}
+
+.fo-h {
+  font-family: var(--f-cjk);
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  color: var(--fg-2);
+}
+
+:root[lang^="en"] .fo-h {
+  font-family: var(--f-latin);
+  letter-spacing: 0.08em;
+}
+
+.fo-newproj {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.fo-newproj input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--glass-line);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 0.78rem;
+  padding: 0.25rem 0.1rem;
+  outline: none;
+}
+
+.fo-newproj input:focus {
+  border-bottom-color: var(--fg-2);
+}
+
+.fo-newproj input::placeholder {
+  color: var(--fg-2);
+}
+
+.fo-newproj button,
+.fo-list button {
+  border: 1px solid var(--glass-line);
+  background: none;
+  color: var(--fg-2);
+  border-radius: 8px;
+  padding: 0.2rem 0.6rem;
+  font-family: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition:
+    color 0.18s,
+    opacity 0.18s;
+}
+
+.fo-newproj button:hover:not(:disabled),
+.fo-list button:hover {
+  color: var(--fg);
+}
+
+.fo-newproj button:disabled {
+  opacity: 0.32;
+  cursor: default;
+}
+
+.fo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.fo-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  font-size: 0.78rem;
+}
+
+.fo-list li.on {
+  border-color: var(--glass-line);
+  background: var(--glass);
+}
+
+.fo-list .hue {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  flex: none;
+}
+
+.fo-list .name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fo-list .rm {
+  border: 0;
+  padding: 0 0.2rem;
+  font-size: 0.7rem;
+  opacity: 0;
+}
+
+.fo-list li:hover .rm,
+.fo-list .rm:focus-visible {
+  opacity: 1;
+}
+
+.fo-list .empty {
+  color: var(--fg-2);
+  justify-content: center;
+  padding: 0.8rem 0;
+  font-size: 0.74rem;
+}
+
+.fo-nums {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.fo-nums span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  align-items: center;
+  padding: 0.5rem 0.3rem;
+  border-radius: 10px;
+  background: var(--glass);
+  font-family: var(--f-latin);
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.fo-nums i {
+  font-style: normal;
+  font-family: var(--f-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  color: var(--fg-2);
+}
+
+.fo-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fo-filter select {
+  flex: 1;
+  min-width: 0;
+  max-width: none;
+}
+
+/*
+ * 長條圖。自己畫，不裝圖表套件 —— 這裡要的只是一排高度不同的方塊，
+ * 套件的體積比整件事大十倍。
+ */
+.fo-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 5.5rem;
+  padding-bottom: 1px;
+  border-bottom: 1px solid var(--glass-line);
+}
+
+.fo-chart .bar {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.fo-chart .bar i {
+  width: 100%;
+  min-height: 1px;
+  border-radius: 3px 3px 0 0;
+  background: var(--fg-2);
+  transition: height 0.3s cubic-bezier(0.22, 1, 0.28, 1);
+}
+
+/* 最後一根是今天，給它實色 —— 圖上總要有一個「現在在這裡」 */
+.fo-chart .bar:last-child i {
+  background: var(--fg);
+}
+
+.fo-peak {
+  font-family: var(--f-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: var(--fg-2);
+  text-align: right;
+}
+
+@media (max-width: 56rem) {
+  .fo-main {
+    justify-content: flex-start;
+  }
+}
+
+/*
  * 快速存取這張卡。
  *
  * 九宮格：九個一組切塊。十幾個圖示排成一長條時，找東西得從頭掃到尾；
