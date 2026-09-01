@@ -3,6 +3,7 @@ import { isEnglish, outerRingName, shichenAlt, shichenName, t } from "../lib/i18
 import { roman } from "../lib/roman";
 import { indexAt } from "../lib/shichen";
 import { moonIndex, jieqiIndex, sunTimes } from "../lib/solar";
+import { wheelPixels } from "../lib/wheel";
 
 /**
  * 全屏時辰盤。
@@ -98,6 +99,21 @@ export function Dial({ now, lat, lon, onClose }: Props) {
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  // 滑輪也是出口。門檻一格（一百像素）而不是一動就關：觸控板一根手指擦過去
+  // 就是幾十像素，那不算「要離開」。開盤後半秒完全不理滾輪 —— 開盤前那一下
+  // 的慣性尾巴會一路飄進來，不擋掉的話盤面剛轉起來就被自己關掉。
+  useEffect(() => {
+    const born = performance.now();
+    let acc = 0;
+    const onWheel = (e: WheelEvent) => {
+      if (performance.now() - born < 500) return;
+      acc += Math.abs(wheelPixels(e));
+      if (acc >= 100) close.current();
+    };
+    window.addEventListener("wheel", onWheel, { passive: true });
+    return () => window.removeEventListener("wheel", onWheel);
   }, []);
 
   // 盤面沒有關閉鈕，出口只有鍵盤。焦點必須落進對話框本身，

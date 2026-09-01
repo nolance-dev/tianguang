@@ -9,6 +9,7 @@ import { resolve } from "../lib/search";
 import { DEFAULTS, load, save, type Settings } from "../lib/settings";
 import { Ring } from "./Ring";
 import { Dial } from "./Dial";
+import { wheelPixels } from "../lib/wheel";
 import { SettingsPanel } from "./Settings";
 import { Weather } from "./Weather";
 import { Cards } from "./Cards";
@@ -36,12 +37,6 @@ const NOTCH = 100; // 一格滾輪大約一百像素
 const NEED = 2;
 const RESET_MS = 240; // 手停這麼久就重新算，慢慢刷不該一路累積成換頁
 const COOLDOWN_MS = 700; // 換頁後的冷卻，蓋掉觸控板的慣性尾巴
-
-function wheelPixels(e: WheelEvent): number {
-  if (e.deltaMode === 1) return e.deltaY * 33; // 以行為單位
-  if (e.deltaMode === 2) return e.deltaY * window.innerHeight; // 以頁為單位
-  return e.deltaY;
-}
 
 /** 這個元素自己還捲得動嗎。內容比框高還不夠 —— 得真的是個捲動容器才算。 */
 function canScroll(el: HTMLElement | null, dy: number): boolean {
