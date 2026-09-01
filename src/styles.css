@@ -651,12 +651,18 @@ body::-webkit-scrollbar {
   width: min(24rem, 100%);
   height: 100%;
   overflow-y: auto;
+  /* 設定長到會捲了。捲軸藏起來，跟頁面其他地方一致 */
+  scrollbar-width: none;
   background: var(--glass);
   border-left: 1px solid var(--glass-line);
   backdrop-filter: blur(28px) saturate(1.3);
   -webkit-backdrop-filter: blur(28px) saturate(1.3);
   color: var(--fg);
   animation: slide-in 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.panel::-webkit-scrollbar {
+  display: none;
 }
 
 @keyframes slide-in {
@@ -1366,9 +1372,16 @@ body::-webkit-scrollbar {
   cursor: grabbing;
 }
 
-/* 右下角的把手。平常不出現，滑到卡片上、或鍵盤停在它上面才長出來 */
+/*
+ * 右下角的把手。平常不出現，滑到卡片上、或鍵盤停在它上面才長出來。
+ *
+ * z-index 是必要的：卡片裡的內容可以是滿版而且自己帶 z-index 的
+ * （雷達、照片）。把手沒有的話會被壓在底下 —— 看得到、點不到，
+ * 雷達一出現就再也拉不動卡片大小。
+ */
 .grow {
   position: absolute;
+  z-index: 5;
   right: 3px;
   bottom: 3px;
   width: 1.15rem;
@@ -1605,6 +1618,7 @@ body::-webkit-scrollbar {
 /* 展開鈕。跟右下角那顆改大小的把手同一套：平常不出現，滑上來才長出來 */
 .expand {
   position: absolute;
+  z-index: 5;
   top: 0.35rem;
   right: 0.35rem;
   width: 1.3rem;
@@ -1637,8 +1651,12 @@ body::-webkit-scrollbar {
  *
  * 展開就佔滿，不做「大一點的卡片」—— 半大不小的浮層兩邊都不是，
  * 既看不清楚細節，也擋住底下的東西。
+ *
+ * 類別叫 .full 不叫 .sheet：.sheet 是設定抽屜的外層，早就有人用了。
+ * 同名的第二條規則會蓋掉第一條，而且蓋得很安靜 —— 設定抽屜從右邊變成
+ * 左上角、底色從暗變亮，中間隔了好幾次提交才被看見。
  */
-.sheet {
+.full {
   position: fixed;
   inset: 0;
   z-index: 20;
@@ -1647,10 +1665,10 @@ body::-webkit-scrollbar {
   gap: clamp(0.8rem, 2vh, 1.4rem);
   padding: clamp(1rem, 3vw, 2rem);
   background: var(--veil, rgba(8, 11, 18, 0.86));
-  animation: sheet-in 0.3s cubic-bezier(0.22, 1, 0.28, 1) both;
+  animation: full-in 0.3s cubic-bezier(0.22, 1, 0.28, 1) both;
 }
 
-@keyframes sheet-in {
+@keyframes full-in {
   from {
     opacity: 0;
     transform: translateY(2%) scale(0.985);
@@ -1658,31 +1676,31 @@ body::-webkit-scrollbar {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sheet {
+  .full {
     animation-duration: 0.01ms;
   }
 }
 
-.sheet-top {
+.full-top {
   display: flex;
   align-items: center;
   gap: 0.8rem;
   flex: none;
 }
 
-.sheet-top > b {
+.full-top > b {
   font-family: var(--f-cjk);
   font-weight: 600;
   letter-spacing: 0.14em;
   font-size: 0.9rem;
 }
 
-:root[lang^="en"] .sheet-top > b {
+:root[lang^="en"] .full-top > b {
   font-family: var(--f-latin);
   letter-spacing: 0.04em;
 }
 
-.sheet-body {
+.full-body {
   flex: 1;
   min-height: 0;
   display: grid;
@@ -1691,7 +1709,7 @@ body::-webkit-scrollbar {
 }
 
 @media (max-width: 56rem) {
-  .sheet-body {
+  .full-body {
     grid-template-columns: 1fr;
     grid-template-rows: minmax(0, 1fr) auto;
     overflow-y: auto;
@@ -2028,7 +2046,7 @@ body::-webkit-scrollbar {
  * 專注的整屏畫面。
  *
  * 左邊是「現在」：時間、四顆鈕、這一段算在哪。右邊是「累積」：專案與統計。
- * 兩邊共用 .sheet-body 那個兩欄格線，跟日曆同一套 —— 展開的畫面長得一樣，
+ * 兩邊共用 .full-body 那個兩欄格線，跟日曆同一套 —— 展開的畫面長得一樣，
  * 使用者才不用每開一張卡就重新找一次返回鍵在哪。
  */
 .fo-modes {
@@ -2469,13 +2487,16 @@ body::-webkit-scrollbar {
   background: var(--glass);
 }
 
-.radar .tile {
+/*
+ * 類別叫 .rtile 不叫 .tile：.tile 是快速連結那些磚，帶著內距、外框、
+ * 圓角和毛玻璃。套在雷達圖磚上，每一格都往內縮成一個小方塊，
+ * 整張圖就變成一格一格的棋盤。
+ */
+.radar .rtile {
   position: absolute;
   width: 256px;
   height: 256px;
   display: block;
-  /* 圖磚之間的接縫在某些縮放比例下會露出一條白線 */
-  image-rendering: auto;
 }
 
 /*
@@ -2483,7 +2504,7 @@ body::-webkit-scrollbar {
  * 不用 mix-blend-mode：RainViewer 的圖磚本來就是為了疊在底圖上而畫的
  * 半透明色塊，再套一次混色模式在亮底圖上會把弱回波整個洗掉。
  */
-.radar .tile.echo {
+.radar .rtile.echo {
   opacity: 0.8;
 }
 
@@ -2516,9 +2537,10 @@ body::-webkit-scrollbar {
   white-space: nowrap;
 }
 
+/* 放左上角。右上角是卡片的展開鈕，右下角是改大小的把手 */
 .radar .zoom {
   position: absolute;
-  right: 0.4rem;
+  left: 0.4rem;
   top: 0.4rem;
   display: flex;
   flex-direction: column;

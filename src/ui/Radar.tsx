@@ -87,7 +87,7 @@ export function Radar({ lat, lon, place, dark }: Props) {
       {cells.map((c) => (
         <img
           key={`b${zoom.value}-${c.x}-${c.y}`}
-          class="tile"
+          class="rtile"
           src={baseTile(dark, zoom.value, c.x, c.y)}
           alt=""
           loading="lazy"
@@ -101,7 +101,7 @@ export function Radar({ lat, lon, place, dark }: Props) {
         cells.map((c) => (
           <img
             key={`r${frame.value!.time}-${zoom.value}-${c.x}-${c.y}`}
-            class="tile echo"
+            class="rtile echo"
             src={radarTile(frame.value!, zoom.value, c.x, c.y)}
             alt=""
             loading="lazy"

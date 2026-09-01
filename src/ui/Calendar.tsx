@@ -77,8 +77,8 @@ export function CalendarDetail({ events, onChange, now, onClose }: DetailProps) 
   }
 
   return (
-    <div class="sheet" role="dialog" aria-modal="true" aria-label={t("c_calendar")}>
-      <header class="sheet-top">
+    <div class="full" role="dialog" aria-modal="true" aria-label={t("c_calendar")}>
+      <header class="full-top">
         <button
           ref={closeRef}
           type="button"
@@ -114,7 +114,7 @@ export function CalendarDetail({ events, onChange, now, onClose }: DetailProps) 
         </div>
       </header>
 
-      <div class="sheet-body">
+      <div class="full-body">
         <section class="cal-main">
           <div class="cal-grid">
             {cells.slice(0, 7).map((d) => (

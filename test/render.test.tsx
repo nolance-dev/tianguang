@@ -503,11 +503,11 @@ describe("工作區卡片", () => {
 
     // 按下去出現整屏
     el.querySelector<HTMLButtonElement>('.card[data-id="pomodoro"] .expand')!.click();
-    await vi.waitFor(() => expect(document.querySelector(".sheet")).not.toBeNull());
+    await vi.waitFor(() => expect(document.querySelector(".full")).not.toBeNull());
     // 用返回鍵關，不用 Esc —— Esc 的監聽掛在 effect 裡，
-    // 而 .sheet 一出現在畫面上時那個 effect 還沒跑
-    document.querySelector<HTMLButtonElement>(".sheet .icon-btn")!.click();
-    await vi.waitFor(() => expect(document.querySelector(".sheet")).toBeNull());
+    // 而 .full 一出現在畫面上時那個 effect 還沒跑
+    document.querySelector<HTMLButtonElement>(".full .icon-btn")!.click();
+    await vi.waitFor(() => expect(document.querySelector(".full")).toBeNull());
     localStorage.removeItem("tg.settings");
   });
 
