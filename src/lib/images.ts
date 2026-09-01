@@ -23,7 +23,17 @@ export interface StoredImage {
   addedAt: number;
 }
 
+/**
+ * IndexedDB 不是到處都有：無痕視窗、企業政策擋掉站台資料、
+ * 或測試環境（jsdom 沒有實作）裡它可能整個不存在，或是一開就丟 SecurityError。
+ *
+ * 讀的那幾支一律不炸 —— 讀不到圖就當作沒有圖，照片牆顯示空的比整頁掛掉好。
+ * 寫的那支照樣讓例外往上丟，呼叫端要據此顯示「存不進去」。
+ */
+const available = (): boolean => typeof indexedDB !== "undefined";
+
 function open(): Promise<IDBDatabase> {
+  if (!available()) return Promise.reject(new Error("indexedDB unavailable"));
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, 1);
     req.onupgradeneeded = () => {
@@ -86,16 +96,29 @@ export async function addImage(file: File): Promise<StoredImage> {
 }
 
 export async function getImage(id: string): Promise<StoredImage | undefined> {
-  return tx<StoredImage | undefined>("readonly", (s) => s.get(id));
+  try {
+    return await tx<StoredImage | undefined>("readonly", (s) => s.get(id));
+  } catch {
+    return undefined;
+  }
 }
 
 export async function listImages(): Promise<StoredImage[]> {
-  const all = await tx<StoredImage[]>("readonly", (s) => s.getAll());
-  return all.sort((a, b) => b.addedAt - a.addedAt);
+  try {
+    const all = await tx<StoredImage[]>("readonly", (s) => s.getAll());
+    return all.sort((a, b) => b.addedAt - a.addedAt);
+  } catch {
+    return [];
+  }
 }
 
 export async function deleteImage(id: string): Promise<void> {
-  await tx("readwrite", (s) => s.delete(id) as unknown as IDBRequest<undefined>);
+  try {
+    await tx("readwrite", (s) => s.delete(id) as unknown as IDBRequest<undefined>);
+  } catch {
+    // 刪不掉就算了。使用者要的是「畫面上不要再有這張」，
+    // 而那件事在重讀清單時自然會發生 —— 讀不到就不會列出來。
+  }
 }
 
 /**
