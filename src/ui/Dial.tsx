@@ -27,10 +27,10 @@ const C = 310; // viewBox 620 的圓心
  * 那口氣才看得出來走到外面了。峰值只維持一瞬間，字讀得到的時間是絕大部分。
  */
 const LITE = [
-  { r: 93, lo: 0.1, hi: 0.5, glow: 7, delay: 0 },
-  { r: 162, lo: 0.08, hi: 0.34, glow: 5, delay: 0.5 },
-  { r: 204, lo: 0.07, hi: 0.38, glow: 7, delay: 0.85 },
-  { r: 250, lo: 0.06, hi: 0.36, glow: 8, delay: 1.2 },
+  { r: 93, lo: 0.1, hi: 0.5, glow: 7, delay: 0, wave: "wave-near" },
+  { r: 162, lo: 0.08, hi: 0.34, glow: 5, delay: 0.5, wave: "wave-mid" },
+  { r: 204, lo: 0.07, hi: 0.38, glow: 7, delay: 0.85, wave: "wave-mid" },
+  { r: 250, lo: 0.06, hi: 0.36, glow: 8, delay: 1.2, wave: "wave-far" },
 ];
 const TAU_SEC = 6; // 每秒六度
 const TAU_MIN = 6; // 每分六度
@@ -161,7 +161,7 @@ export function Dial({ now, lat, lon, onClose }: Props) {
 
       <div class="dial-wrap">
         <svg viewBox="0 0 620 620" aria-hidden="true">
-          {LITE.map(({ r, lo, hi, glow, delay }) => (
+          {LITE.map(({ r, lo, hi, glow, delay, wave }) => (
             <circle
               key={r}
               class="lite"
@@ -169,7 +169,10 @@ export function Dial({ now, lat, lon, onClose }: Props) {
               cy={C}
               r={r}
               fill="none"
-              style={`--lo: ${lo}; --hi: ${hi}; --glow: ${glow}px; animation-delay: ${delay}s`}
+              style={
+                `--lo: ${lo}; --hi: ${hi}; --glow: ${glow}px;` +
+                ` --wave: ${wave}; animation-delay: ${delay}s`
+              }
             />
           ))}
 

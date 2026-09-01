@@ -470,53 +470,50 @@ body::-webkit-scrollbar {
  * 沒有這個動畫時更暗。當令的那些字（.on）本來就是滿的，把上下限都設成 1，
  * 動畫等於不動它們 —— 動畫的優先序高過一般宣告，不這樣做反而會把它們拉暗。
  */
-@keyframes passlight {
-  0%,
-  100% {
-    fill-opacity: var(--fo);
-  }
-  50% {
-    fill-opacity: var(--fo-hi);
-  }
-}
-
 .dial :is(.rn, .ar, .hr, .jq, .bch, .sunlab) {
-  animation: passlight 5s ease-in-out infinite;
+  fill-opacity: calc(var(--fo) + (var(--fo-hi) - var(--fo)) * var(--v));
+  animation: var(--wave) 5s ease-in-out infinite;
 }
 
 .dial .sunlab {
   --fo: 0.6;
   --fo-hi: 0.95;
+  --wave: wave-near;
   animation-delay: 0.16s;
 }
 
 .dial .bch {
   --fo: 0.32;
   --fo-hi: 0.66;
+  --wave: wave-near;
   animation-delay: 0.4s;
 }
 
 .dial .jq {
   --fo: 0.26;
   --fo-hi: 0.58;
+  --wave: wave-mid;
   animation-delay: 0.72s;
 }
 
 .dial .hr {
   --fo: 0.3;
   --fo-hi: 0.62;
+  --wave: wave-far;
   animation-delay: 1.06s;
 }
 
 .dial .rn {
   --fo: 0.32;
   --fo-hi: 0.66;
+  --wave: wave-far;
   animation-delay: 1.4s;
 }
 
 .dial .ar {
   --fo: 0.2;
   --fo-hi: 0.5;
+  --wave: wave-far;
   animation-delay: 1.4s;
 }
 
@@ -572,52 +569,105 @@ body::-webkit-scrollbar {
  * 是光從盤心走到最外圈，走完大概一秒二。亮度上下限每圈自己帶（--lo / --hi），
  * 越外圈越暗：這是背景的呼吸，字要壓得住它。
  */
-@keyframes hubbreathe {
-  0%,
-  100% {
-    stroke-opacity: var(--lo);
-    filter: drop-shadow(0 0 0 transparent);
+/*
+ * 一口氣的形狀，四種。
+ *
+ * 之前全部共用一條五秒的 ease-in-out，只有延遲不同 —— 那是四圈輪流做同一個動作，
+ * 不是一道波。真的在擴散的東西越往外散得越開：near 半秒亮到頂、一秒退掉；
+ * wave-out 要一秒四才亮到頂、退要兩秒一。近的是一閃，遠的是漫過來。
+ *
+ * 週期一律五秒不能動 —— 各給各的長度會慢慢錯開，走幾輪順序就亂了。
+ * 變的只是這一口氣在五秒裡佔多寬。
+ *
+ * 動的是共用的 --v（0 到 1），每個元素再用 calc 把它映到自己的範圍：
+ * 導線映到 stroke-opacity 和光暈半徑、字映到 fill-opacity、四象和曆書欄映到 opacity。
+ * 一套關鍵影格餵四種尺度的東西。
+ */
+@property --v {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@keyframes wave-near {
+  0% {
+    --v: 0;
   }
-  50% {
-    stroke-opacity: var(--hi);
-    filter: drop-shadow(0 0 var(--glow) var(--gold));
+  10% {
+    --v: 1;
+  }
+  30%,
+  100% {
+    --v: 0;
+  }
+}
+
+@keyframes wave-mid {
+  0% {
+    --v: 0;
+  }
+  15% {
+    --v: 1;
+  }
+  42%,
+  100% {
+    --v: 0;
+  }
+}
+
+@keyframes wave-far {
+  0% {
+    --v: 0;
+  }
+  21% {
+    --v: 1;
+  }
+  56%,
+  100% {
+    --v: 0;
+  }
+}
+
+@keyframes wave-out {
+  0% {
+    --v: 0;
+  }
+  28% {
+    --v: 1;
+  }
+  70%,
+  100% {
+    --v: 0;
   }
 }
 
 .dial .lite {
   stroke: var(--gold);
   stroke-width: 1;
-  stroke-opacity: var(--lo);
-  animation: hubbreathe 5s ease-in-out infinite;
+  stroke-opacity: calc(var(--lo) + (var(--hi) - var(--lo)) * var(--v));
+  filter: drop-shadow(0 0 calc(var(--glow) * var(--v)) var(--gold));
+  animation: var(--wave, wave-near) 5s ease-in-out infinite;
 }
 
 /*
- * 呼吸往外走完最後兩段。
+ * 呼吸走完最後兩段。
  *
- * 盤心 0、三圈導線 0.5 / 0.85 / 1.2 秒，四象在角上（比最外圈還遠）1.5 秒，
- * 曆書欄在盤外 1.85 秒 —— 同一口氣一路推到畫面邊緣。
+ * 盤心 0、三圈導線 0.5 / 0.85 / 1.2 秒，四象在角上 1.6 秒、曆書欄在盤外 1.85 秒。
+ * 越往外那一下越慢 —— 這兩段吃的是最寬的 wave-out。
  *
- * 起伏的下限各自帶（--blo）：四象壓到 0.5 那一口氣才看得出來，
- * 曆書欄只到 0.75，那是要讀的字，閃太兇會讀不下去。
+ * 起伏的下限各自帶（--blo）：四象壓到 0.3 那一下才看得出來，
+ * 曆書欄只到 0.55，那是要讀的字，閃太兇會讀不下去。
  */
-@keyframes outbreathe {
-  0%,
-  100% {
-    opacity: var(--blo, 0.6);
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
 .dial .sx-in {
   --blo: 0.3;
-  animation: outbreathe 5s ease-in-out 1.6s infinite;
+  opacity: calc(var(--blo) + (1 - var(--blo)) * var(--v));
+  animation: wave-out 5s ease-in-out 1.6s infinite;
 }
 
 .dial .marg .mrow {
   --blo: 0.55;
-  animation: outbreathe 5s ease-in-out 1.85s infinite;
+  opacity: calc(var(--blo) + (1 - var(--blo)) * var(--v));
+  animation: wave-out 5s ease-in-out 1.85s infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -627,6 +677,13 @@ body::-webkit-scrollbar {
   .dial .marg .mrow,
   .dial :is(.rn, .ar, .hr, .jq, .bch, .sunlab) {
     animation: none;
+  }
+
+  /* --v 停在 0 就是各自的谷底。字的谷底本來就是原本的亮度，
+     四象和曆書欄的谷底是壓暗過的，靜止時要拉回滿的 */
+  .dial .sx-in,
+  .dial .marg .mrow {
+    opacity: 1;
   }
 }
 
