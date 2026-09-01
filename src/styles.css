@@ -430,7 +430,8 @@ body::-webkit-scrollbar {
   place-items: center;
 }
 
-.dial svg {
+/* 只給盤那一張。寫成 .dial svg 會把四角那四張獨立的 svg 一起吃掉 */
+.dial-wrap > svg {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -440,7 +441,7 @@ body::-webkit-scrollbar {
   transition: transform 0.72s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.55s ease;
 }
 
-.dial.in svg {
+.dial.in .dial-wrap > svg {
   transform: none;
   opacity: 1;
 }
@@ -456,6 +457,72 @@ body::-webkit-scrollbar {
 .dial.ready g.sec {
   /* 秒針一秒一跳，尾巴帶回彈，是石英錶的頓感不是連續掃 */
   transition: transform 0.15s cubic-bezier(0.34, 1.62, 0.58, 1);
+}
+
+/*
+ * 呼吸經過的時候，那一圈的字白一下。
+ *
+ * 延遲照半徑排，跟導線同一條公式（(r − 93) / 157 × 1.2 秒）：日照弧 114 是 0.16、
+ * 時辰 145 是 0.4、節氣 187 是 0.72、時 232 是 1.06、分刻 276 是 1.4。
+ * 光走到哪一圈，那一圈的字就亮，過去了就回到原本的亮度。
+ *
+ * 谷底就是原本的值，不是壓暗了再亮回來 —— 亮度只往上加，字在任何一刻都不會比
+ * 沒有這個動畫時更暗。當令的那些字（.on）本來就是滿的，把上下限都設成 1，
+ * 動畫等於不動它們 —— 動畫的優先序高過一般宣告，不這樣做反而會把它們拉暗。
+ */
+@keyframes passlight {
+  0%,
+  100% {
+    fill-opacity: var(--fo);
+  }
+  50% {
+    fill-opacity: var(--fo-hi);
+  }
+}
+
+.dial :is(.rn, .ar, .hr, .jq, .bch, .sunlab) {
+  animation: passlight 5s ease-in-out infinite;
+}
+
+.dial .sunlab {
+  --fo: 0.6;
+  --fo-hi: 0.95;
+  animation-delay: 0.16s;
+}
+
+.dial .bch {
+  --fo: 0.32;
+  --fo-hi: 0.66;
+  animation-delay: 0.4s;
+}
+
+.dial .jq {
+  --fo: 0.26;
+  --fo-hi: 0.58;
+  animation-delay: 0.72s;
+}
+
+.dial .hr {
+  --fo: 0.3;
+  --fo-hi: 0.62;
+  animation-delay: 1.06s;
+}
+
+.dial .rn {
+  --fo: 0.32;
+  --fo-hi: 0.66;
+  animation-delay: 1.4s;
+}
+
+.dial .ar {
+  --fo: 0.2;
+  --fo-hi: 0.5;
+  animation-delay: 1.4s;
+}
+
+.dial :is(.rn, .ar, .hr, .jq, .bch).on {
+  --fo: 1;
+  --fo-hi: 1;
 }
 
 /*
@@ -543,9 +610,9 @@ body::-webkit-scrollbar {
   }
 }
 
-.dial .sx g {
+.dial .sx-in {
   --blo: 0.3;
-  animation: outbreathe 5s ease-in-out 1.5s infinite;
+  animation: outbreathe 5s ease-in-out 1.6s infinite;
 }
 
 .dial .marg .mrow {
@@ -556,8 +623,9 @@ body::-webkit-scrollbar {
 @media (prefers-reduced-motion: reduce) {
   .dial g[style*="--spin"],
   .dial .lite,
-  .dial .sx g,
-  .dial .marg .mrow {
+  .dial .sx-in,
+  .dial .marg .mrow,
+  .dial :is(.rn, .ar, .hr, .jq, .bch, .sunlab) {
     animation: none;
   }
 }
@@ -725,22 +793,49 @@ body::-webkit-scrollbar {
 /*
  * 四角的四象。
  *
- * 疊在時辰盤那張 svg 上面、同一個 620 座標系，所以角落的位置跟環是同一套尺。
- * 分成兩張 svg 是為了無障礙：底下那張整張 aria-hidden（環上全是重複的刻度，
- * 一格一格唸完是折磨），四象的宿名要唸得出來，就不能待在裡面。
+ * 貼畫面的角，不是貼盤的角。盤是正方的，寬螢幕上畫面的角比盤的角空得多，
+ * 靠過去就能畫得更大 —— 窄畫面沒有那個餘裕，尺寸就退回 vmin 那一檔。
  *
- * 顏色各象自己的（--sx），亮度壓到 0.5 以下 —— 這是盤的四個角，不是四張圖。
+ * 兩檔的上限都是幾何算出來的：盤最外圈的字在半徑 0.448 × 盤寬上，
+ * 方塊的內角不能越過那條線。寬螢幕 27vh、窄螢幕 16vmin 是各自的安全值。
+ *
+ * 不放進時辰盤那張 svg，是為了無障礙：那一張整張 aria-hidden（環上全是重複的
+ * 刻度，一格一格唸完是折磨），四象的宿名要唸得出來，就不能待在裡面。
  */
 .dial .sx {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
   z-index: 1;
   pointer-events: none;
+  width: 16vmin;
   opacity: 0;
   /* 跟著曆書欄一起浮出來，晚一點點，讓角落是最後到位的東西 */
   transition: opacity 1.1s ease 2.6s;
+}
+
+@media (min-aspect-ratio: 27 / 20) {
+  .dial .sx {
+    width: min(27vh, 20vw);
+  }
+}
+
+.dial .sx-0 {
+  top: 2vh;
+  left: 2vh;
+}
+
+.dial .sx-3 {
+  top: 2vh;
+  right: 2vh;
+}
+
+.dial .sx-1 {
+  bottom: 2vh;
+  left: 2vh;
+}
+
+.dial .sx-2 {
+  bottom: 2vh;
+  right: 2vh;
 }
 
 .dial.in .sx {
@@ -769,19 +864,19 @@ body::-webkit-scrollbar {
 }
 
 /* 當令的那一象亮起來。盤上正走到哪一季，角上就該是誰 */
-.sx .on .sx-line {
+.sx.on .sx-line {
   stroke-opacity: 0.55;
 }
 
-.sx .on .sx-dot {
+.sx.on .sx-dot {
   fill-opacity: 0.9;
 }
 
-.sx .on .sx-star {
+.sx.on .sx-star {
   fill-opacity: 0.62;
 }
 
-.sx .on .sx-lab {
+.sx.on .sx-lab {
   fill-opacity: 0.8;
 }
 
