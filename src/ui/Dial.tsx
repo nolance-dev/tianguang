@@ -137,9 +137,12 @@ export function Dial({ now, lat, lon, onClose }: Props) {
 
       <div class="dial-wrap">
         <svg viewBox="0 0 620 620" aria-hidden="true">
-          {[250, 204, 162, 93].map((r) => (
+          {[250, 204, 162].map((r) => (
             <circle key={r} cx={C} cy={C} r={r} fill="none" stroke="currentColor" stroke-opacity=".06" />
           ))}
+
+          {/* 秒針根部那一圈。其他三圈是死的分隔線，這圈是呼吸燈 */}
+          <circle class="hubring" cx={C} cy={C} r="93" fill="none" />
 
           {/* 一環：六十分刻，一小時一圈，整分才跳。逢五羅馬數字，其餘小阿拉伯數字 */}
           <g style={spin(minAngle, 3.35, 4.9)}>

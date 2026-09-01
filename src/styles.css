@@ -479,11 +479,38 @@ body::-webkit-scrollbar {
 }
 
 .dial g[style*="--spin"] {
-  animation: ringspin var(--dur, 5s) cubic-bezier(0.07, 0.78, 0.14, 1) both;
+  animation: ringspin var(--dur, 5s) cubic-bezier(0.13, 0.7, 0.16, 1) both;
+}
+
+/*
+ * 秒針根部那一圈的呼吸燈。
+ *
+ * 五秒一息 —— 人靜下來大概就是這個速度，而且跟秒針一秒一跳完全不同拍，
+ * 兩個節奏各走各的，盤面才不會變成打拍子。亮度只在 0.1 到 0.5 之間走，
+ * 它是背景的呼吸，不是要跟中央的時間搶眼睛。
+ */
+@keyframes hubbreathe {
+  0%,
+  100% {
+    stroke-opacity: 0.1;
+    filter: drop-shadow(0 0 0 transparent);
+  }
+  50% {
+    stroke-opacity: 0.5;
+    filter: drop-shadow(0 0 7px var(--gold));
+  }
+}
+
+.dial .hubring {
+  stroke: var(--gold);
+  stroke-width: 1;
+  stroke-opacity: 0.1;
+  animation: hubbreathe 5s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dial g[style*="--spin"] {
+  .dial g[style*="--spin"],
+  .dial .hubring {
     animation: none;
   }
 }
