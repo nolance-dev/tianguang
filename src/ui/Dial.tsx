@@ -121,8 +121,11 @@ export function Dial({ now, lat, lon, onClose }: Props) {
   const sun = sunTimes(now, lat, lon);
 
   // turns 是開盤時先自轉幾圈。圈數各環不同 —— 那就是「不同頻率」：同樣五秒，
-  // 分環轉三圈多、日照弧只轉一圈半，看起來就是各轉各的。dur 也各差一點，
+  // 分環轉兩圈、日照弧不到一圈，看起來就是各轉各的。dur 也各差一點，
   // 六環不會同一瞬間一起剎車。
+  //
+  // 要整體快慢就等比縮放這裡的圈數，不要動曲線：曲線決定的是「越轉越慢」
+  // 那個形狀，圈數決定的才是速度。改曲線會把減速的手感一起改掉。
   //
   // 用 rotate 這個獨立變換屬性，不動 transform：transform 隨時間每分每秒在跳，
   // 動畫掛上去會蓋掉它。兩者各自算完再相乘，互不干涉。
@@ -150,7 +153,7 @@ export function Dial({ now, lat, lon, onClose }: Props) {
           <circle class="hubring" cx={C} cy={C} r="93" fill="none" />
 
           {/* 一環：六十分刻，一小時一圈，整分才跳。逢五羅馬數字，其餘小阿拉伯數字 */}
-          <g style={spin(minAngle, 3.35, 4.9)}>
+          <g style={spin(minAngle, 2, 4.9)}>
             {Array.from({ length: 60 }, (_, i) => {
               const m = i + 1;
               const five = m % 5 === 0;
@@ -180,7 +183,7 @@ export function Dial({ now, lat, lon, onClose }: Props) {
           </g>
 
           {/* 二環：二十四小時，一天一圈，整點才跳 */}
-          <g style={spin(hourAngle, 2.6, 5.1)}>
+          <g style={spin(hourAngle, 1.55, 5.1)}>
             {Array.from({ length: 24 }, (_, h) => (
               <g key={h} transform={`rotate(${h * 15} ${C} ${C})`}>
                 <text
@@ -206,7 +209,7 @@ export function Dial({ now, lat, lon, onClose }: Props) {
           </g>
 
           {/* 三環：節氣（中）／月名（英），一年一圈。標籤置於格中央，所以偏移半格 */}
-          <g style={spin(outerAngle, 1.85, 4.6)}>
+          <g style={spin(outerAngle, 1.1, 4.6)}>
             {Array.from({ length: outerCount }, (_, i) => (
               <g key={i} transform={`rotate(${((i + 0.5) * 360) / outerCount} ${C} ${C})`}>
                 <text
@@ -224,7 +227,7 @@ export function Dial({ now, lat, lon, onClose }: Props) {
           </g>
 
           {/* 四環：十二時辰／十二光相，兩小時跳一格 */}
-          <g style={spin(scAngle, 2.2, 5)}>
+          <g style={spin(scAngle, 1.3, 5)}>
             {Array.from({ length: 12 }, (_, k) => (
               <g key={k} transform={`rotate(${k * 30} ${C} ${C})`}>
                 <text
@@ -250,7 +253,7 @@ export function Dial({ now, lat, lon, onClose }: Props) {
           </g>
 
           {/* 五環：日照弧 */}
-          <g style={spin(sunAngle, 1.4, 4.4)}>
+          <g style={spin(sunAngle, 0.85, 4.4)}>
             <circle class="nitearc" cx={C} cy={C} r="114" fill="none" stroke-width="3.5" />
             {sun.sunrise !== null && sun.sunset !== null && (
               <>
@@ -274,7 +277,7 @@ export function Dial({ now, lat, lon, onClose }: Props) {
           </g>
 
           {/* 秒針。軸心藏在中央時間後面，只露外半截 —— 不必為了指針把時間縮小 */}
-          <g class="sec" style={spin(secAngleRef.current, -5.2, 4.7)}>
+          <g class="sec" style={spin(secAngleRef.current, -3.1, 4.7)}>
             <path class="sec-hand" d={`M${C} ${C - 140} L${C + 1.8} ${C - 86} L${C - 1.8} ${C - 86} Z`} />
             <circle class="sec-hub" cx={C} cy={C - 86} r="4.5" />
           </g>
