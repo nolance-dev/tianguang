@@ -260,8 +260,13 @@ export function App() {
       links={cfg.links}
       onLinks={(l) => patch({ links: l })}
       linkGrid={cfg.linkGrid}
-      photoId={cfg.photoId}
-      onPhoto={(id) => patch({ photoId: id })}
+      photo={{ id: cfg.photoId, rotate: cfg.photoRotate }}
+      onPhoto={(p) =>
+        patch({
+          ...(p.id !== undefined ? { photoId: p.id } : {}),
+          ...(p.rotate !== undefined ? { photoRotate: p.rotate } : {}),
+        })
+      }
     />
   );
   const notices = (

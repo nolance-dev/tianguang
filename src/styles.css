@@ -1440,11 +1440,55 @@ body::-webkit-scrollbar {
 .photoframe {
   position: absolute;
   inset: 0;
-  background-size: cover;
-  background-position: center;
   border-radius: inherit;
+  overflow: hidden;
   /* 沒有標題列可以抓，照片本身就是把手 */
   cursor: grab;
+}
+
+.photofade {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  animation: photo-in 0.55s ease both;
+}
+
+@keyframes photo-in {
+  from {
+    opacity: 0;
+    transform: scale(1.03);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photofade {
+    animation-duration: 0.01ms;
+  }
+}
+
+/* 輪播間隔那個下拉。標題列上只放得下一個很小的控制項 */
+.card.photocard > header select {
+  background: none;
+  border: 0;
+  color: var(--fg-2);
+  font-family: var(--f-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.card.photocard > header select:hover {
+  color: var(--fg);
+}
+
+.card.photocard > header option {
+  color: #1b2230;
 }
 
 .card.held .photoframe {

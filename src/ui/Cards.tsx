@@ -52,9 +52,9 @@ interface Props extends Body {
   links: Link[];
   onLinks: (links: Link[]) => void;
   linkGrid: boolean;
-  /** 照片牆上掛的那張。跟桌布無關 */
-  photoId: string | null;
-  onPhoto: (id: string | null) => void;
+  /** 照片牆的狀態。跟桌布無關 */
+  photo: { id: string | null; rotate: number };
+  onPhoto: (patch: Partial<{ id: string | null; rotate: number }>) => void;
 }
 
 /**
@@ -124,7 +124,7 @@ export function Cards({
   links,
   onLinks,
   linkGrid,
-  photoId,
+  photo,
   onPhoto,
 }: Props) {
   const live = useSignal<Tile[] | null>(null);
@@ -246,7 +246,7 @@ export function Cards({
           {tile.id === "todos" && <TodoCard value={value} onChange={onChange} />}
           {tile.id === "note" && <NoteCard value={value} onChange={onChange} />}
           {tile.id === "pomodoro" && <PomodoroCard value={value} onChange={onChange} />}
-          {tile.id === "photos" && <PhotoWall photoId={photoId} onPhoto={onPhoto} />}
+          {tile.id === "photos" && <PhotoWall photo={photo} onPhoto={onPhoto} />}
           {tile.id === "links" && (
             <>
               <header>

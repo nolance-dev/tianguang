@@ -559,5 +559,19 @@
   },
   "c_photos_done": {
     "message": "完成"
+  },
+  "c_photos_rotate": {
+    "message": "輪播"
+  },
+  "c_photos_rotate_off": {
+    "message": "不輪播"
+  },
+  "c_photos_every": {
+    "message": "每 $1",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
   }
 }

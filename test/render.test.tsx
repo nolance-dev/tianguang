@@ -493,6 +493,11 @@ describe("工作區卡片", () => {
     // 還沒挑照片就直接是編輯模式，跟設定抽屜共用同一個圖庫元件
     expect(on.querySelector(".card.photocard .picker.wall")).not.toBeNull();
     expect(on.querySelector(".photoframe"), "沒有照片就沒有相框").toBeNull();
+
+    // 輪播間隔就在編輯模式的標題列上，預設不輪播
+    const every = on.querySelector<HTMLSelectElement>(".card.photocard header select")!;
+    expect(every.value).toBe("0");
+    expect(every.options.length, "關閉加四個間隔").toBe(5);
     localStorage.removeItem("tg.settings");
   });
 

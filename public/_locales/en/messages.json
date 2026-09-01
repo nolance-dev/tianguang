@@ -523,5 +523,19 @@
   },
   "c_photos_done": {
     "message": "Done"
+  },
+  "c_photos_rotate": {
+    "message": "Slideshow"
+  },
+  "c_photos_rotate_off": {
+    "message": "Off"
+  },
+  "c_photos_every": {
+    "message": "Every $1",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
   }
 }

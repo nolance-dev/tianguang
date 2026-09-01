@@ -50,6 +50,8 @@ export interface Settings {
   desk: Tile[];
   /** 照片牆上掛的那張。跟桌布的 imageId 是兩回事，各記各的。 */
   photoId: string | null;
+  /** 輪播間隔（秒）。0 是不輪播，就掛 photoId 那一張。 */
+  photoRotate: number;
   /** 自訂名言。留白就用內建那批隨機抽。 */
   quoteText: string;
   quoteBy: string;
@@ -81,6 +83,7 @@ export const DEFAULTS: Settings = {
   linkGrid: true,
   desk: DEFAULT_DESK,
   photoId: null,
+  photoRotate: 0,
   quoteText: "",
   quoteBy: "",
   links: [],
