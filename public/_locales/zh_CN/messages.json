@@ -544,5 +544,35 @@
   },
   "m_week": {
     "message": "周次"
+  },
+  "sx_title": {
+    "message": "四象二十八宿"
+  },
+  "sx_of": {
+    "message": "七宿："
+  },
+  "sx_name_0": {
+    "message": "青龙"
+  },
+  "sx_name_1": {
+    "message": "玄武"
+  },
+  "sx_name_2": {
+    "message": "白虎"
+  },
+  "sx_name_3": {
+    "message": "朱雀"
+  },
+  "sx_stars_0": {
+    "message": "角 亢 氐 房 心 尾 箕"
+  },
+  "sx_stars_1": {
+    "message": "斗 牛 女 虚 危 室 壁"
+  },
+  "sx_stars_2": {
+    "message": "奎 娄 胃 昴 毕 觜 参"
+  },
+  "sx_stars_3": {
+    "message": "井 鬼 柳 星 张 翼 轸"
   }
 }

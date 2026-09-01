@@ -828,5 +828,35 @@
   },
   "m_week": {
     "message": "Week"
+  },
+  "sx_title": {
+    "message": "The four symbols and the twenty-eight mansions"
+  },
+  "sx_of": {
+    "message": ", seven mansions: "
+  },
+  "sx_name_0": {
+    "message": "Azure Dragon"
+  },
+  "sx_name_1": {
+    "message": "Black Tortoise"
+  },
+  "sx_name_2": {
+    "message": "White Tiger"
+  },
+  "sx_name_3": {
+    "message": "Vermilion Bird"
+  },
+  "sx_stars_0": {
+    "message": "Horn, Neck, Root, Room, Heart, Tail, Winnowing Basket"
+  },
+  "sx_stars_1": {
+    "message": "Dipper, Ox, Girl, Emptiness, Rooftop, Encampment, Wall"
+  },
+  "sx_stars_2": {
+    "message": "Legs, Bond, Stomach, Hairy Head, Net, Turtle Beak, Three Stars"
+  },
+  "sx_stars_3": {
+    "message": "Well, Ghost, Willow, Star, Extended Net, Wings, Chariot"
   }
 }

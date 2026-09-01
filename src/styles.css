@@ -692,6 +692,60 @@ body::-webkit-scrollbar {
 }
 
 /*
+ * 四角的四象。
+ *
+ * 疊在時辰盤那張 svg 上面、同一個 620 座標系，所以角落的位置跟環是同一套尺。
+ * 分成兩張 svg 是為了無障礙：底下那張整張 aria-hidden（環上全是重複的刻度，
+ * 一格一格唸完是折磨），四象的宿名要唸得出來，就不能待在裡面。
+ *
+ * 顏色各象自己的（--sx），亮度壓到 0.5 以下 —— 這是盤的四個角，不是四張圖。
+ */
+.dial .sx {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  /* 跟著曆書欄一起浮出來，晚一點點，讓角落是最後到位的東西 */
+  transition: opacity 1.1s ease 2.6s;
+}
+
+.dial.in .sx {
+  opacity: 1;
+}
+
+.sx-line {
+  stroke: var(--sx);
+  stroke-opacity: 0.34;
+  stroke-width: 0.9;
+  stroke-linejoin: round;
+}
+
+.sx-dot {
+  fill: var(--sx);
+  fill-opacity: 0.5;
+}
+
+.sx-lab {
+  fill: var(--sx);
+  fill-opacity: 0.42;
+  font-family: var(--f-cjk);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  /* 字距推到右邊會讓兩個字看起來偏心，補回半格 */
+  transform: translateX(0.12em);
+}
+
+:root[lang^="en"] .sx-lab {
+  font-family: var(--f-latin);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  transform: none;
+}
+
+/*
  * 盤面兩側的曆書欄。
  *
  * 盤是正方的，寬螢幕上左右一定各空一條。直排把那條窄長的空間用滿，

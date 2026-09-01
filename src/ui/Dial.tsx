@@ -3,6 +3,7 @@ import { isEnglish, outerRingName, shichenAlt, shichenName, t } from "../lib/i18
 import { roman } from "../lib/roman";
 import { indexAt } from "../lib/shichen";
 import { moonIndex, jieqiIndex, sunTimes } from "../lib/solar";
+import { FourSymbols } from "./FourSymbols";
 import { Margins } from "./Margins";
 
 /**
@@ -301,6 +302,8 @@ export function Dial({ now, lat, lon, onClose }: Props) {
 
           <path class="dial-mark" d={`M${C} 6 l8 15 h-16 z`} />
         </svg>
+
+        <FourSymbols />
 
         <div class="dial-center">
           <div class="dc-time">
