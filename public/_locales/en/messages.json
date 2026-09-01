@@ -517,5 +517,11 @@
   },
   "s_card_photos": {
     "message": "Photos"
+  },
+  "c_photos_edit": {
+    "message": "Change photo"
+  },
+  "c_photos_done": {
+    "message": "Done"
   }
 }

@@ -1427,9 +1427,61 @@ body::-webkit-scrollbar {
 }
 
 /*
- * 照片牆。設定抽屜那個圖庫的放大版 —— 同一個元件，格子大一號、鋪滿整張卡。
- * 上傳那塊釘在最上面，縮圖在下面自己捲，卡片拉高就看到更多張。
+ * 照片牆。
+ *
+ * 常態就是一張照片鋪滿整張卡，沒有標題列也沒有內距 —— 一張照片不需要
+ * 一個標題告訴你它是照片。卡片本身已經 overflow: hidden，圓角自然對得上。
+ * 用 :has 判斷，才不用把「現在是哪個模式」再從元件傳一次下來。
  */
+.card.photocard:has(.photoframe) {
+  padding: 0;
+}
+
+.photoframe {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  border-radius: inherit;
+  /* 沒有標題列可以抓，照片本身就是把手 */
+  cursor: grab;
+}
+
+.card.held .photoframe {
+  cursor: grabbing;
+}
+
+.photoedit {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  border: 0;
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.card.photocard:hover .photoedit,
+.photoedit:focus-visible {
+  opacity: 1;
+}
+
+/* 照片上的把手要看得見，--fg-2 壓在照片上會消失 */
+.card.photocard:has(.photoframe) .grow {
+  color: #fff;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7));
+}
+
+/* 編輯模式：設定抽屜那個圖庫的放大版，格子大一號、鋪滿整張卡 */
 .card.photocard .picker {
   margin-top: 0;
   flex: 1;
@@ -1542,6 +1594,24 @@ body::-webkit-scrollbar {
   font-size: 0.62rem;
   letter-spacing: 0.09em;
   color: var(--fg-2);
+}
+
+/* 標題列右邊的小動作鈕。是按鈕不是把手，所以不繼承那個 grab 游標 */
+.card > header button {
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--f-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.09em;
+  color: var(--fg-2);
+  transition: color 0.2s;
+}
+
+.card > header button:hover,
+.card > header button:focus-visible {
+  color: var(--fg);
 }
 
 .card .empty {

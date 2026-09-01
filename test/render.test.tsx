@@ -490,8 +490,9 @@ describe("工作區卡片", () => {
     );
     const on = mount(new Date(2026, 7, 31, 11, 0, 0));
     await vi.waitFor(() => expect(on.querySelector(".card.photocard")).not.toBeNull());
-    // 跟設定抽屜共用同一個圖庫元件
+    // 還沒挑照片就直接是編輯模式，跟設定抽屜共用同一個圖庫元件
     expect(on.querySelector(".card.photocard .picker.wall")).not.toBeNull();
+    expect(on.querySelector(".photoframe"), "沒有照片就沒有相框").toBeNull();
     localStorage.removeItem("tg.settings");
   });
 

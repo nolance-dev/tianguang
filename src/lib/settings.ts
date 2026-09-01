@@ -48,6 +48,8 @@ export interface Settings {
   linkGrid: boolean;
   /** 工作區卡片的順序與尺寸。畫之前一律過 desk.normalize()。 */
   desk: Tile[];
+  /** 照片牆上掛的那張。跟桌布的 imageId 是兩回事，各記各的。 */
+  photoId: string | null;
   /** 自訂名言。留白就用內建那批隨機抽。 */
   quoteText: string;
   quoteBy: string;
@@ -78,6 +80,7 @@ export const DEFAULTS: Settings = {
   cards: { todos: true, note: true, pomodoro: false, quote: true, links: true, photos: false },
   linkGrid: true,
   desk: DEFAULT_DESK,
+  photoId: null,
   quoteText: "",
   quoteBy: "",
   links: [],

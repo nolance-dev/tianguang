@@ -553,5 +553,11 @@
   },
   "s_card_photos": {
     "message": "照片牆"
+  },
+  "c_photos_edit": {
+    "message": "換一張"
+  },
+  "c_photos_done": {
+    "message": "完成"
   }
 }

@@ -2,7 +2,7 @@ import { useSignal } from "@preact/signals";
 import { useEffect, useRef } from "preact/hooks";
 import { t } from "../lib/i18n";
 import { Links } from "./Links";
-import { ImagePicker } from "./ImagePicker";
+import { PhotoWall } from "./PhotoWall";
 import type { Link } from "../lib/links";
 import {
   COLS,
@@ -52,9 +52,9 @@ interface Props extends Body {
   links: Link[];
   onLinks: (links: Link[]) => void;
   linkGrid: boolean;
-  /** 目前當桌布的那張圖，沒有就是 null */
-  wallpaper: string | null;
-  onWallpaper: (id: string | null) => void;
+  /** 照片牆上掛的那張。跟桌布無關 */
+  photoId: string | null;
+  onPhoto: (id: string | null) => void;
 }
 
 /**
@@ -124,8 +124,8 @@ export function Cards({
   links,
   onLinks,
   linkGrid,
-  wallpaper,
-  onWallpaper,
+  photoId,
+  onPhoto,
 }: Props) {
   const live = useSignal<Tile[] | null>(null);
   const held = useSignal<CardId | null>(null);
@@ -240,25 +240,13 @@ export function Cards({
           data-id={tile.id}
           style={{ "--w": String(tile.w), "--h": String(tile.h) }}
           onPointerDown={(e) => {
-            if ((e.target as HTMLElement).closest("header")) startMove(e, tile.id);
+            if ((e.target as HTMLElement).closest("header, .photoframe")) startMove(e, tile.id);
           }}
         >
           {tile.id === "todos" && <TodoCard value={value} onChange={onChange} />}
           {tile.id === "note" && <NoteCard value={value} onChange={onChange} />}
           {tile.id === "pomodoro" && <PomodoroCard value={value} onChange={onChange} />}
-          {tile.id === "photos" && (
-            <>
-              <header>
-                <b>{t("c_photos")}</b>
-              </header>
-              {/* 設定抽屜裡那個圖庫的放大版。點一張就換桌布，再點一次換回漸層 */}
-              <ImagePicker
-                wall
-                selected={wallpaper}
-                onSelect={(id) => onWallpaper(id === wallpaper ? null : id)}
-              />
-            </>
-          )}
+          {tile.id === "photos" && <PhotoWall photoId={photoId} onPhoto={onPhoto} />}
           {tile.id === "links" && (
             <>
               <header>
