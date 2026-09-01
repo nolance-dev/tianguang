@@ -2500,10 +2500,14 @@ body::-webkit-scrollbar {
  * 底圖與回波用同一組 z/x/y 圖磚，所以對齊不必靠調整 —— 兩邊本來就在
  * 同一套座標上。位置由 cover() 依容器實際尺寸算出來，城市剛好在正中央。
  */
+/*
+ * 這一層不設 z-index。設了它就自成一個堆疊脈絡，裡面的縮放鈕再怎麼加
+ * z-index 也只是在這一層裡面比高低 —— 整層還是壓在溫度那塊底下，
+ * 按鈕看得見卻是灰的。不設，鈕的 z-index 才排得進卡片那一層。
+ */
 .radar {
   position: absolute;
   inset: 0;
-  z-index: 1;
   overflow: hidden;
   border-radius: inherit;
   background: var(--glass);

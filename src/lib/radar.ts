@@ -22,6 +22,15 @@ export const TILE = 256;
 export const MIN_Z = 4;
 export const MAX_Z = 10;
 
+/**
+ * 回波圖磚的最大縮放。
+ *
+ * RainViewer 只到 z7。再往上它回的是一張寫著「Zoom Level Not Supported」
+ * 的灰底圖 —— HTTP 200、正常的 256×256 PNG、每一張都剛好 1370 位元組。
+ * 沒有任何一種狀態碼或大小檢查看得出來，只有把它畫出來才知道。
+ */
+export const RADAR_MAX_Z = 7;
+
 export interface Frame {
   /** 圖磚網址的前綴，例如 https://tilecache.rainviewer.com/v2/radar/xxxx */
   base: string;
@@ -85,12 +94,42 @@ export function cover(
       cells.push({
         x: ((ix % n) + n) % n,
         y: iy,
-        left: Math.round((ix - fx) * TILE + half.w),
-        top: Math.round((iy - fy) * TILE + half.h),
+        // 不四捨五入。回波那一層是在較粗的縮放上算完再乘回來的，
+        // 先取整再乘，半個像素的誤差會被放大成好幾個像素 ——
+        // 底圖和回波就對不齊了。瀏覽器本來就處理得了小數位置。
+        left: (ix - fx) * TILE + half.w,
+        top: (iy - fy) * TILE + half.h,
       });
     }
   }
   return cells;
+}
+
+/**
+ * 回波那一層要畫的圖磚。
+ *
+ * 超過 RainViewer 的上限就固定抓 z7 的圖磚再放大貼上去，
+ * 跟地圖客戶端的 maxNativeZoom 是同一招：底圖繼續變細，回波變糊，
+ * 但兩邊蓋的還是同一塊地。糊掉的回波仍然是資料；
+ * 一張寫著「不支援」的灰卡不是。
+ */
+export function echoLayer(
+  lat: number,
+  lon: number,
+  z: number,
+  width: number,
+  height: number,
+): { z: number; scale: number; cells: Cell[] } {
+  const ez = Math.min(z, RADAR_MAX_Z);
+  const scale = 2 ** (z - ez);
+  // 先在較粗的縮放上算一塊縮小過的區域，再整個放大回來 ——
+  // 中心點在縮小的那塊裡是正中央，乘回去之後還是正中央
+  const cells = cover(lat, lon, ez, width / scale, height / scale).map((c) => ({
+    ...c,
+    left: c.left * scale,
+    top: c.top * scale,
+  }));
+  return { z: ez, scale, cells };
 }
 
 /**

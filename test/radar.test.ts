@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { baseTile, cover, radarTile, TILE, tileAt } from "../src/lib/radar";
+import {
+  baseTile,
+  cover,
+  echoLayer,
+  radarTile,
+  RADAR_MAX_Z,
+  TILE,
+  tileAt,
+} from "../src/lib/radar";
 
 describe("圖磚座標", () => {
   it("台北在 z6 落在 x53 y27 —— 這組數字是拿真的圖磚驗過的", () => {
@@ -76,5 +84,44 @@ describe("圖磚網址", () => {
   it("底圖跟著亮暗換，而且是 /tile/{z}/{y}/{x} —— 列在前，跟 XYZ 相反", () => {
     expect(baseTile(true, 6, 53, 27)).toContain("World_Dark_Gray_Base/MapServer/tile/6/27/53");
     expect(baseTile(false, 6, 53, 27)).toContain("World_Light_Gray_Base/MapServer/tile/6/27/53");
+  });
+});
+
+describe("回波那一層", () => {
+  it("在上限以內就跟底圖同一組圖磚", () => {
+    const z = RADAR_MAX_Z;
+    const e = echoLayer(25.033, 121.565, z, 600, 400);
+    expect(e.z).toBe(z);
+    expect(e.scale).toBe(1);
+    expect(e.cells).toEqual(cover(25.033, 121.565, z, 600, 400));
+  });
+
+  it("超過上限就抓粗一級的再放大 —— 硬要 z9 會拿到一張「不支援」的灰卡", () => {
+    const e = echoLayer(25.033, 121.565, RADAR_MAX_Z + 2, 600, 400);
+    expect(e.z, "不會去要 RainViewer 沒有的縮放").toBe(RADAR_MAX_Z);
+    expect(e.scale).toBe(4);
+  });
+
+  it("放大之後城市還是在正中央", () => {
+    const [lat, lon] = [25.033, 121.565];
+    const [w, h] = [600, 400];
+    const z = RADAR_MAX_Z + 2;
+    const e = echoLayer(lat, lon, z, w, h);
+    const f = tileAt(lat, lon, e.z);
+
+    const host = e.cells.find((c) => c.x === Math.floor(f.x) && c.y === Math.floor(f.y))!;
+    expect(host).toBeTruthy();
+    const size = TILE * e.scale;
+    expect(host.left + (f.x % 1) * size).toBeCloseTo(w / 2, 0);
+    expect(host.top + (f.y % 1) * size).toBeCloseTo(h / 2, 0);
+  });
+
+  it("放大之後仍然蓋滿整塊", () => {
+    const e = echoLayer(25.033, 121.565, RADAR_MAX_Z + 3, 600, 400);
+    const size = TILE * e.scale;
+    expect(Math.min(...e.cells.map((c) => c.left))).toBeLessThanOrEqual(0);
+    expect(Math.max(...e.cells.map((c) => c.left + size))).toBeGreaterThanOrEqual(600);
+    expect(Math.min(...e.cells.map((c) => c.top))).toBeLessThanOrEqual(0);
+    expect(Math.max(...e.cells.map((c) => c.top + size))).toBeGreaterThanOrEqual(400);
   });
 });

@@ -3,6 +3,7 @@ import { useEffect, useRef } from "preact/hooks";
 import { t } from "../lib/i18n";
 import {
   cover,
+  echoLayer,
   hasRadarAccess,
   latestFrame,
   MAX_Z,
@@ -74,7 +75,12 @@ export function Radar({ lat, lon, place, dark }: Props) {
   }, [allowed.value]);
 
   const { w, h } = box.value;
-  const cells = w > 0 && h > 0 ? cover(lat, lon, zoom.value, w, h) : [];
+  const live = w > 0 && h > 0;
+  const cells = live ? cover(lat, lon, zoom.value, w, h) : [];
+  // 回波那一層自己算。超過 RainViewer 的上限就抓粗一級的再放大
+  const echo = live
+    ? echoLayer(lat, lon, zoom.value, w, h)
+    : { z: zoom.value, scale: 1, cells: [] };
   const stamp = frame.value
     ? new Date(frame.value.time * 1000).toLocaleTimeString(undefined, {
         hour: "2-digit",
@@ -98,16 +104,21 @@ export function Radar({ lat, lon, place, dark }: Props) {
       ))}
 
       {frame.value &&
-        cells.map((c) => (
+        echo.cells.map((c) => (
           <img
-            key={`r${frame.value!.time}-${zoom.value}-${c.x}-${c.y}`}
+            key={`r${frame.value!.time}-${echo.z}-${c.x}-${c.y}`}
             class="rtile echo"
-            src={radarTile(frame.value!, zoom.value, c.x, c.y)}
+            src={radarTile(frame.value!, echo.z, c.x, c.y)}
             alt=""
             loading="lazy"
-            width={TILE}
-            height={TILE}
-            style={{ left: `${c.left}px`, top: `${c.top}px` }}
+            width={TILE * echo.scale}
+            height={TILE * echo.scale}
+            style={{
+              left: `${c.left}px`,
+              top: `${c.top}px`,
+              width: `${TILE * echo.scale}px`,
+              height: `${TILE * echo.scale}px`,
+            }}
           />
         ))}
 
