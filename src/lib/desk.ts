@@ -27,7 +27,7 @@ export const DEFAULT_DESK: Tile[] = [
   { id: "links", w: 2, h: 2 },
   { id: "todos", w: 2, h: 1 },
   { id: "note", w: 2, h: 1 },
-  { id: "pomodoro", w: 1, h: 1 },
+  { id: "pomodoro", w: 2, h: 1 },
 ];
 
 function clamp(n: unknown, lo: number, hi: number, fallback: number): number {

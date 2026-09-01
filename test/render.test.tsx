@@ -8,6 +8,7 @@ import { jieqiIndex } from "../src/lib/solar";
 import zhTW from "../public/_locales/zh_TW/messages.json";
 import { ENGINES } from "../src/lib/search";
 import { paletteForColor } from "../src/lib/mesh";
+import { DEFAULT_DESK } from "../src/lib/desk";
 
 /**
  * 冒煙測試。不驗長相 —— 那要載進 Edge 用眼睛看。
@@ -425,6 +426,16 @@ describe("工作區卡片", () => {
     await vi.waitFor(() =>
       expect(order(), "Shift 是換位置").toEqual(["links", "note", "todos"]),
     );
+  });
+
+  it("預設排法裡待辦、隨手記、番茄鐘同一個尺寸", () => {
+    const size = (id: string) => {
+      const tile = DEFAULT_DESK.find((t) => t.id === id)!;
+      return `${tile.w}x${tile.h}`;
+    };
+    // 高度只由 --h 決定（列高是固定的 12rem），所以同樣的 w×h 就是同樣大小
+    expect(size("pomodoro"), "番茄鐘要跟上面兩張一樣大").toBe(size("todos"));
+    expect(size("note")).toBe(size("todos"));
   });
 
   it("快速存取九個一組切塊，加號也佔一格", async () => {

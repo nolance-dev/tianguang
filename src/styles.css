@@ -1304,7 +1304,15 @@ body::-webkit-scrollbar {
 .cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: minmax(10rem, auto);
+  /*
+   * 列高固定，不是 minmax(10rem, auto)。
+   *
+   * auto 的意思是「由內容決定」，於是番茄鐘那張的高度變成由錶面決定，
+   * 而錶面的大小又跟著卡片寬度跑 —— 同樣是 --h: 1 的卡，一張 10rem
+   * 一張 30rem，而且往下拖也拖不動（一格的高度是變動的，算不準）。
+   * 固定之後「幾列高」才真的等於高度。
+   */
+  grid-auto-rows: 12rem;
   gap: clamp(0.6rem, 1.2vw, 1rem);
   width: min(58rem, 88%);
   margin-top: clamp(1rem, 2.5vh, 2rem);
@@ -1329,7 +1337,9 @@ body::-webkit-scrollbar {
   border: 1px solid var(--glass-line);
   /* 卡片跟它底下那一屏的底色很接近，一道淺影才分得開 */
   box-shadow: 0 2px 12px -8px rgba(0, 0, 0, 0.55);
-  min-height: 7.5rem;
+  /* 高度由格線決定，卡片自己不准撐高；內容多的在自己那一層捲 */
+  min-height: 0;
+  overflow: hidden;
   position: relative;
   grid-column: span var(--w, 2);
   grid-row: span var(--h, 1);
@@ -1400,7 +1410,8 @@ body::-webkit-scrollbar {
  * container-type: size 要求高度不依賴內容，而這裡的列高是 auto。
  */
 .card .todos {
-  max-height: calc(var(--h, 1) * 9rem);
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   scrollbar-width: none;
 }
@@ -1410,9 +1421,9 @@ body::-webkit-scrollbar {
 }
 
 .card.note textarea {
-  min-height: calc(var(--h, 1) * 4.5rem);
   /* 卡片拉高時筆記框跟著填滿，不要在底下留一塊死白 */
   flex: 1;
+  min-height: 0;
 }
 
 /*
@@ -1703,7 +1714,7 @@ body::-webkit-scrollbar {
  */
 .clockface {
   flex: 1;
-  min-height: 4.5rem;
+  min-height: 0;
   min-width: 0;
   width: 100%;
   display: grid;
@@ -1998,7 +2009,7 @@ html::-webkit-scrollbar {
 }
 
 .screen.desk .card {
-  min-height: 11rem;
+  min-height: 0;
 }
 
 /* ---------- 指令面板 ---------- */
