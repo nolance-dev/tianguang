@@ -188,9 +188,6 @@
   "dial_title": {
     "message": "時辰盤"
   },
-  "dial_close": {
-    "message": "關閉時辰盤"
-  },
   "save_local_fallback": {
     "message": "設定同步不了，已存在這台電腦。換裝置看不到，其餘功能不受影響。"
   },

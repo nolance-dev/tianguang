@@ -152,9 +152,6 @@
   "dial_title": {
     "message": "The dial"
   },
-  "dial_close": {
-    "message": "Close the dial"
-  },
   "save_local_fallback": {
     "message": "Settings could not sync, so they are saved on this computer only. Everything else works as usual."
   },

@@ -188,9 +188,6 @@
   "dial_title": {
     "message": "时辰盘"
   },
-  "dial_close": {
-    "message": "关闭时辰盘"
-  },
   "save_local_fallback": {
     "message": "设置无法同步，已存在这台电脑。换设备看不到，其余功能不受影响。"
   },

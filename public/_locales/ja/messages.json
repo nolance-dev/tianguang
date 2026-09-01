@@ -188,9 +188,6 @@
   "dial_title": {
     "message": "辰刻盤"
   },
-  "dial_close": {
-    "message": "辰刻盤を閉じる"
-  },
   "save_local_fallback": {
     "message": "設定を同期できないため、このパソコンにのみ保存しました。ほかの機能はそのまま使えます。"
   },

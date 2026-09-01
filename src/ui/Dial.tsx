@@ -77,13 +77,20 @@ export function Dial({ now, lat, lon, onClose }: Props) {
   const close = useRef(onClose);
   close.current = onClose;
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close.current();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" && e.key !== "F11") return;
+      // F11 是瀏覽器的全螢幕鍵。攔不攔得住由瀏覽器決定，攔得住就只收盤不切全螢幕
+      e.preventDefault();
+      close.current();
+    };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  const closeRef = useRef<HTMLButtonElement>(null);
-  useLayoutEffect(() => closeRef.current?.focus(), []);
+  // 盤面沒有關閉鈕，出口只有鍵盤。焦點必須落進對話框本身，
+  // 否則焦點還留在底下那顆看不見的按鈕上，讀屏會唸盤面外面的東西。
+  const boxRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => boxRef.current?.focus(), []);
 
   const en = isEnglish();
   const minute = now.getMinutes();
@@ -125,16 +132,14 @@ export function Dial({ now, lat, lon, onClose }: Props) {
 
   return (
     <div
+      ref={boxRef}
+      tabIndex={-1}
       class={`dial${shown ? " in" : ""}${ready ? " ready" : ""}`}
       role="dialog"
       aria-modal="true"
       aria-label={t("dial_title")}
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      aria-keyshortcuts="Escape F11"
     >
-      <button ref={closeRef} class="dial-x" type="button" onClick={onClose} aria-label={t("dial_close")}>
-        ✕
-      </button>
-
       <div class="dial-wrap">
         <svg viewBox="0 0 620 620" aria-hidden="true">
           {[250, 204, 162].map((r) => (
