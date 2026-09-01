@@ -795,5 +795,26 @@
   },
   "s_holidays_devmode": {
     "message": "開發伺服器抓不到節日：Google 的行事曆不給跨網域讀，要載進 Edge 當擴充功能才拿得到。"
+  },
+  "c_media": {
+    "message": "正在播放"
+  },
+  "s_card_media": {
+    "message": "正在播放"
+  },
+  "c_media_quiet": {
+    "message": "現在沒有分頁在發出聲音"
+  },
+  "c_media_mute": {
+    "message": "靜音"
+  },
+  "c_media_unmute": {
+    "message": "取消靜音"
+  },
+  "c_media_ask": {
+    "message": "要看哪些分頁在播放，需要分頁權限。"
+  },
+  "c_media_allow": {
+    "message": "允許"
   }
 }

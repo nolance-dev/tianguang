@@ -15,7 +15,8 @@ export type CardId =
   | "links"
   | "photos"
   | "calendar"
-  | "weather";
+  | "weather"
+  | "media";
 
 export interface Tile {
   id: CardId;
@@ -28,7 +29,16 @@ export interface Tile {
 export const COLS = 4;
 export const MAX_H = 3;
 
-const IDS: CardId[] = ["todos", "note", "pomodoro", "links", "photos", "calendar", "weather"];
+const IDS: CardId[] = [
+  "todos",
+  "note",
+  "pomodoro",
+  "links",
+  "photos",
+  "calendar",
+  "weather",
+  "media",
+];
 
 export const DEFAULT_DESK: Tile[] = [
   { id: "links", w: 2, h: 2 },
@@ -38,6 +48,7 @@ export const DEFAULT_DESK: Tile[] = [
   { id: "photos", w: 2, h: 2 },
   { id: "calendar", w: 1, h: 1 },
   { id: "weather", w: 1, h: 1 },
+  { id: "media", w: 2, h: 1 },
 ];
 
 function clamp(n: unknown, lo: number, hi: number, fallback: number): number {

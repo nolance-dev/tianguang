@@ -222,7 +222,17 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
           <section>
             <h3>{t("s_cards")}</h3>
             {(
-              ["links", "calendar", "weather", "todos", "note", "pomodoro", "photos", "quote"] as const
+              [
+                "links",
+                "calendar",
+                "weather",
+                "media",
+                "todos",
+                "note",
+                "pomodoro",
+                "photos",
+                "quote",
+              ] as const
             ).map((k) => (
               <label class="row switch" key={k}>
                 <span>{t(`s_card_${k}`)}</span>

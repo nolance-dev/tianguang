@@ -6,6 +6,7 @@ import { PhotoWall } from "./PhotoWall";
 import { CalendarCard } from "./Calendar";
 import type { SecondCal } from "../lib/secondcal";
 import { WeatherCard } from "./WeatherCard";
+import { MediaCard } from "./MediaCard";
 import type { Link } from "../lib/links";
 import {
   COLS,
@@ -123,6 +124,7 @@ const VARIANT: Record<CardId, string> = {
   photos: " photocard",
   calendar: " calcard",
   weather: " wxcardwrap",
+  media: " mediacard",
 };
 
 /** 有整屏詳細畫面的卡。沒列在這裡的就不長那顆展開鈕。 */
@@ -275,6 +277,7 @@ export function Cards({
             />
           )}
           {tile.id === "weather" && <WeatherCard {...weather} />}
+          {tile.id === "media" && <MediaCard />}
           {tile.id === "links" && (
             <>
               <header>

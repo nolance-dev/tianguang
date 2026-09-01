@@ -759,5 +759,26 @@
   },
   "s_holidays_devmode": {
     "message": "Holidays cannot be fetched on the dev server — Google's calendar sends no CORS headers. Load dist into Edge as an extension to see them."
+  },
+  "c_media": {
+    "message": "Now playing"
+  },
+  "s_card_media": {
+    "message": "Now playing"
+  },
+  "c_media_quiet": {
+    "message": "Nothing is making sound right now"
+  },
+  "c_media_mute": {
+    "message": "Mute"
+  },
+  "c_media_unmute": {
+    "message": "Unmute"
+  },
+  "c_media_ask": {
+    "message": "Seeing which tabs are playing needs the tabs permission."
+  },
+  "c_media_allow": {
+    "message": "Allow"
   }
 }
