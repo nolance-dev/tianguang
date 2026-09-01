@@ -789,5 +789,44 @@
   },
   "s_card_clock": {
     "message": "Clock"
+  },
+  "m_sunrise": {
+    "message": "Sunrise"
+  },
+  "m_sunset": {
+    "message": "Sunset"
+  },
+  "m_day": {
+    "message": "Daylight"
+  },
+  "m_night": {
+    "message": "Night"
+  },
+  "m_lunar": {
+    "message": "Lunar"
+  },
+  "m_hou_0": {
+    "message": "First pentad"
+  },
+  "m_hou_1": {
+    "message": "Second pentad"
+  },
+  "m_hou_2": {
+    "message": "Third pentad"
+  },
+  "m_next": {
+    "message": "Next"
+  },
+  "m_next_v": {
+    "message": "$1 in $2 d"
+  },
+  "m_lon": {
+    "message": "Ecliptic"
+  },
+  "m_doy": {
+    "message": "Day"
+  },
+  "m_week": {
+    "message": "Week"
   }
 }

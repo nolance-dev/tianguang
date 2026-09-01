@@ -505,5 +505,44 @@
   },
   "pal_devmode": {
     "message": "ここは開発サーバーでブラウザー API がありません。タブ・ブックマーク・履歴を使うには dist を拡張機能として Edge に読み込んでください。"
+  },
+  "m_sunrise": {
+    "message": "日の出"
+  },
+  "m_sunset": {
+    "message": "日の入"
+  },
+  "m_day": {
+    "message": "昼"
+  },
+  "m_night": {
+    "message": "夜"
+  },
+  "m_lunar": {
+    "message": "旧暦"
+  },
+  "m_hou_0": {
+    "message": "初候"
+  },
+  "m_hou_1": {
+    "message": "次候"
+  },
+  "m_hou_2": {
+    "message": "末候"
+  },
+  "m_next": {
+    "message": "次の節気"
+  },
+  "m_next_v": {
+    "message": "$1 まで $2 日"
+  },
+  "m_lon": {
+    "message": "黄経"
+  },
+  "m_doy": {
+    "message": "年内日数"
+  },
+  "m_week": {
+    "message": "週"
   }
 }

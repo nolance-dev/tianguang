@@ -825,5 +825,44 @@
   },
   "s_card_clock": {
     "message": "時鐘"
+  },
+  "m_sunrise": {
+    "message": "日出"
+  },
+  "m_sunset": {
+    "message": "日落"
+  },
+  "m_day": {
+    "message": "晝"
+  },
+  "m_night": {
+    "message": "夜"
+  },
+  "m_lunar": {
+    "message": "農曆"
+  },
+  "m_hou_0": {
+    "message": "初候"
+  },
+  "m_hou_1": {
+    "message": "次候"
+  },
+  "m_hou_2": {
+    "message": "末候"
+  },
+  "m_next": {
+    "message": "將至"
+  },
+  "m_next_v": {
+    "message": "$1 $2 日"
+  },
+  "m_lon": {
+    "message": "黃經"
+  },
+  "m_doy": {
+    "message": "年日"
+  },
+  "m_week": {
+    "message": "週次"
   }
 }

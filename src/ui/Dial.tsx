@@ -3,7 +3,7 @@ import { isEnglish, outerRingName, shichenAlt, shichenName, t } from "../lib/i18
 import { roman } from "../lib/roman";
 import { indexAt } from "../lib/shichen";
 import { moonIndex, jieqiIndex, sunTimes } from "../lib/solar";
-import { wheelPixels } from "../lib/wheel";
+import { Margins } from "./Margins";
 
 /**
  * 全屏時辰盤。
@@ -91,32 +91,13 @@ export function Dial({ now, lat, lon, onClose }: Props) {
   const close = useRef(onClose);
   close.current = onClose;
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" && e.key !== "F11") return;
-      // F11 是瀏覽器的全螢幕鍵。攔不攔得住由瀏覽器決定，攔得住就只收盤不切全螢幕
-      e.preventDefault();
-      close.current();
-    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close.current();
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  // 滑輪也是出口。門檻一格（一百像素）而不是一動就關：觸控板一根手指擦過去
-  // 就是幾十像素，那不算「要離開」。開盤後半秒完全不理滾輪 —— 開盤前那一下
-  // 的慣性尾巴會一路飄進來，不擋掉的話盤面剛轉起來就被自己關掉。
-  useEffect(() => {
-    const born = performance.now();
-    let acc = 0;
-    const onWheel = (e: WheelEvent) => {
-      if (performance.now() - born < 500) return;
-      acc += Math.abs(wheelPixels(e));
-      if (acc >= 100) close.current();
-    };
-    window.addEventListener("wheel", onWheel, { passive: true });
-    return () => window.removeEventListener("wheel", onWheel);
-  }, []);
 
-  // 盤面沒有關閉鈕，出口只有鍵盤。焦點必須落進對話框本身，
+  // 盤面沒有關閉鈕，出口只有 Esc。焦點必須落進對話框本身，
   // 否則焦點還留在底下那顆看不見的按鈕上，讀屏會唸盤面外面的東西。
   const boxRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => boxRef.current?.focus(), []);
@@ -170,8 +151,10 @@ export function Dial({ now, lat, lon, onClose }: Props) {
       role="dialog"
       aria-modal="true"
       aria-label={t("dial_title")}
-      aria-keyshortcuts="Escape F11"
+      aria-keyshortcuts="Escape"
     >
+      <Margins now={now} lat={lat} lon={lon} />
+
       <div class="dial-wrap">
         <svg viewBox="0 0 620 620" aria-hidden="true">
           {LITE.map(({ r, lo, hi, glow, delay }) => (

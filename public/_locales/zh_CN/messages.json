@@ -505,5 +505,44 @@
   },
   "pal_devmode": {
     "message": "这里是开发服务器，没有浏览器的 API。要用标签页、书签、历史这些来源，得把 dist 载入 Edge 当扩展运行。"
+  },
+  "m_sunrise": {
+    "message": "日出"
+  },
+  "m_sunset": {
+    "message": "日落"
+  },
+  "m_day": {
+    "message": "昼"
+  },
+  "m_night": {
+    "message": "夜"
+  },
+  "m_lunar": {
+    "message": "农历"
+  },
+  "m_hou_0": {
+    "message": "初候"
+  },
+  "m_hou_1": {
+    "message": "次候"
+  },
+  "m_hou_2": {
+    "message": "末候"
+  },
+  "m_next": {
+    "message": "将至"
+  },
+  "m_next_v": {
+    "message": "$1 $2 天"
+  },
+  "m_lon": {
+    "message": "黄经"
+  },
+  "m_doy": {
+    "message": "年日"
+  },
+  "m_week": {
+    "message": "周次"
   }
 }

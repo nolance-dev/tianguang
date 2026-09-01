@@ -691,6 +691,97 @@ body::-webkit-scrollbar {
   outline: none;
 }
 
+/*
+ * 盤面兩側的曆書欄。
+ *
+ * 盤是正方的，寬螢幕上左右一定各空一條。直排把那條窄長的空間用滿，
+ * 而且中文本來就直排。英文版轉回橫排 —— 直排的拉丁字母要側著讀。
+ *
+ * 亮度壓在 0.3（標題）和 0.6（數值），比外環的刻度還低：
+ * 它是盤的註腳，眼睛掃過去要能忽略它。
+ */
+.marg {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  z-index: 3;
+  display: none;
+  flex-direction: column;
+  gap: 1.6rem;
+  max-height: 86vh;
+  writing-mode: vertical-rl;
+  opacity: 0;
+  /* 等環轉得差不多了才浮出來。一開盤就全部到齊，那五秒的旋轉就沒人看了 */
+  transition: opacity 1.1s ease 2.2s;
+}
+
+.dial.in .marg {
+  opacity: 1;
+}
+
+/*
+ * 擺在空白帶的正中央，不是貼著螢幕邊。
+ * 盤寬 min(96vh, 96vw)，兩側各空 (100vw - 盤寬) / 2，那條帶的中線就在四分之一處。
+ * 貼邊的話空白只是從一邊移到另一邊，中間反而裂出一條更寬的黑。
+ */
+.marg-l {
+  left: calc((100vw - min(96vh, 96vw)) / 4);
+  translate: -50% -50%;
+}
+
+/* 右欄反著排，第一列一樣貼著盤 */
+.marg-r {
+  right: calc((100vw - min(96vh, 96vw)) / 4);
+  translate: 50% -50%;
+  flex-direction: column-reverse;
+}
+
+/* 盤是 min(96vh, 96vw)，畫面夠寬才空得出那兩條；不夠寬就不要擠上去 */
+@media (min-aspect-ratio: 27 / 20) {
+  .marg {
+    display: flex;
+  }
+}
+
+.mrow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.mrow i {
+  font-family: var(--f-cjk);
+  font-style: normal;
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  color: var(--fg);
+  opacity: 0.32;
+}
+
+.mrow b {
+  font-family: var(--f-mono);
+  font-weight: 400;
+  font-size: 0.86rem;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  opacity: 0.62;
+}
+
+:root[lang^="en"] .marg {
+  writing-mode: horizontal-tb;
+  gap: 0.8rem;
+}
+
+:root[lang^="en"] .marg-r {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+:root[lang^="en"] .mrow i {
+  font-family: var(--f-latin);
+  letter-spacing: 0.12em;
+}
+
 /* ---------- 設定抽屜 ---------- */
 
 .sheet {
