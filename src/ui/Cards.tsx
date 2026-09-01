@@ -371,43 +371,49 @@ function PomodoroCard({ value, onChange }: Body) {
         <span>{t(p.mode === "work" ? "c_pomo_work" : "c_pomo_rest")}</span>
       </header>
 
-      <div class="clockface">
-        {/* 剩餘時間畫在 svg 裡，跟著 viewBox 縮放 —— 卡片拉大時數字自己會變大，
-            不必拿容器查詢單位去猜。也因為它是真的文字，讀螢幕讀得到。 */}
-        <svg viewBox="0 0 100 100" role="img" aria-label={formatLeft(left)}>
-          <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-opacity=".15" stroke-width="5" />
-          <circle
-            cx="50"
-            cy="50"
-            r="42"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="5"
-            stroke-linecap="round"
-            transform="rotate(-90 50 50)"
-            stroke-dasharray={`${(1 - left / total) * 2 * Math.PI * 42} ${2 * Math.PI * 42}`}
-          />
-          <text class="left" x="50" y="51" text-anchor="middle" dominant-baseline="central">
-            {formatLeft(left)}
-          </text>
-        </svg>
-      </div>
+      {/* 錶面與控制項包成一組，卡片拉寬時這一組從直排換成橫排 ——
+          @container 改不了容器自己（.card），所以得有這一層才換得了方向 */}
+      <div class="pomo-body">
+        <div class="clockface">
+          {/* 剩餘時間畫在 svg 裡，跟著 viewBox 縮放 —— 卡片拉大時數字自己會變大，
+              不必拿容器查詢單位去猜。也因為它是真的文字，讀螢幕讀得到。 */}
+          <svg viewBox="0 0 100 100" role="img" aria-label={formatLeft(left)}>
+            <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-opacity=".15" stroke-width="5" />
+            <circle
+              cx="50"
+              cy="50"
+              r="42"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="5"
+              stroke-linecap="round"
+              transform="rotate(-90 50 50)"
+              stroke-dasharray={`${(1 - left / total) * 2 * Math.PI * 42} ${2 * Math.PI * 42}`}
+            />
+            <text class="left" x="50" y="51" text-anchor="middle" dominant-baseline="central">
+              {formatLeft(left)}
+            </text>
+          </svg>
+        </div>
 
-      <div class="acts">
-        <button
-          type="button"
-          onClick={() => onChange({ pomodoro: isRunning(p) ? pause(p) : start(p) })}
-        >
-          {t(isRunning(p) ? "c_pomo_pause" : "c_pomo_start")}
-        </button>
-        <button type="button" onClick={() => onChange({ pomodoro: reset(p) })}>
-          {t("c_pomo_reset")}
-        </button>
-      </div>
+        <div class="pomo-side">
+          <div class="acts">
+            <button
+              type="button"
+              onClick={() => onChange({ pomodoro: isRunning(p) ? pause(p) : start(p) })}
+            >
+              {t(isRunning(p) ? "c_pomo_pause" : "c_pomo_start")}
+            </button>
+            <button type="button" onClick={() => onChange({ pomodoro: reset(p) })}>
+              {t("c_pomo_reset")}
+            </button>
+          </div>
 
-      <p class="rounds">
-        {t("c_pomo_rounds")} {roundsToday(value)}
-      </p>
+          <p class="rounds">
+            {t("c_pomo_rounds")} {roundsToday(value)}
+          </p>
+        </div>
+      </div>
     </>
   );
 }

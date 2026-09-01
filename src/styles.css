@@ -1427,8 +1427,20 @@ body::-webkit-scrollbar {
     align-content: start;
   }
 
-  .clockface svg {
-    max-width: 7.5rem;
+  /*
+   * 夠寬就換成橫排：錶面在左，開始／重設與今日輪數在右。
+   * 這一段本來是把錶面 max-width 壓成 7.5rem —— 那等於「卡片越寬，圓越小」，
+   * 剛好反了。
+   */
+  .pomo-body {
+    flex-direction: row;
+    gap: clamp(0.8rem, 3cqw, 1.8rem);
+  }
+
+  .pomo-side {
+    width: auto;
+    flex: 1;
+    max-width: 18rem;
   }
 }
 
@@ -1672,15 +1684,33 @@ body::-webkit-scrollbar {
 
 /* 番茄鐘 */
 /*
- * 番茄鐘拉高時要跟著長高。
+ * 番茄鐘。
  *
- * 原本錶面是固定的 5rem，卡片拉到三列高就變成一顆小圓圈頂在上面、
- * 底下一大片空白。現在錶面吃掉剩下的高度，圓的直徑取「寬與高的較小值」
- * ——圓不能被拉成橢圓，所以用 aspect-ratio 鎖住，讓空間去遷就它。
+ * 拉高就長高，拉寬就把錶面挪到左邊、控制項排到右邊 ——
+ * 拉寬只是把同一顆圓放大的話，多出來的寬度是白給的。
  */
 .card.pomo {
   align-items: center;
   text-align: center;
+}
+
+.pomo-body {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+}
+
+.pomo-side {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  justify-content: center;
 }
 
 /*
@@ -1692,7 +1722,8 @@ body::-webkit-scrollbar {
  */
 .clockface {
   flex: 1;
-  min-height: 5rem;
+  min-height: 4.5rem;
+  min-width: 0;
   width: 100%;
   display: grid;
   place-items: center;
