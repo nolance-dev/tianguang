@@ -580,15 +580,6 @@
   "s_card_calendar": {
     "message": "日曆"
   },
-  "cal_view": {
-    "message": "檢視"
-  },
-  "cal_month": {
-    "message": "月"
-  },
-  "cal_agenda": {
-    "message": "議程"
-  },
   "cal_today": {
     "message": "今天"
   },
@@ -616,9 +607,6 @@
   "cal_none": {
     "message": "這一天沒有事件"
   },
-  "cal_none_ahead": {
-    "message": "接下來沒有排程"
-  },
   "cal_today_count": {
     "message": "今天 $1 件",
     "placeholders": {
@@ -632,5 +620,13 @@
   },
   "card_expand": {
     "message": "展開"
+  },
+  "cal_more": {
+    "message": "還有 $1 件",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
   }
 }

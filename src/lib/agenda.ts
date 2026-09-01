@@ -39,17 +39,23 @@ export function onDay(events: Event[], date: string): Event[] {
     .sort((a, b) => a.time.localeCompare(b.time) || a.text.localeCompare(b.text));
 }
 
-/** 有行程的日期，給月曆上那些小圓點用。 */
-export function busyDays(events: Event[]): Set<string> {
-  return new Set(events.map((e) => e.date));
-}
-
-/** 從今天起往後的行程，議程檢視用。過去的不列 —— 議程是「接下來」。 */
-export function upcoming(events: Event[], from = today(), limit = 40): Event[] {
-  return events
-    .filter((e) => e.date >= from)
-    .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
-    .slice(0, limit);
+/**
+ * 依日期分組，每組已排好。
+ *
+ * 月曆一次要畫四十二格，每一格都拿整份行程過濾一次是四十二趟；
+ * 先分一次組，畫的時候只是查表。
+ */
+export function byDay(events: Event[]): Map<string, Event[]> {
+  const out = new Map<string, Event[]>();
+  for (const e of events) {
+    const bucket = out.get(e.date);
+    if (bucket) bucket.push(e);
+    else out.set(e.date, [e]);
+  }
+  for (const bucket of out.values()) {
+    bucket.sort((a, b) => a.time.localeCompare(b.time) || a.text.localeCompare(b.text));
+  }
+  return out;
 }
 
 /**

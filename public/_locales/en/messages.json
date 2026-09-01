@@ -544,15 +544,6 @@
   "s_card_calendar": {
     "message": "Calendar"
   },
-  "cal_view": {
-    "message": "View"
-  },
-  "cal_month": {
-    "message": "Month"
-  },
-  "cal_agenda": {
-    "message": "Agenda"
-  },
   "cal_today": {
     "message": "Today"
   },
@@ -580,9 +571,6 @@
   "cal_none": {
     "message": "Nothing on this day"
   },
-  "cal_none_ahead": {
-    "message": "Nothing scheduled ahead"
-  },
   "cal_today_count": {
     "message": "$1 today",
     "placeholders": {
@@ -596,5 +584,13 @@
   },
   "card_expand": {
     "message": "Expand"
+  },
+  "cal_more": {
+    "message": "$1 more",
+    "placeholders": {
+      "1": {
+        "content": "$1"
+      }
+    }
   }
 }

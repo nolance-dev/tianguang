@@ -199,6 +199,9 @@ export function App() {
     // 暗底用比背景更暗的底做深度，亮底用白 —— 反過來會把字吃掉。
     r.style.setProperty("--card", p.light ? "rgba(255,255,255,.70)" : "rgba(13,17,27,.50)");
     r.style.setProperty("--veil", p.light ? "rgba(250,249,246,.90)" : "rgba(8,11,18,.86)");
+    // 壓在 --fg 那個色塊上的字。它是 --fg 的反面，不是背景色 ——
+    // 用半透明的 --card 當字色會糊成灰的。
+    r.style.setProperty("--fg-ink", p.light ? "#F7F5F1" : "#12161F");
     r.style.setProperty("--grain", String(s.grain));
     r.style.setProperty("--dim", String(s.dim));
     // 模糊只對自訂圖有意義，而且只有真的要模糊時才掛濾鏡 ——

@@ -1,16 +1,7 @@
 import { useSignal } from "@preact/signals";
 import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
 import { isEnglish, t } from "../lib/i18n";
-import {
-  busyDays,
-  makeEvent,
-  monthGrid,
-  onDay,
-  shiftMonth,
-  upcoming,
-  ymd,
-  type Event,
-} from "../lib/agenda";
+import { byDay, makeEvent, monthGrid, onDay, shiftMonth, ymd, type Event } from "../lib/agenda";
 
 /**
  * 日曆。
@@ -19,9 +10,12 @@ import {
  * 一個問題 ——「今天幾號」，那個答案該一眼看完，不必先掃過一整個月的格子。
  * 要看月曆就展開。
  *
- * 展開的那一屏是「月」和「議程」兩個檢視。日／週／年是同一份資料換一種排版，
- * 真的要用再加，先不要為了填滿一排頁籤而做三個沒人點的東西。
+ * 展開的那一屏只有月檢視。格子裡直接寫事件的標題，不是點一顆小圓點 ——
+ * 圓點只回答「這天有沒有事」，而看月曆的人問的是「這天是什麼事」。
  */
+
+/** 一格裡塞得下的事件行數。再多就收成「還有 N 件」。 */
+const PER_CELL = 2;
 
 interface CardProps {
   events: Event[];
@@ -35,7 +29,7 @@ export function CalendarCard({ events, now }: CardProps) {
     new Intl.DateTimeFormat(en ? "en-GB" : undefined, opts).format(now);
 
   return (
-    <div class="calface">
+    <div class="calface" data-grab>
       <span class="cal-wd">{fmt({ weekday: "long" })}</span>
       <b class="cal-day">{now.getDate()}</b>
       <span class="cal-mo">{fmt({ month: "long" })}</span>
@@ -53,7 +47,6 @@ interface DetailProps {
 
 export function CalendarDetail({ events, onChange, now, onClose }: DetailProps) {
   const en = isEnglish();
-  const view = useSignal<"month" | "agenda">("month");
   const year = useSignal(now.getFullYear());
   const month = useSignal(now.getMonth());
   const picked = useSignal(ymd(now));
@@ -69,9 +62,10 @@ export function CalendarDetail({ events, onChange, now, onClose }: DetailProps) 
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
-  const busy = busyDays(events);
+  const grouped = byDay(events);
   const cells = monthGrid(year.value, month.value);
-  const dayEvents = onDay(events, picked.value);
+  const dayEvents = grouped.get(picked.value) ?? [];
+  const todayKey = ymd(now);
 
   const label = (d: Date, opts: Intl.DateTimeFormatOptions) =>
     new Intl.DateTimeFormat(en ? "en-GB" : undefined, opts).format(d);
@@ -85,91 +79,76 @@ export function CalendarDetail({ events, onChange, now, onClose }: DetailProps) 
   return (
     <div class="sheet" role="dialog" aria-modal="true" aria-label={t("c_calendar")}>
       <header class="sheet-top">
-        <button ref={closeRef} type="button" class="icon-btn" onClick={onClose} aria-label={t("sheet_back")}>
+        <button
+          ref={closeRef}
+          type="button"
+          class="icon-btn"
+          onClick={onClose}
+          aria-label={t("sheet_back")}
+        >
           ←
         </button>
         <b>{t("c_calendar")}</b>
-        <div class="seg" role="group" aria-label={t("cal_view")}>
-          {(["month", "agenda"] as const).map((v) => (
-            <button key={v} type="button" aria-pressed={view.value === v} onClick={() => (view.value = v)}>
-              {t(v === "month" ? "cal_month" : "cal_agenda")}
-            </button>
-          ))}
+
+        {/* 月份的前後鍵放在最上面那一列，底下那塊就純粹是格子 */}
+        <div class="cal-nav">
+          <button
+            type="button"
+            onClick={() => {
+              year.value = now.getFullYear();
+              month.value = now.getMonth();
+              picked.value = todayKey;
+            }}
+          >
+            {t("cal_today")}
+          </button>
+          <button type="button" onClick={() => jump(-1)} aria-label={t("cal_prev")}>
+            ‹
+          </button>
+          <b class="cal-when">
+            {label(new Date(year.value, month.value, 1), { year: "numeric", month: "long" })}
+          </b>
+          <button type="button" onClick={() => jump(1)} aria-label={t("cal_next")}>
+            ›
+          </button>
         </div>
       </header>
 
       <div class="sheet-body">
         <section class="cal-main">
-          {view.value === "month" ? (
-            <>
-              <div class="cal-nav">
+          <div class="cal-grid">
+            {cells.slice(0, 7).map((d) => (
+              <span key={`h${d.getDay()}`} class="cal-head">
+                {label(d, { weekday: "short" })}
+              </span>
+            ))}
+            {cells.map((d) => {
+              const key = ymd(d);
+              const mine = grouped.get(key) ?? [];
+              return (
                 <button
+                  key={key}
                   type="button"
-                  onClick={() => {
-                    year.value = now.getFullYear();
-                    month.value = now.getMonth();
-                    picked.value = ymd(now);
-                  }}
+                  class={`cal-cell${d.getMonth() !== month.value ? " out" : ""}${
+                    key === todayKey ? " today" : ""
+                  }${key === picked.value ? " on" : ""}`}
+                  aria-current={key === todayKey ? "date" : undefined}
+                  onClick={() => (picked.value = key)}
                 >
-                  {t("cal_today")}
+                  <span class="num">{d.getDate()}</span>
+                  {mine.slice(0, PER_CELL).map((e) => (
+                    <span key={e.id} class="chip">
+                      {e.time && <i>{e.time}</i>}
+                      {e.text}
+                    </span>
+                  ))}
+                  {mine.length > PER_CELL && (
+                    <span class="more">{t("cal_more", String(mine.length - PER_CELL))}</span>
+                  )}
                 </button>
-                <button type="button" onClick={() => jump(-1)} aria-label={t("cal_prev")}>
-                  ‹
-                </button>
-                <button type="button" onClick={() => jump(1)} aria-label={t("cal_next")}>
-                  ›
-                </button>
-                <b>{label(new Date(year.value, month.value, 1), { year: "numeric", month: "long" })}</b>
-              </div>
-
-              <div class="cal-grid" role="grid">
-                {cells.slice(0, 7).map((d) => (
-                  <span key={`h${d.getDay()}`} class="cal-head">
-                    {label(d, { weekday: "short" })}
-                  </span>
-                ))}
-                {cells.map((d) => {
-                  const key = ymd(d);
-                  const out = d.getMonth() !== month.value;
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      class={`cal-cell${out ? " out" : ""}${key === ymd(now) ? " today" : ""}${
-                        key === picked.value ? " on" : ""
-                      }`}
-                      aria-current={key === ymd(now) ? "date" : undefined}
-                      onClick={() => (picked.value = key)}
-                    >
-                      <span>{d.getDate()}</span>
-                      {busy.has(key) && <i class="dot" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          ) : (
-            <ul class="cal-agenda">
-              {upcoming(events, ymd(now)).map((e) => (
-                <li key={e.id}>
-                  <span class="when">
-                    {label(new Date(`${e.date}T00:00`), { month: "short", day: "numeric" })}
-                    {e.time && ` ${e.time}`}
-                  </span>
-                  <span class="what">{e.text}</span>
-                  <button
-                    type="button"
-                    class="rm"
-                    aria-label={t("cal_remove")}
-                    onClick={() => onChange(events.filter((x) => x.id !== e.id))}
-                  >
-                    ✕
-                  </button>
-                </li>
-              ))}
-              {upcoming(events, ymd(now)).length === 0 && <li class="empty">{t("cal_none_ahead")}</li>}
-            </ul>
-          )}
+              );
+            })}
+          </div>
         </section>
 
         <aside class="cal-side">
@@ -223,21 +202,29 @@ function AddEvent({ date, onAdd }: { date: string; onAdd: (e: Event) => void }) 
         time.value = "";
       }}
     >
+      {/* 內容自己一行。跟時間和按鈕擠在同一列時三個都太窄，
+          而要寫的那一欄本來就是最長的那一欄 */}
       <input
+        class="what"
         type="text"
         value={text.value}
         placeholder={t("cal_add_hint")}
         aria-label={t("cal_add_hint")}
         onInput={(e) => (text.value = e.currentTarget.value)}
       />
-      {/* 時間可以留白 —— 一天裡多數的事沒有準確時刻，逼人填一個假的沒有意義 */}
-      <input
-        type="time"
-        value={time.value}
-        aria-label={t("cal_time")}
-        onInput={(e) => (time.value = e.currentTarget.value)}
-      />
-      <button type="submit">{t("cal_add")}</button>
+      <div class="row">
+        {/* 時間可以留白 —— 一天裡多數的事沒有準確時刻，逼人填一個假的沒有意義 */}
+        <input
+          type="time"
+          value={time.value}
+          aria-label={t("cal_time")}
+          onInput={(e) => (time.value = e.currentTarget.value)}
+        />
+        <span class="hint">{time.value ? "" : t("cal_allday")}</span>
+        <button type="submit" disabled={!text.value.trim()}>
+          {t("cal_add")}
+        </button>
+      </div>
     </form>
   );
 }

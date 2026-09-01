@@ -1,15 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import {
-  busyDays,
-  makeEvent,
-  monthGrid,
-  onDay,
-  shiftMonth,
-  upcoming,
-  ymd,
-  type Event,
-} from "../src/lib/agenda";
+import { byDay, makeEvent, monthGrid, onDay, shiftMonth, ymd, type Event } from "../src/lib/agenda";
 
 const ev = (date: string, time: string, text: string): Event => ({
   id: `${date}-${time}-${text}`,
@@ -48,22 +39,11 @@ describe("某一天", () => {
     expect(onDay(list, "2026-09-01").map((e) => e.text)).toEqual(["整天的", "早上的", "下午的"]);
   });
 
-  it("哪幾天有事，給月曆的小圓點用", () => {
-    const busy = busyDays(list);
-    expect(busy.has("2026-09-01")).toBe(true);
-    expect(busy.has("2026-09-03")).toBe(false);
-  });
-});
-
-describe("議程", () => {
-  const list = [
-    ev("2026-08-30", "", "上個月的"),
-    ev("2026-09-05", "10:00", "下週"),
-    ev("2026-09-01", "08:00", "今天"),
-  ];
-
-  it("只列今天以後的，過去的不出現 —— 議程是「接下來」", () => {
-    expect(upcoming(list, "2026-09-01").map((e) => e.text)).toEqual(["今天", "下週"]);
+  it("分組一次就好，每組自己排好 —— 月曆一次要畫四十二格", () => {
+    const map = byDay(list);
+    expect(map.get("2026-09-01")!.map((e) => e.text)).toEqual(["整天的", "早上的", "下午的"]);
+    expect(map.get("2026-09-03")).toBeUndefined();
+    expect(map.size).toBe(2);
   });
 });
 

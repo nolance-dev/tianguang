@@ -249,7 +249,8 @@ export function Cards({
           data-id={tile.id}
           style={{ "--w": String(tile.w), "--h": String(tile.h) }}
           onPointerDown={(e) => {
-            if ((e.target as HTMLElement).closest("header, .photoframe")) startMove(e, tile.id);
+            // 沒有標題列的卡（照片、日曆）自己標出哪一塊可以抓
+            if ((e.target as HTMLElement).closest("header, [data-grab]")) startMove(e, tile.id);
           }}
         >
           {tile.id === "todos" && <TodoCard value={value} onChange={onChange} />}

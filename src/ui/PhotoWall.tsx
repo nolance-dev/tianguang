@@ -139,7 +139,7 @@ export function PhotoWall({ photo, onPhoto }: Props) {
   }
 
   return (
-    <div class="photoframe">
+    <div class="photoframe" data-grab>
       {/*
         key 一換，元素就換一個，淡入的動畫才會重跑 —— 同一個元素只是換底圖的話
         瀏覽器不會為背景圖做過場。不做交叉淡入是因為那要同時握著兩張的 blob
