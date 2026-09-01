@@ -17,6 +17,19 @@ import { moonIndex, jieqiIndex, sunTimes } from "../lib/solar";
  */
 
 const C = 310; // viewBox 620 的圓心
+
+/*
+ * 四圈導線的呼吸燈。延遲跟半徑成正比，所以光是從中心一圈一圈走出去的。
+ *
+ * 越往外越暗、光暈越小：四圈同亮度會讓整盤浮起來一層金霧，字就讀不出來了。
+ * 中心那圈（秒針根部）最亮，它本來就是盤心。
+ */
+const LITE = [
+  { r: 93, lo: 0.1, hi: 0.5, glow: 7, delay: 0 },
+  { r: 162, lo: 0.08, hi: 0.34, glow: 5, delay: 0.5 },
+  { r: 204, lo: 0.07, hi: 0.26, glow: 4, delay: 0.85 },
+  { r: 250, lo: 0.06, hi: 0.2, glow: 4, delay: 1.2 },
+];
 const TAU_SEC = 6; // 每秒六度
 const TAU_MIN = 6; // 每分六度
 const TAU_HOUR = 15; // 每小時十五度
@@ -145,12 +158,17 @@ export function Dial({ now, lat, lon, onClose }: Props) {
     >
       <div class="dial-wrap">
         <svg viewBox="0 0 620 620" aria-hidden="true">
-          {[250, 204, 162].map((r) => (
-            <circle key={r} cx={C} cy={C} r={r} fill="none" stroke="currentColor" stroke-opacity=".06" />
+          {LITE.map(({ r, lo, hi, glow, delay }) => (
+            <circle
+              key={r}
+              class="lite"
+              cx={C}
+              cy={C}
+              r={r}
+              fill="none"
+              style={`--lo: ${lo}; --hi: ${hi}; --glow: ${glow}px; animation-delay: ${delay}s`}
+            />
           ))}
-
-          {/* 秒針根部那一圈。其他三圈是死的分隔線，這圈是呼吸燈 */}
-          <circle class="hubring" cx={C} cy={C} r="93" fill="none" />
 
           {/* 一環：六十分刻，一小時一圈，整分才跳。逢五羅馬數字，其餘小阿拉伯數字 */}
           <g style={spin(minAngle, 1.97)}>

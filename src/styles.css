@@ -496,34 +496,37 @@ body::-webkit-scrollbar {
 }
 
 /*
- * 秒針根部那一圈的呼吸燈。
+ * 整盤的呼吸燈。
  *
  * 五秒一息 —— 人靜下來大概就是這個速度，而且跟秒針一秒一跳完全不同拍，
- * 兩個節奏各走各的，盤面才不會變成打拍子。亮度只在 0.1 到 0.5 之間走，
- * 它是背景的呼吸，不是要跟中央的時間搶眼睛。
+ * 兩個節奏各走各的，盤面才不會變成打拍子。
+ *
+ * 四圈的延遲跟半徑成正比（0 / 0.5 / 0.85 / 1.2 秒），所以一息不是四圈一起亮，
+ * 是光從盤心走到最外圈，走完大概一秒二。亮度上下限每圈自己帶（--lo / --hi），
+ * 越外圈越暗：這是背景的呼吸，字要壓得住它。
  */
 @keyframes hubbreathe {
   0%,
   100% {
-    stroke-opacity: 0.1;
+    stroke-opacity: var(--lo);
     filter: drop-shadow(0 0 0 transparent);
   }
   50% {
-    stroke-opacity: 0.5;
-    filter: drop-shadow(0 0 7px var(--gold));
+    stroke-opacity: var(--hi);
+    filter: drop-shadow(0 0 var(--glow) var(--gold));
   }
 }
 
-.dial .hubring {
+.dial .lite {
   stroke: var(--gold);
   stroke-width: 1;
-  stroke-opacity: 0.1;
+  stroke-opacity: var(--lo);
   animation: hubbreathe 5s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .dial g[style*="--spin"],
-  .dial .hubring {
+  .dial .lite {
     animation: none;
   }
 }
