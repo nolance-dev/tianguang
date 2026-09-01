@@ -806,7 +806,7 @@ body::-webkit-scrollbar {
   position: absolute;
   z-index: 1;
   pointer-events: none;
-  width: 16vmin;
+  width: 17vmin;
   opacity: 0;
   /* 跟著曆書欄一起浮出來，晚一點點，讓角落是最後到位的東西 */
   transition: opacity 1.1s ease 2.6s;
@@ -814,28 +814,28 @@ body::-webkit-scrollbar {
 
 @media (min-aspect-ratio: 27 / 20) {
   .dial .sx {
-    width: min(27vh, 20vw);
+    width: min(31vh, 23vw);
   }
 }
 
 .dial .sx-0 {
-  top: 2vh;
-  left: 2vh;
+  top: 2.5vh;
+  left: 2vw;
 }
 
 .dial .sx-3 {
-  top: 2vh;
-  right: 2vh;
+  top: 2.5vh;
+  right: 2vw;
 }
 
 .dial .sx-1 {
-  bottom: 2vh;
-  left: 2vh;
+  bottom: 2.5vh;
+  left: 2vw;
 }
 
 .dial .sx-2 {
-  bottom: 2vh;
-  right: 2vh;
+  bottom: 2.5vh;
+  right: 2vw;
 }
 
 .dial.in .sx {

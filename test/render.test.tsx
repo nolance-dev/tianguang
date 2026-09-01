@@ -682,3 +682,40 @@ describe("指令面板", () => {
     expect(document.querySelector(".pal-empty")?.textContent).toBeTruthy();
   });
 });
+
+describe("時辰盤", () => {
+  it("四象掛在盤的外面，四張各自獨立", async () => {
+    /*
+     * 這條測試是為了一個看不見的錯而寫的：四象本來包在 .dial-wrap 裡面，
+     * 而 .dial-wrap > svg 那條規則會給裡面每一張 svg 套上盤自己的 inset 和縮放 ——
+     * 四張角落的圖就疊成一坨壓在盤上。型別檢查、打包、冒煙測試全都會過，
+     * 只有把畫面 render 出來用眼睛看才發現得了。所以把結構本身釘住。
+     */
+    mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+
+    (document.querySelector("button.clock") as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(document.querySelector(".dial")).not.toBeNull());
+
+    const sx = document.querySelectorAll(".dial svg.sx");
+    expect(sx).toHaveLength(4);
+    for (const el of sx) {
+      expect(el.closest(".dial-wrap")).toBeNull();
+      expect(el.parentElement?.classList.contains("dial")).toBe(true);
+    }
+
+    // 當令的那一象要亮著，而且只有一象
+    expect(document.querySelectorAll(".dial svg.sx.on")).toHaveLength(1);
+  });
+
+  it("曆書欄也在盤的外面", async () => {
+    mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+    (document.querySelector("button.clock") as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(document.querySelector(".dial")).not.toBeNull());
+
+    const marg = document.querySelectorAll(".dial .marg");
+    expect(marg).toHaveLength(2);
+    for (const el of marg) expect(el.closest(".dial-wrap")).toBeNull();
+  });
+});

@@ -154,6 +154,9 @@ export function Dial({ now, lat, lon, onClose }: Props) {
       aria-label={t("dial_title")}
       aria-keyshortcuts="Escape"
     >
+      {/* 這兩個都要留在 .dial-wrap 外面：它們定位的參考是整個畫面，
+          包進盤那個正方形裡就只能貼著盤走，也會被 .dial-wrap > svg 那條規則吃掉 */}
+      <FourSymbols now={now} />
       <Margins now={now} lat={lat} lon={lon} />
 
       <div class="dial-wrap">
@@ -302,8 +305,6 @@ export function Dial({ now, lat, lon, onClose }: Props) {
 
           <path class="dial-mark" d={`M${C} 6 l8 15 h-16 z`} />
         </svg>
-
-        <FourSymbols now={now} />
 
         <div class="dial-center">
           <div class="dc-time">
