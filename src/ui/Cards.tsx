@@ -7,6 +7,8 @@ import { CalendarCard } from "./Calendar";
 import type { SecondCal } from "../lib/secondcal";
 import { WeatherCard } from "./WeatherCard";
 import { MediaCard } from "./MediaCard";
+import { ClockCard } from "./ClockCard";
+import type { Settings } from "../lib/settings";
 import type { Link } from "../lib/links";
 import {
   COLS,
@@ -60,6 +62,8 @@ interface Props extends Body {
   onPhoto: (patch: Partial<{ id: string | null; rotate: number }>) => void;
   now: Date;
   onExpand: (id: CardId) => void;
+  /** 時鐘卡要看十二／二十四小時制 */
+  settings: Settings;
   /** 月曆卡要的：第二套曆法，以及今天的節日 */
   calendar: { secondCal: SecondCal; todayHoliday: string | null };
   /** 天氣卡要的座標與單位。亮暗由呼叫端判斷，卡片自己不看時間 */
@@ -125,6 +129,7 @@ const VARIANT: Record<CardId, string> = {
   calendar: " calcard",
   weather: " wxcardwrap",
   media: " mediacard",
+  clock: " clockcardwrap",
 };
 
 /** 有整屏詳細畫面的卡。沒列在這裡的就不長那顆展開鈕。 */
@@ -145,6 +150,7 @@ export function Cards({
   onExpand,
   weather,
   calendar,
+  settings,
 }: Props) {
   const live = useSignal<Tile[] | null>(null);
   const held = useSignal<CardId | null>(null);
@@ -278,6 +284,9 @@ export function Cards({
           )}
           {tile.id === "weather" && <WeatherCard {...weather} />}
           {tile.id === "media" && <MediaCard />}
+          {tile.id === "clock" && (
+            <ClockCard now={now} settings={settings} onOpen={() => onExpand("clock")} />
+          )}
           {tile.id === "links" && (
             <>
               <header>

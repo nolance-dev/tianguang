@@ -401,6 +401,30 @@ describe("工作區卡片", () => {
     await vi.waitFor(() => expect(app.dataset.page).toBe("0"));
   });
 
+  it("時鐘卡顯示到秒，而且跟著整頁那個時間走", async () => {
+    localStorage.setItem(
+      "tg.settings",
+      JSON.stringify({
+        schemaVersion: 1,
+        clock24: true,
+        cards: {
+          todos: true, note: true, pomodoro: false, quote: true, links: true,
+          photos: false, calendar: false, weather: false, media: false, clock: true,
+        },
+      }),
+    );
+    const el = mount(new Date(2026, 7, 31, 9, 5, 7));
+    await vi.waitFor(() => expect(el.querySelector(".clockcard")).not.toBeNull());
+
+    const time = () => el.querySelector(".cc-time")!.textContent!.replace(/\s+/g, "");
+    expect(time(), "秒一定顯示 —— 這張卡就是為了秒存在的").toBe("09:0507");
+
+    // 整頁只有一個時間來源，所以它跟著那個走
+    await vi.advanceTimersByTimeAsync(3200);
+    await vi.waitFor(() => expect(time()).toBe("09:0510"));
+    localStorage.removeItem("tg.settings");
+  });
+
   it("卡片可以改大小換位置，鍵盤也走得通", async () => {
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelector(".cards")).not.toBeNull());

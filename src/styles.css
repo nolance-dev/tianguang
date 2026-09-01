@@ -2789,6 +2789,98 @@ body::-webkit-scrollbar {
 }
 
 /*
+ * 時鐘這張卡。
+ *
+ * 第一屏那個大時鐘不顯示秒 —— 那裡要的是「大概幾點」。這張卡是為了秒存在的，
+ * 所以秒一定在，而且用小一號推到基線上：讀時間的人看的是時分，秒是背景。
+ *
+ * 字級跟著卡片寬度走（cqw），拉寬就整個放大，不是在一片空白裡置中。
+ */
+.clockcard {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.8rem;
+  cursor: grab;
+  user-select: none;
+}
+
+.card.held .clockcard {
+  cursor: grabbing;
+}
+
+.cc-time {
+  display: flex;
+  align-items: baseline;
+  font-family: var(--f-latin);
+  font-size: clamp(1.8rem, 17cqw, 5.5rem);
+  line-height: 1;
+  letter-spacing: -0.015em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 冒號固定寬度，不然每分鐘跳字時整串會左右抖 */
+.cc-time .sep {
+  opacity: 0.45;
+  padding: 0 0.04em;
+}
+
+.cc-sec {
+  font-size: 0.42em;
+  color: var(--fg-2);
+  margin-left: 0.22em;
+  letter-spacing: 0.02em;
+}
+
+.cc-ampm {
+  font-family: var(--f-mono);
+  font-size: 0.26em;
+  letter-spacing: 0.16em;
+  color: var(--fg-2);
+  margin-left: 0.4em;
+}
+
+.cc-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  text-align: center;
+}
+
+.cc-date {
+  font-family: var(--f-mono);
+  font-size: clamp(0.58rem, 2.2cqw, 0.76rem);
+  letter-spacing: 0.16em;
+  color: var(--fg-2);
+}
+
+.cc-sc {
+  font-family: var(--f-cjk);
+  font-size: clamp(0.6rem, 2.4cqw, 0.8rem);
+  letter-spacing: 0.1em;
+  color: var(--fg-2);
+}
+
+:root[lang^="en"] .cc-sc {
+  font-family: var(--f-latin);
+  letter-spacing: 0.03em;
+}
+
+/* 窄的時候日期那兩行擠不下，留時間就好 —— 秒才是這張卡的重點 */
+@container (max-width: 12rem) {
+  .cc-meta {
+    display: none;
+  }
+}
+
+/*
  * 正在播放。
  *
  * 底圖是那個網站的圖示放大再糊掉。它不是專輯封面 —— 瀏覽器不給擴充功能

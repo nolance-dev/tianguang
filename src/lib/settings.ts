@@ -47,6 +47,7 @@ export interface Settings {
     calendar: boolean;
     weather: boolean;
     media: boolean;
+    clock: boolean;
   };
   /** 快速連結的呈現：true 是九個一組的九宮格，false 是一個一個排開 */
   linkGrid: boolean;
@@ -99,6 +100,7 @@ export const DEFAULTS: Settings = {
     calendar: true,
     weather: false,
     media: false,
+    clock: false,
   },
   linkGrid: true,
   desk: DEFAULT_DESK,

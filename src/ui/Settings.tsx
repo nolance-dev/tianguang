@@ -224,6 +224,7 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
             {(
               [
                 "links",
+                "clock",
                 "calendar",
                 "weather",
                 "media",

@@ -99,6 +99,15 @@ export function App() {
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
+  /*
+   * 每秒讀一次真實時間。
+   *
+   * 試過改成對齊整秒的 setTimeout 遞迴 —— setInterval(1000) 從掛載那一刻起算，
+   * 如果那一刻是 .437 秒，之後每次跳秒都在 .437。但顯示出來的時間永遠是對的
+   * （每次都重讀 new Date()），差的只是「什麼時候換那個數字」。
+   * 而要在測試裡假掉 setTimeout 才驗得了它，那會連 Preact 排 effect 的路徑
+   * 一起假掉，四個測試當場掛掉。為了一個看不出錯的次秒偏移弄壞測試基礎，不划算。
+   */
   useEffect(() => {
     const id = setInterval(() => (now.value = new Date()), TICK_MS);
     return () => clearInterval(id);
@@ -312,7 +321,12 @@ export function App() {
       onLinks={(l) => patch({ links: l })}
       linkGrid={cfg.linkGrid}
       now={now.value}
-      onExpand={(id) => (sheet.value = id)}
+      settings={cfg}
+      onExpand={(id) => {
+        // 時鐘沒有自己的整屏畫面，它展開的是時辰盤 —— 那本來就是它的大版本
+        if (id === "clock") dialOpen.value = true;
+        else sheet.value = id;
+      }}
       calendar={{
         secondCal: cfg.secondCal,
         todayHoliday: holidays.value.get(ws.today())?.[0] ?? null,
