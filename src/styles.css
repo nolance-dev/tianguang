@@ -1683,22 +1683,26 @@ body::-webkit-scrollbar {
   text-align: center;
 }
 
+/*
+ * 外框吃滿寬、滿高，正方形的是裡面那個 svg。
+ *
+ * 原本把 aspect-ratio 放在外框上，寬度得靠高度反推 —— 反推出來的寬度
+ * 不參與置中，圓就偏在一邊。改成外框負責留位置、svg 負責是圓，
+ * place-items 才有東西可以置中。
+ */
 .clockface {
-  position: relative;
   flex: 1;
   min-height: 5rem;
-  aspect-ratio: 1;
-  max-width: 100%;
-  margin: 0 auto;
+  width: 100%;
   display: grid;
   place-items: center;
 }
 
 .clockface svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
   height: 100%;
+  width: auto;
+  max-width: 100%;
+  aspect-ratio: 1;
 }
 
 .clockface circle:last-of-type {
@@ -1910,7 +1914,7 @@ html::-webkit-scrollbar {
 
 .screen.desk .quote {
   margin: 0;
-  max-width: min(40rem, 88%);
+  max-width: min(46rem, 90%);
   /* 這一屏上它是主角，不是註腳，字級跟著站起來 */
   font-size: clamp(1rem, 1.5vw, 1.3rem);
   line-height: 1.9;
@@ -1925,13 +1929,24 @@ html::-webkit-scrollbar {
   font-size: 0.7rem;
 }
 
+/* 工作區是拿來擺東西的，留白讓給第一屏就好 —— 這裡把兩側收窄，
+   四欄制才有空間拉得開，一張四欄寬的卡不會擠成一條 */
 .screen.desk .cards {
-  width: min(64rem, 92%);
+  width: min(84rem, 96%);
   margin-top: 0;
 }
 
 .screen.desk .card {
   min-height: 11rem;
+}
+
+/*
+ * 卡片換位置、改大小時的過場。時間跟第二屏插上來那一下同一組曲線，
+ * 只是短一半 —— 換頁是「翻到另一件事」，挪一張卡不是。
+ */
+::view-transition-group(*) {
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.28, 1);
 }
 
 /* ---------- 指令面板 ---------- */

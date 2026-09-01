@@ -53,6 +53,38 @@ interface Props extends Body {
   linkGrid: boolean;
 }
 
+/**
+ * 版面變動包一層 View Transition，格子的跳動就變成滑動。
+ *
+ * 用瀏覽器內建的，不自己寫 FLIP：grid 的跨距是離散的，
+ * CSS 沒有辦法對 `grid-column: span 2 -> 3` 做過場，自己量位置再補上
+ * transform 那條路要處理換行、捲動、以及動畫中途又被改一次。
+ *
+ * 同時只跑一個 —— 拖曳時一秒可能跨好幾格，前一個還沒跑完就再開一個的話
+ * 瀏覽器會把它整個丟掉，反而比不做還跳。前一個還在跑就直接套用。
+ */
+let running = false;
+
+function animate(apply: () => void): void {
+  const doc = document as Document & {
+    startViewTransition?: (cb: () => void | Promise<void>) => { finished: Promise<void> };
+  };
+  const still =
+    typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (running || still || !doc.startViewTransition) {
+    apply();
+    return;
+  }
+  running = true;
+  const tx = doc.startViewTransition(async () => {
+    apply();
+    // Preact 的重繪排在微任務。callback 要等它落到畫面上才能結束，
+    // 否則瀏覽器會對著還沒更新的 DOM 拍第二張照片，等於沒動。
+    await new Promise<void>((done) => requestAnimationFrame(() => done()));
+  });
+  void tx.finished.catch(() => {}).finally(() => (running = false));
+}
+
 const VARIANT: Record<CardId, string> = {
   todos: "",
   note: " note",
@@ -107,7 +139,7 @@ export function Cards({
       }
       if (to === over) return;
       over = to;
-      live.value = move(live.peek() ?? order, id, to);
+      animate(() => (live.value = move(live.peek() ?? order, id, to)));
     };
     document.addEventListener("pointermove", onMove);
     document.addEventListener(
@@ -139,7 +171,15 @@ export function Cards({
     const onMove = (ev: PointerEvent) => {
       const w = tile.w + Math.round((ev.clientX - x0) / unitX);
       const h = tile.h + Math.round((ev.clientY - y0) / unitY);
-      live.value = resize(live.peek() ?? order, tile.id, w, h);
+      // 沒跨過格就什麼都不做。每一次 pointermove 都重設一次訊號的話，
+      // 動畫會一直被自己打斷，看起來反而更頓。夾過範圍再比，
+      // 才不會在拉到底之後還一直重算。
+      const now = live.peek() ?? order;
+      const next = resize(now, tile.id, w, h);
+      const a = now.find((x) => x.id === tile.id);
+      const b = next.find((x) => x.id === tile.id);
+      if (a && b && a.w === b.w && a.h === b.h) return;
+      animate(() => (live.value = next));
     };
     document.addEventListener("pointermove", onMove);
     document.addEventListener(
@@ -158,11 +198,10 @@ export function Cards({
     const dy = e.key === "ArrowDown" ? 1 : e.key === "ArrowUp" ? -1 : 0;
     if (!dx && !dy) return;
     e.preventDefault();
-    onDesk(
-      e.shiftKey
-        ? nudge(order, tile.id, dx || dy)
-        : resize(order, tile.id, tile.w + dx, tile.h + dy),
-    );
+    const next = e.shiftKey
+      ? nudge(order, tile.id, dx || dy)
+      : resize(order, tile.id, tile.w + dx, tile.h + dy);
+    animate(() => onDesk(next));
   }
 
   if (tiles.length === 0) return null;
@@ -174,7 +213,12 @@ export function Cards({
           key={tile.id}
           class={`card${VARIANT[tile.id]}${held.value === tile.id ? " held" : ""}`}
           data-id={tile.id}
-          style={{ "--w": String(tile.w), "--h": String(tile.h) }}
+          style={{
+            "--w": String(tile.w),
+            "--h": String(tile.h),
+            // 每張卡有自己的名字，過場才知道是「這張變大」而不是「舊的消失、新的出現」
+            viewTransitionName: `tile-${tile.id}`,
+          }}
           onPointerDown={(e) => {
             if ((e.target as HTMLElement).closest("header")) startMove(e, tile.id);
           }}
