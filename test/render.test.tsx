@@ -852,7 +852,7 @@ describe("快速存取的張數由設定決定", () => {
 });
 
 
-describe("快速存取：右鍵編輯與右鍵拖動", () => {
+describe("快速存取：Shift＋右鍵編輯與拖動", () => {
   const seed = (n: number) =>
     Array.from({ length: n }, (_, i) => ({
       id: `l${i}`,
@@ -870,14 +870,14 @@ describe("快速存取：右鍵編輯與右鍵拖動", () => {
     return e;
   };
 
-  it("右鍵按一下不動 = 編輯，網址和名稱都帶進表單", async () => {
+  it("Shift＋右鍵按一下不動 = 編輯，網址和名稱都帶進表單", async () => {
     put(3);
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3));
 
     const slot = el.querySelector('.card.linkcard [data-i="1"]') as HTMLElement;
-    slot.dispatchEvent(ptr("pointerdown", { button: 2, clientX: 10, clientY: 10 }));
-    slot.dispatchEvent(ptr("pointerup", { button: 2, clientX: 10, clientY: 10 }));
+    slot.dispatchEvent(ptr("pointerdown", { button: 2, shiftKey: true, clientX: 10, clientY: 10 }));
+    slot.dispatchEvent(ptr("pointerup", { button: 2, shiftKey: true, clientX: 10, clientY: 10 }));
 
     await vi.waitFor(() =>
       expect(el.querySelector(".card.linkcard form.addform")).not.toBeNull(),
@@ -894,8 +894,8 @@ describe("快速存取：右鍵編輯與右鍵拖動", () => {
     await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3));
 
     const slot = el.querySelector('.card.linkcard [data-i="0"]') as HTMLElement;
-    slot.dispatchEvent(ptr("pointerdown", { button: 2, clientX: 5, clientY: 5 }));
-    slot.dispatchEvent(ptr("pointerup", { button: 2, clientX: 5, clientY: 5 }));
+    slot.dispatchEvent(ptr("pointerdown", { button: 2, shiftKey: true, clientX: 5, clientY: 5 }));
+    slot.dispatchEvent(ptr("pointerup", { button: 2, shiftKey: true, clientX: 5, clientY: 5 }));
     await vi.waitFor(() => expect(el.querySelector("form.addform")).not.toBeNull());
 
     const form = el.querySelector("form.addform") as HTMLFormElement;
@@ -916,7 +916,24 @@ describe("快速存取：右鍵編輯與右鍵拖動", () => {
     localStorage.removeItem("tg.settings");
   });
 
-  it("右鍵拖到另一格 = 換位置", async () => {
+  it("沒按 Shift 的右鍵什麼都不做，選單留給瀏覽器", async () => {
+    put(3);
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3));
+
+    const slot = el.querySelector('.card.linkcard [data-i="1"]') as HTMLElement;
+    slot.dispatchEvent(ptr("pointerdown", { button: 2, clientX: 10, clientY: 10 }));
+    slot.dispatchEvent(ptr("pointerup", { button: 2, clientX: 10, clientY: 10 }));
+    expect(el.querySelector("form.addform")).toBeNull();
+
+    // 而且不攔 contextmenu —— 攔了等於把瀏覽器選單吃掉又不給替代品
+    const menu = new MouseEvent("contextmenu", { bubbles: true, cancelable: true });
+    slot.dispatchEvent(menu);
+    expect(menu.defaultPrevented).toBe(false);
+    localStorage.removeItem("tg.settings");
+  });
+
+  it("Shift＋右鍵拖到另一格 = 換位置", async () => {
     put(3);
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3));
@@ -927,7 +944,7 @@ describe("快速存取：右鍵編輯與右鍵拖動", () => {
     const real = document.elementFromPoint;
     document.elementFromPoint = () => to;
 
-    from.dispatchEvent(ptr("pointerdown", { button: 2, clientX: 0, clientY: 0 }));
+    from.dispatchEvent(ptr("pointerdown", { button: 2, shiftKey: true, clientX: 0, clientY: 0 }));
     from.dispatchEvent(ptr("pointermove", { clientX: 80, clientY: 0 }));
     from.dispatchEvent(ptr("pointerup", { clientX: 80, clientY: 0 }));
     document.elementFromPoint = real;

@@ -120,15 +120,21 @@ export function Links({ links, onChange, max }: Props) {
           class={`slot${dragging.value === i ? " dragging" : ""}${over.value === i ? " over" : ""}`}
           draggable
           /*
-           * 右鍵按著拖 = 換位置，右鍵按一下不動 = 編輯。
+           * Shift 加右鍵按著拖 = 換位置，Shift 加右鍵按一下不動 = 編輯。
            *
            * 左鍵留給「打開這個網站」—— 那是這張卡九成九的用途，不該為了換位置
-           * 而讓每一次點擊都先猜使用者要不要拖。右鍵在這裡本來只會叫出瀏覽器的
-           * 選單，那個選單對這些磚塊沒有一項有用的功能。
+           * 而讓每一次點擊都先猜使用者要不要拖。
+           *
+           * 為什麼要多按一個 Shift：單純的右鍵在 Edge 上叫得出瀏覽器自己的選單，
+           * 頁面攔不乾淨。與其跟瀏覽器搶同一個手勢，不如換一個它不碰的組合 ——
+           * 而且沒按 Shift 的右鍵照樣有瀏覽器選單可用，不會被我們吃掉。
            */
-          onContextMenu={(e) => e.preventDefault()}
+          onContextMenu={(e) => {
+            // 只擋我們自己要用的那一種，其餘留給瀏覽器
+            if (e.shiftKey) e.preventDefault();
+          }}
           onPointerDown={(e) => {
-            if (e.button !== 2) return;
+            if (e.button !== 2 || !e.shiftKey) return;
             e.preventDefault();
             (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
             drag.current = { from: i, x: e.clientX, y: e.clientY, moved: false };
