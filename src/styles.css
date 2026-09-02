@@ -3522,61 +3522,64 @@ body::-webkit-scrollbar {
  *
  * 一列圖示的卡片沒有理由跟兩列的一樣高 —— 撐滿的結果是下面一大塊空白，
  * 而空白會讓人以為那裡本來該有東西。align-self: start 讓它縮到內容的高度，
- * 上限仍是自己那幾列（max-height: 100%），不會溢到隔壁。
+ * 上限仍是自己那幾列（max-height: 100%），裝不下的就在卡片裡捲。
  */
 .card.linkcard {
   align-self: start;
   max-height: 100%;
 }
 
+/*
+ * 排法由卡片的寬度決定：**一欄放四個**。
+ *
+ * 一欄寬（--w: 1）四個、兩欄八個、三欄十二個、四欄十六個。一張卡裝十六個，
+ * 所以十六個要排幾列也就跟著定了：一欄寬四列、兩欄兩列、三欄兩列、四欄一列。
+ * 高度（--h）決定看得到幾列，剩下的在卡片裡捲 —— 所以「寬一點矮一點」和
+ * 「窄一點高一點」都放得下同樣的十六個，只是形狀不同。
+ *
+ * 用格線不用 flex-wrap：flex 是「排得下就塞」，欄數是算出來的副作用；
+ * 格線的欄數是講明的，同一個寬度在任何字級與間隙下都是同一個排法。
+ */
 .card.linkcard .links {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 8), minmax(0, 1fr));
+  align-content: start;
   margin-top: 0;
   max-width: none;
-  /* 卡片裡靠左排。置中的話第二列只有幾個時會浮在中間，看起來像排錯了 */
-  justify-content: flex-start;
-  /*
-   * 卡片裡的間隙比第一屏那排窄。
-   *
-   * 這個數字是算過的：工作區四欄制、一張兩欄寬的卡，內寬約 637px，
-   * 圖示 4.2rem 配 0.7rem 的間隙剛好一列八個 —— 兩列就是十六個，
-   * 正好是一張卡的上限。間隙留 0.9rem 的話一列只排得下七個，
-   * 第十五、十六個就會掉到看不見的第三列去。
-   */
   gap: clamp(0.4rem, 0.8vw, 0.7rem);
   overflow-y: auto;
   scrollbar-width: none;
 }
 
-/*
- * 一張卡最多兩列圖示，再多的自己捲。
- *
- * 一列排得下幾個由卡片多寬決定（flex-wrap 自己會算），列數由圖示的數量決定，
- * 但到兩列就停 —— 再長下去這張卡會把整屏吃掉，而快速存取本來就是「常用的那幾個」。
- */
-.card.linkcard .links:not(.nine) {
-  --lrow: clamp(3.2rem, 5.2vw, 4.2rem);
-  --lgap: clamp(0.4rem, 0.8vw, 0.7rem);
-  max-height: calc(var(--lrow) * 2 + var(--lgap));
+.card.linkcard[data-w="1"] .links {
+  --cols: 4;
+}
+
+.card.linkcard[data-w="2"] .links {
+  --cols: 8;
+}
+
+.card.linkcard[data-w="3"] .links {
+  --cols: 12;
+}
+
+.card.linkcard[data-w="4"] .links {
+  --cols: 16;
+}
+
+/* 格子裡的磚塊填滿自己那一欄，不再自己決定寬度 */
+.card.linkcard .slot,
+.card.linkcard .links > .tile {
+  width: 100%;
+}
+
+/* 空狀態是一段話加一顆加號，不是格線 */
+.card.linkcard .links.empty {
+  display: flex;
 }
 
 .card.linkcard .links::-webkit-scrollbar {
   display: none;
-}
-
-.links.nine {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: clamp(0.8rem, 2vw, 1.6rem);
-}
-
-.links.nine .block {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: clamp(0.4rem, 1vw, 0.7rem);
-  padding: clamp(0.4rem, 1vw, 0.7rem);
-  border-radius: 12px;
-  border: 1px solid var(--glass-line);
 }
 
 
@@ -3588,6 +3591,11 @@ body::-webkit-scrollbar {
 
   .card {
     grid-column: span 2;
+  }
+
+  /* 每張卡都被拉成整排寬了，存下來的 --w 不再代表實際寬度 */
+  .card.linkcard .links {
+    --cols: 8;
   }
 }
 

@@ -289,18 +289,19 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
 
           <section>
             <h3>{t("s_links")}</h3>
-            <div class="seg" data-seg="linkstyle" role="group" aria-label={t("s_link_style")}>
-              {([true, false] as const).map((on) => (
+            <div class="seg" data-seg="linkcards" role="group" aria-label={t("s_link_cards")}>
+              {[1, 2, 3, 4].map((n) => (
                 <button
-                  key={String(on)}
+                  key={n}
                   type="button"
-                  aria-pressed={value.linkGrid === on}
-                  onClick={() => onChange({ linkGrid: on })}
+                  aria-pressed={value.linkCards === n}
+                  onClick={() => onChange({ linkCards: n })}
                 >
-                  {t(on ? "s_link_style_grid" : "s_link_style_flat")}
+                  {n}
                 </button>
               ))}
             </div>
+            <p class="note">{t("s_link_cards_hint", String(LINKS_PER_CARD))}</p>
             <LinkImport value={value} onChange={onChange} />
           </section>
 
@@ -403,7 +404,6 @@ function LinkImport({ value, onChange }: { value: S; onChange: (p: Partial<S>) =
 
   return (
     <>
-      <p class="note">{t("s_links_cap", String(LINKS_PER_CARD))}</p>
       <div class="row">
         <span>
           {value.links.length} / {MAX_LINKS}

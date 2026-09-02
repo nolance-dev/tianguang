@@ -332,7 +332,7 @@ export function App() {
       onDesk={onDesk}
       links={cfg.links}
       onLinks={(l) => patch({ links: l })}
-      linkGrid={cfg.linkGrid}
+      linkCards={cfg.linkCards}
       now={now.value}
       settings={cfg}
       onExpand={(id) => {

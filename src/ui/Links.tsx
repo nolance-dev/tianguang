@@ -9,24 +9,14 @@ import { faviconUrl, initial, makeLink, reorder, type Link } from "../lib/links"
  * 圖示走瀏覽器內建的 favicon 快取（_favicon/），不對外抓圖 —— 離線也有圖示，
  * 也不會把使用者開過哪些站洩漏給第三方。開發模式沒有那個協定，退回字母磚。
  *
- * 兩種排法：九個一組的九宮格，或一個一個排開。九宮格是把格子切成
- * 一眼數得完的塊 —— 十幾個圖示排成一長條，找東西時得從頭掃到尾。
+ * 排法只有一種：一格一格排開，一列幾個由卡片多寬決定。
+ * 曾經有過九個一組的九宮格，拿掉了 —— 卡片本來就有大小，塊再切一次是第二套
+ * 尺寸規則，兩套規則會打架。
  */
-
-/** 九宮格一組九格。加號也佔一格，所以滿了會自己開下一塊。 */
-const PER_BLOCK = 9;
-
-function blocks<T>(cells: T[]): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < cells.length; i += PER_BLOCK) out.push(cells.slice(i, i + PER_BLOCK));
-  return out.length ? out : [[]];
-}
 
 interface Props {
   links: Link[];
   onChange: (links: Link[]) => void;
-  /** 九宮格排法。false 是一個一個排開 */
-  grid?: boolean;
   /**
    * 這一張還能再放幾個之前就不給加號了。
    *
@@ -36,7 +26,7 @@ interface Props {
   max: number;
 }
 
-export function Links({ links, onChange, grid, max }: Props) {
+export function Links({ links, onChange, max }: Props) {
   const adding = useSignal(false);
   const dragging = useSignal<number | null>(null);
   const over = useSignal<number | null>(null);
@@ -117,19 +107,6 @@ export function Links({ links, onChange, grid, max }: Props) {
     ) : null;
 
   const cells = adder ? [...slots, adder] : slots;
-
-  // 九宮格是把 cells 切塊，不是換一套 DOM —— 拖曳換位那段兩種排法共用
-  if (grid) {
-    return (
-      <div class="links nine">
-        {blocks(cells).map((block, i) => (
-          <div class="block" key={i}>
-            {block}
-          </div>
-        ))}
-      </div>
-    );
-  }
 
   return <div class="links">{cells}</div>;
 }

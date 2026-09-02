@@ -608,7 +608,10 @@
   "s_desk_reset_home": {
     "message": "ホーム画面の配置をリセット"
   },
-  "s_links_cap": {
-    "message": "1 枚あたり最大 $1 件。いっぱいになると自動でもう 1 枚増えます。"
+  "s_link_cards": {
+    "message": "カードの枚数"
+  },
+  "s_link_cards_hint": {
+    "message": "1 枚に $1 件。もっと置くなら枚数を増やしてください（自動では増えません）。"
   }
 }

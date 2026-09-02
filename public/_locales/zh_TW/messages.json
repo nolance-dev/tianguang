@@ -530,15 +530,6 @@
   "s_card_links": {
     "message": "快速存取"
   },
-  "s_link_style": {
-    "message": "呈現方式"
-  },
-  "s_link_style_grid": {
-    "message": "九宮格"
-  },
-  "s_link_style_flat": {
-    "message": "單獨排開"
-  },
   "c_photos": {
     "message": "照片牆"
   },
@@ -928,7 +919,10 @@
   "s_desk_reset_home": {
     "message": "重設主頁面版面"
   },
-  "s_links_cap": {
-    "message": "一張卡最多 $1 個，滿了會自動多開一張。"
+  "s_link_cards": {
+    "message": "卡片張數"
+  },
+  "s_link_cards_hint": {
+    "message": "一張裝 $1 個。要放更多就多開一張，不會自己長出來。"
   }
 }

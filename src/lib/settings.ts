@@ -61,8 +61,12 @@ export interface Settings {
   };
   /** 主頁面那一排的順序與尺寸。跟 desk 各記各的，兩屏的版面互不影響。 */
   homeDesk: Tile[];
-  /** 快速連結的呈現：true 是九個一組的九宮格，false 是一個一個排開 */
-  linkGrid: boolean;
+  /**
+   * 快速存取要幾張卡。一張裝十六個（desk.LINKS_PER_CARD），
+   * 張數由使用者決定 —— 自動長出來的話，加一個連結會突然多一張卡在版面上，
+   * 那不是使用者要求的變化。
+   */
+  linkCards: number;
   /** 工作區卡片的順序與尺寸。畫之前一律過 desk.normalize()。 */
   desk: Tile[];
   /** 照片牆上掛的那張。跟桌布的 imageId 是兩回事，各記各的。 */
@@ -121,7 +125,7 @@ export const DEFAULTS: Settings = {
     photos: false,
   },
   homeDesk: DEFAULT_HOME_DESK,
-  linkGrid: true,
+  linkCards: 1,
   desk: DEFAULT_DESK,
   photoId: null,
   photoRotate: 0,

@@ -59,7 +59,8 @@ interface Props extends Body {
   onDesk: (desk: Tile[]) => void;
   links: Link[];
   onLinks: (links: Link[]) => void;
-  linkGrid: boolean;
+  /** 快速存取要幾張卡。由設定決定，不是由連結數量長出來 */
+  linkCards: number;
   /** 照片牆的狀態。跟桌布無關 */
   photo: { id: string | null; rotate: number };
   onPhoto: (patch: Partial<{ id: string | null; rotate: number }>) => void;
@@ -146,7 +147,7 @@ export function Cards({
   onDesk,
   links,
   onLinks,
-  linkGrid,
+  linkCards,
   photo,
   onPhoto,
   now,
@@ -160,17 +161,13 @@ export function Cards({
   const grid = useRef<HTMLDivElement>(null);
 
   /*
-   * 快速存取有幾張，是連結的數量決定的，不是設定裡存的。
+   * 快速存取有幾張是設定說了算，不是連結的數量說了算。
    *
-   * 一張裝十六個，加號也要有地方站 —— 所以是 (數量 + 1) 除以十六無條件進位：
-   * 十六個滿了，第十七個要加的時候，第二張已經在那裡等著了。
-   * 減到剩一張的量，多出來的那張就自己消失（下面那個 linkIds.includes）。
+   * 自動長出來的話，加第十七個連結會讓版面突然多一張卡 —— 使用者要的是加一個
+   * 連結，不是改版面。所以滿了就是滿了，要更多自己去設定裡加一張。
    */
-  const linkCards = Math.min(
-    Math.max(1, Math.ceil((links.length + 1) / LINKS_PER_CARD)),
-    Math.ceil(MAX_LINKS / LINKS_PER_CARD),
-  );
-  const linkIds: TileId[] = Array.from({ length: linkCards }, (_, i) =>
+  const cardCount = Math.min(Math.max(1, Math.round(linkCards)), MAX_LINKS / LINKS_PER_CARD);
+  const linkIds: TileId[] = Array.from({ length: cardCount }, (_, i) =>
     i === 0 ? "links" : (`links${i + 1}` as TileId),
   );
 
@@ -296,6 +293,8 @@ export function Cards({
           key={tile.id}
           class={`card${VARIANT[kindOf(tile.id)]}${held.value === tile.id ? " held" : ""}`}
           data-id={tile.id}
+          data-w={tile.w}
+          data-h={tile.h}
           style={{ "--w": String(tile.w), "--h": String(tile.h) }}
           onPointerDown={(e) => {
             // 沒有標題列的卡（照片、日曆）自己標出哪一塊可以抓
@@ -335,9 +334,8 @@ export function Cards({
                     onChange={(next) =>
                       onLinks([...links.slice(0, from), ...next, ...links.slice(from + mine.length)])
                     }
-                    grid={linkGrid}
-                    // 全部滿了就把上限壓到現有數量，加號自然不出現
-                    max={links.length >= MAX_LINKS ? mine.length : LINKS_PER_CARD}
+                    // 這一張裝滿十六個、或全部的卡都裝滿了，加號就不出現
+                    max={links.length >= cardCount * LINKS_PER_CARD ? mine.length : LINKS_PER_CARD}
                   />
                 </>
               );

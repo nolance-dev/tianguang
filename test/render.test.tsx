@@ -474,39 +474,29 @@ describe("工作區卡片", () => {
     expect(size("note")).toBe(size("todos"));
   });
 
-  it("快速存取九個一組切塊，加號也佔一格", async () => {
-    const eleven = Array.from({ length: 11 }, (_, i) => ({
+  it("排法由卡片寬度決定，欄數掛在 data-w 上", async () => {
+    const links = Array.from({ length: 16 }, (_, i) => ({
       id: `l${i}`,
       title: `站 ${i}`,
       url: `https://example.com/${i}`,
     }));
     localStorage.setItem(
       "tg.settings",
-      JSON.stringify({ schemaVersion: 1, links: eleven, linkGrid: true }),
-    );
-
-    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelector(".links.nine")).not.toBeNull());
-
-    const blocks = el.querySelectorAll(".links.nine .block");
-    expect(blocks.length, "十一個連結加一顆加號 = 兩塊").toBe(2);
-    expect(blocks[0]!.children.length).toBe(9);
-    expect(blocks[1]!.children.length, "剩下兩個加上加號").toBe(3);
-    localStorage.removeItem("tg.settings");
-  });
-
-  it("換成單獨排開就不切塊", async () => {
-    localStorage.setItem(
-      "tg.settings",
-      JSON.stringify({
-        schemaVersion: 1,
-        linkGrid: false,
-        links: [{ id: "a", title: "站", url: "https://example.com" }],
-      }),
+      JSON.stringify({ schemaVersion: 1, links, desk: [{ id: "links", w: 3, h: 2 }] }),
     );
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelector(".card.linkcard .links")).not.toBeNull());
-    expect(el.querySelector(".links.nine")).toBeNull();
+    // 設定是非同步載進來的：等到連結真的到位，不是等卡片出現（那時還是預設版面）
+    await vi.waitFor(() =>
+      expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(16),
+    );
+
+    // 欄數由 CSS 依 data-w 決定（一欄四個），這裡確認那兩個屬性有掛上去
+    const card = el.querySelector(".card.linkcard") as HTMLElement;
+    expect(card.dataset.w).toBe("3");
+    expect(card.dataset.h).toBe("2");
+    // 十六個都在同一張卡裡，沒有再被切成小塊
+    expect(card.querySelectorAll(".slot")).toHaveLength(16);
+    expect(el.querySelector(".links.nine"), "九宮格已經拿掉了").toBeNull();
     localStorage.removeItem("tg.settings");
   });
 
@@ -791,7 +781,7 @@ describe("顆粒與變暗只作用在圖片上", () => {
   });
 });
 
-describe("快速存取滿了就多開一張", () => {
+describe("快速存取的張數由設定決定", () => {
   const seed = (n: number) =>
     Array.from({ length: n }, (_, i) => ({
       id: `l${i}`,
@@ -799,46 +789,49 @@ describe("快速存取滿了就多開一張", () => {
       url: `https://example${i}.com/`,
     }));
 
-  const setLinks = (n: number) =>
+  const put = (n: number, cards: number) =>
     localStorage.setItem(
       "tg.settings",
-      JSON.stringify({ schemaVersion: 1, links: seed(n), linkGrid: false }),
+      JSON.stringify({ schemaVersion: 1, links: seed(n), linkCards: cards }),
     );
 
-  it("十五個還是一張，十六個就有第二張等著", async () => {
-    setLinks(15);
+  it("設定一張就是一張 —— 連結再多也不會自己長出第二張", async () => {
+    put(20, 1);
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelector(".card.linkcard")).not.toBeNull());
-    // 十五個 + 加號 = 十六格，剛好一張
+    await vi.waitFor(() =>
+      expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(16),
+    );
     expect(el.querySelectorAll(".card.linkcard")).toHaveLength(1);
+    // 裝得下的就是前十六個，其餘的在設定加一張之前不顯示
+    expect(el.querySelector(".card.linkcard")!.querySelectorAll(".slot")).toHaveLength(16);
     localStorage.removeItem("tg.settings");
   });
 
-  it("十六個滿了，加號在第二張上", async () => {
-    setLinks(16);
-    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard").length).toBe(2));
-
-    const cards = el.querySelectorAll(".card.linkcard");
-    // 第一張裝滿十六個，而且沒有加號 —— 加號在下一張
-    expect(cards[0]!.querySelectorAll(".slot")).toHaveLength(16);
-    expect(cards[0]!.querySelector(".tile.add")).toBeNull();
-    expect(cards[1]!.querySelector(".tile.add")).not.toBeNull();
-    localStorage.removeItem("tg.settings");
-  });
-
-  it("第十七個之後，兩張各裝各的", async () => {
-    setLinks(20);
+  it("設定兩張就切成兩段，第十七個之後落在第二張", async () => {
+    put(20, 2);
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard").length).toBe(2));
     const cards = el.querySelectorAll(".card.linkcard");
     expect(cards[0]!.querySelectorAll(".slot")).toHaveLength(16);
     expect(cards[1]!.querySelectorAll(".slot")).toHaveLength(4);
+    // 加號在還有空位的那一張上
+    expect(cards[0]!.querySelector(".tile.add")).toBeNull();
+    expect(cards[1]!.querySelector(".tile.add")).not.toBeNull();
+    localStorage.removeItem("tg.settings");
+  });
+
+  it("一張裝滿十六個就不給加號 —— 要更多得自己去設定加一張", async () => {
+    put(16, 1);
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() =>
+      expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(16),
+    );
+    expect(el.querySelector(".card.linkcard")!.querySelector(".tile.add")).toBeNull();
     localStorage.removeItem("tg.settings");
   });
 
   it("在第二張刪掉一個，刪的是第二張那一段裡的那一個", async () => {
-    setLinks(18);
+    put(18, 2);
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard").length).toBe(2));
 
@@ -848,11 +841,10 @@ describe("快速存取滿了就多開一張", () => {
     (first.querySelector(".rm") as HTMLButtonElement).click();
 
     await vi.waitFor(() =>
-      expect(
-        el.querySelectorAll(".card.linkcard")[1]!.querySelector(".cap")!.textContent,
-      ).toBe("站台17"),
+      expect(el.querySelectorAll(".card.linkcard")[1]!.querySelector(".cap")!.textContent).toBe(
+        "站台17",
+      ),
     );
-    // 第一張沒被動到
     expect(el.querySelectorAll(".card.linkcard")[0]!.querySelectorAll(".slot")).toHaveLength(16);
     localStorage.removeItem("tg.settings");
   });

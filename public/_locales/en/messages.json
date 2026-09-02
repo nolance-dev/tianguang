@@ -494,15 +494,6 @@
   "s_card_links": {
     "message": "Shortcuts"
   },
-  "s_link_style": {
-    "message": "Arrangement"
-  },
-  "s_link_style_grid": {
-    "message": "Nine to a block"
-  },
-  "s_link_style_flat": {
-    "message": "One by one"
-  },
   "c_photos": {
     "message": "Photos"
   },
@@ -892,7 +883,10 @@
   "s_desk_reset_home": {
     "message": "Reset home layout"
   },
-  "s_links_cap": {
-    "message": "Up to $1 per card. A new card appears when one fills up."
+  "s_link_cards": {
+    "message": "Cards"
+  },
+  "s_link_cards_hint": {
+    "message": "$1 per card. Add a card to hold more - they never appear on their own."
   }
 }

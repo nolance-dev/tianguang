@@ -608,7 +608,10 @@
   "s_desk_reset_home": {
     "message": "重设主页面版面"
   },
-  "s_links_cap": {
-    "message": "一张卡最多 $1 个，满了会自动多开一张。"
+  "s_link_cards": {
+    "message": "卡片张数"
+  },
+  "s_link_cards_hint": {
+    "message": "一张装 $1 个。要放更多就多开一张，不会自己长出来。"
   }
 }
