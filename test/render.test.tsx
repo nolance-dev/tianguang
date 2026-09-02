@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { render } from "preact";
+import { readFileSync } from "node:fs";
 import { App } from "../src/ui/App";
 import { DEFAULTS, migrate, SCHEMA_VERSION } from "../src/lib/settings";
 import { isEnglish } from "../src/lib/i18n";
@@ -161,6 +162,28 @@ describe("時辰盤與設定", () => {
     expect(dial.querySelectorAll(".hr.on").length).toBe(1);
     expect(dial.querySelectorAll(":is(.rn,.ar).on").length).toBe(1);
     expect(dial.querySelector(".dc-time")?.textContent).toBe("22:48");
+  });
+
+  it("盤自己帶一套前景色，不吃 :root 那一套", () => {
+    /*
+     * :root 的 --fg 跟著時辰走：白天是 #1B2230（深字配亮底），晚上才是淺的。
+     * 而盤的底永遠是純黑 —— 盤裡面任何跟 :root 要 --fg 的東西，白天就是黑底黑字。
+     *
+     * 曆書欄的標題就是這樣整個白天都看不見，晚上又自己好了。量出來是
+     * rgb(27,34,48) 疊在 rgb(0,0,0) 上，再乘 0.32 的字級透明度和 0.55 的呼吸，
+     * 等效 0.176。半天正常半天消失的錯特別難抓，所以釘一條。
+     *
+     * 只驗來源：jsdom 不套用外部樣式表，量不到 computed style。
+     */
+    const css = readFileSync("src/styles.css", "utf8");
+    const at = css.indexOf("\n.dial {");
+    expect(at, "找不到 .dial 那一段").toBeGreaterThan(-1);
+    const block = css.slice(at, css.indexOf("\n}", at));
+    expect(block, "盤要自己定 --fg，否則白天會變成黑底黑字").toMatch(/--fg:/);
+    expect(
+      block,
+      "--fg-2 一起定，下一個放進盤裡的元件才不會踩同一個坑",
+    ).toMatch(/--fg-2:/);
   });
 
   it("Esc 關掉時辰盤", async () => {
