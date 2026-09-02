@@ -151,13 +151,19 @@ export function Links({ links, onChange, max }: Props) {
             aria-label={t("links_edit")}
             onClick={() => (editing.value = link.id)}
           >
-            {/* 畫的不是字。✎ 這個字在多數字型裡側邊留白不對稱，
-                塞進圓鈕就是看起來偏一邊，怎麼微調都只是在補某一種字型 */}
+            {/*
+              * 畫的不是字。✎ 這個字在多數字型裡側邊留白不對稱，塞進圓鈕就是偏一邊，
+              * 微調 padding 只是在補某一種字型。
+              *
+              * 那個 translate 也不是憑感覺調的：兩段路徑合起來的外框是
+              * x 3.00、y 2.67、10.33 見方，中心落在 (8.16, 7.84)，離 viewBox 的中心
+              * 差 (0.16, -0.16) —— 這裡把它補回去。筆是斜的，外框置中才是真的置中。
+              */}
             <svg viewBox="0 0 16 16" aria-hidden="true">
-              <path
-                d="M10.6 2.4a1.4 1.4 0 0 1 2 2l-.7.7-2-2 .7-.7ZM9.2 3.8l2 2L5 12H3v-2l6.2-6.2Z"
-                fill="currentColor"
-              />
+              <g transform="translate(-0.16 0.16)" fill="currentColor">
+                <path d="M12.9 3.1a1.5 1.5 0 0 0-2.1 0L9.6 4.3l2.1 2.1 1.2-1.2a1.5 1.5 0 0 0 0-2.1Z" />
+                <path d="M8.5 5.4 3 10.9V13h2.1l5.5-5.5-2.1-2.1Z" />
+              </g>
             </svg>
           </button>
           <button
