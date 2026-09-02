@@ -930,5 +930,26 @@
   },
   "links_edit": {
     "message": "編輯"
+  },
+  "s_backup": {
+    "message": "備份與還原"
+  },
+  "s_backup_hint": {
+    "message": "一個檔案裝走設定、版面、待辦、筆記與番茄鐘紀錄。照片不在裡面 —— 它們存在本機的資料庫，一張就好幾 MB。"
+  },
+  "s_backup_export": {
+    "message": "匯出成檔案"
+  },
+  "s_backup_import": {
+    "message": "從檔案還原"
+  },
+  "s_backup_saved": {
+    "message": "已匯出。換一台電腦時用「從檔案還原」讀回來。"
+  },
+  "s_backup_done": {
+    "message": "已還原。"
+  },
+  "s_backup_bad": {
+    "message": "這個檔案讀不出來，可能不是天光的備份。"
   }
 }

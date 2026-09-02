@@ -5,6 +5,8 @@ import { DEFAULT_DESK, DEFAULT_HOME_DESK, LINKS_PER_CARD } from "../lib/desk";
 import { SECOND_CALS } from "../lib/secondcal";
 import { hasHolidayAccess, requestHolidayAccess, supported } from "../lib/holidays";
 import { MAX_LINKS, suggestFromTopSites } from "../lib/links";
+import { fileName, pack, unpack } from "../lib/snapshot";
+import type { Workspace } from "../lib/workspace";
 import { geocode, hasAccess, hasCjk, requestAccess, type Place } from "../lib/weather";
 import { locale } from "../lib/i18n";
 import type { Settings as S } from "../lib/settings";
@@ -22,9 +24,12 @@ interface Props {
   value: S;
   onChange: (patch: Partial<S>) => void;
   onClose: () => void;
+  /** 備份要把工作區一起打包 —— 版面是設定，進度在工作區 */
+  work: Workspace;
+  onRestore: (settings: S, work: Workspace) => void;
 }
 
-export function SettingsPanel({ value, onChange, onClose }: Props) {
+export function SettingsPanel({ value, onChange, onClose, work, onRestore }: Props) {
   const first = useRef<HTMLInputElement>(null);
   useLayoutEffect(() => first.current?.focus(), []);
 
@@ -310,6 +315,12 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
             <WeatherSettings value={value} onChange={onChange} />
           </section>
 
+          <section>
+            <h3>{t("s_backup")}</h3>
+            <p class="note">{t("s_backup_hint")}</p>
+            <Backup value={value} work={work} onRestore={onRestore} />
+          </section>
+
           <section class="about">
             <h3>{t("s_about")}</h3>
             <dl>
@@ -543,6 +554,81 @@ function WeatherSettings({ value, onChange }: { value: S; onChange: (p: Partial<
           ))}
         </ul>
       )}
+    </>
+  );
+}
+
+/**
+ * 備份與還原。
+ *
+ * 一個檔案，裡面是設定加工作區。跨裝置最老實的一條路 —— 不必登入、不必信任
+ * 任何伺服器、換瀏覽器換帳號都能用。缺點是要自己搬檔案，所以介面上寫清楚
+ * 它包含什麼、不包含什麼。
+ */
+function Backup({
+  value,
+  work,
+  onRestore,
+}: {
+  value: S;
+  work: Workspace;
+  onRestore: (settings: S, work: Workspace) => void;
+}) {
+  const [msg, setMsg] = useState<string | null>(null);
+  const file = useRef<HTMLInputElement>(null);
+
+  return (
+    <>
+      <button
+        type="button"
+        class="wide"
+        onClick={() => {
+          const at = new Date();
+          const blob = new Blob([JSON.stringify(pack(value, work, at), null, 2)], {
+            type: "application/json",
+          });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileName(at);
+          a.click();
+          // 立刻收掉的話，有些情況下下載還沒開始就沒了
+          setTimeout(() => URL.revokeObjectURL(url), 10_000);
+          setMsg(t("s_backup_saved"));
+        }}
+      >
+        {t("s_backup_export")}
+      </button>
+
+      <button type="button" class="wide" onClick={() => file.current?.click()}>
+        {t("s_backup_import")}
+      </button>
+
+      <input
+        ref={file}
+        type="file"
+        accept="application/json,.json"
+        hidden
+        onChange={async (e) => {
+          const picked = e.currentTarget.files?.[0];
+          e.currentTarget.value = "";
+          if (!picked) return;
+          try {
+            const got = unpack(JSON.parse(await picked.text()));
+            if (!got) {
+              setMsg(t("s_backup_bad"));
+              return;
+            }
+            onRestore(got.settings, got.workspace);
+            setMsg(t("s_backup_done"));
+          } catch {
+            // 壞掉的 JSON、選錯檔案、讀不到 —— 對使用者都是同一件事
+            setMsg(t("s_backup_bad"));
+          }
+        }}
+      />
+
+      {msg && <p class="note">{msg}</p>}
     </>
   );
 }

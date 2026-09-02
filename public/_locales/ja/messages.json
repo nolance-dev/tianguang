@@ -619,5 +619,26 @@
   },
   "links_edit": {
     "message": "編集"
+  },
+  "s_backup": {
+    "message": "バックアップと復元"
+  },
+  "s_backup_hint": {
+    "message": "設定・レイアウト・ToDo・メモ・ポモドーロの記録を 1 ファイルに。写真は含みません（端末のデータベースにあり、1 枚で数 MB になります）。"
+  },
+  "s_backup_export": {
+    "message": "ファイルに書き出す"
+  },
+  "s_backup_import": {
+    "message": "ファイルから復元"
+  },
+  "s_backup_saved": {
+    "message": "書き出しました。別の PC では「ファイルから復元」で読み込めます。"
+  },
+  "s_backup_done": {
+    "message": "復元しました。"
+  },
+  "s_backup_bad": {
+    "message": "このファイルは読めません。天光のバックアップではないようです。"
   }
 }

@@ -77,6 +77,30 @@
 去讀 `navigator.mediaSession`、以及每一站自己的「下一首」按鈕怎麼按。
 上架審查會為那個權限逐條問，而且對方一改版就壞。
 
+
+## 跨裝置（做到一半）
+
+**已經有的**：設定與版面走 `chrome.storage.sync` —— 同一個 Edge 帳號登入的兩台機器
+本來就會同步。進度（待辦、筆記、番茄鐘紀錄）走 `chrome.storage.local`，不跨裝置，
+因為 sync 每項 8KB、總計 100KB，那些東西會長大。
+
+**這一輪做的**：`src/lib/snapshot.ts` —— 設定加工作區打包成一個 JSON，
+設定裡可以匯出成檔案、從檔案還原。跨瀏覽器、跨帳號都能用，代價是自己搬檔案。
+照片不在裡面（IndexedDB，一張好幾 MB）。
+
+**還沒做的：登入 Google 存到雲端**。快照層已經是那件事的貨物，缺的是運送：
+
+1. 到 Google Cloud Console 開一個專案，建立 OAuth 2.0 用戶端 ID（類型：網頁應用程式），
+   授權的重新導向 URI 填 `https://<擴充功能 ID>.chromiumapp.org/`。
+2. 擴充功能 ID 在上架前不固定 —— 要嘛先上架拿到正式 ID，要嘛在 manifest 裡放一組
+   `key` 把 ID 釘死。這一步沒有替代方案，Google 那邊要認得這個 ID。
+3. manifest 加 `identity` 權限與 `https://www.googleapis.com/*` 的主機權限。
+4. 程式面：`chrome.identity.launchWebAuthFlow()` 拿 token（Edge 也支援，
+   `getAuthToken()` 只有 Chrome 有），快照上傳到雲端硬碟的 `appDataFolder` ——
+   那是每個應用自己的隱藏資料夾，使用者的檔案清單看不到它，也不佔可見空間。
+
+第 1、2 步只有帳號的主人做得到，程式這邊等那組用戶端 ID 就能接上。
+
 ## 之後
 
 四項都做完了。剩下的是上線前的事，不是新元件：

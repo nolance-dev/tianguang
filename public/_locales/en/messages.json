@@ -894,5 +894,26 @@
   },
   "links_edit": {
     "message": "Edit"
+  },
+  "s_backup": {
+    "message": "Backup and restore"
+  },
+  "s_backup_hint": {
+    "message": "One file holds settings, layout, todos, notes and pomodoro history. Photos are not included - they live in a local database and run to megabytes each."
+  },
+  "s_backup_export": {
+    "message": "Export to a file"
+  },
+  "s_backup_import": {
+    "message": "Restore from a file"
+  },
+  "s_backup_saved": {
+    "message": "Exported. On another computer, use Restore from a file."
+  },
+  "s_backup_done": {
+    "message": "Restored."
+  },
+  "s_backup_bad": {
+    "message": "That file could not be read - it may not be an Aubade backup."
   }
 }

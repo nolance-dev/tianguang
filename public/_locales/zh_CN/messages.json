@@ -619,5 +619,26 @@
   },
   "links_edit": {
     "message": "编辑"
+  },
+  "s_backup": {
+    "message": "备份与还原"
+  },
+  "s_backup_hint": {
+    "message": "一个文件装走设置、版面、待办、笔记与番茄钟记录。照片不在里面 —— 它们存在本机的数据库，一张就好几 MB。"
+  },
+  "s_backup_export": {
+    "message": "导出为文件"
+  },
+  "s_backup_import": {
+    "message": "从文件还原"
+  },
+  "s_backup_saved": {
+    "message": "已导出。换一台电脑时用「从文件还原」读回来。"
+  },
+  "s_backup_done": {
+    "message": "已还原。"
+  },
+  "s_backup_bad": {
+    "message": "这个文件读不出来，可能不是天光的备份。"
   }
 }

@@ -481,6 +481,12 @@ export function App() {
           value={settings.value}
           onChange={patch}
           onClose={() => (panelOpen.value = false)}
+          work={work.value}
+          onRestore={(s, w) => {
+            // 整包蓋過去，不是逐項合併 —— 還原的意思就是「回到那個時候的樣子」
+            patch(s);
+            patchWork(w);
+          }}
         />
       )}
     </>
