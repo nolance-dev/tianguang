@@ -642,6 +642,37 @@ describe("工作區卡片", () => {
     expect(size("note")).toBe(size("todos"));
   });
 
+  it("列高跟著卡片走，收起來的快速存取才不會在底下留一條空", () => {
+    /*
+     * 快速存取排成一排時卡片會收起來（align-self: start）。但如果列高是寫死的
+     * grid-auto-rows: 12rem，列不會跟著收 —— 旁邊有別的卡填著看不出來，一旦它
+     * 獨佔一整列（拉滿四欄放最上面就是），量到的是 71.4 像素的空條。
+     *
+     * 修法有兩半，而且隔了一千九百行：列改成 min-content，卡片自己帶算出來的
+     * 高度。任何一半單獨被改掉都會壞 —— 只留 min-content 會讓每一列都塌，
+     * 只留寫死的列高會讓那條空回來。所以兩半一起釘。
+     *
+     * 幾何量不到（jsdom 沒有版面），只能驗來源。
+     */
+    const css = readFileSync("src/styles.css", "utf8");
+    const block = (sel: string) => {
+      const at = css.indexOf("\n" + sel + " {");
+      expect(at, `找不到 ${sel}`).toBeGreaterThan(-1);
+      return css.slice(at, css.indexOf("\n}", at));
+    };
+    expect(block(".cards"), "列高要由卡片決定").toMatch(
+      /grid-auto-rows:\s*min-content/,
+    );
+    expect(
+      block(".card"),
+      "卡片要自己帶算出來的高度，列才有東西可以跟",
+    ).toMatch(/height:\s*calc\([^)]*--h/);
+    expect(
+      block('.card.linkcard:has(.links[data-rows="1"])'),
+      "收起來的那一排是唯一由內容決定高度的卡",
+    ).toMatch(/height:\s*auto/);
+  });
+
   it("排法由卡片寬度決定，欄數掛在 data-w 上", async () => {
     const links = Array.from({ length: 16 }, (_, i) => ({
       id: `l${i}`,

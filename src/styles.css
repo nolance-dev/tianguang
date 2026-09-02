@@ -2186,8 +2186,22 @@ body::-webkit-scrollbar {
    * 一張 30rem，而且往下拖也拖不動（一格的高度是變動的，算不準）。
    * 固定之後「幾列高」才真的等於高度。
    */
-  grid-auto-rows: 12rem;
-  gap: clamp(0.6rem, 1.2vw, 1rem);
+  /*
+   * 列高不再由 grid-auto-rows 直接寫死，改由每張卡自己帶著高度，
+   * 列去配合卡片（min-content）。
+   *
+   * 為什麼要繞這一圈：快速存取排成一排的時候卡片會收起來（align-self: start），
+   * 但列還是死守 12rem —— 旁邊有別的卡填著看不出來，一旦它自己獨佔一整列
+   * （拉滿四欄放在最上面就是這種情況），那 71 像素的空就整條露出來。
+   *
+   * 卡片的高度是算出來的，不是由內容長出來的，所以列高仍然是可預期的
+   * ——「auto 讓番茄鐘的錶面決定列高」那個老問題不會回來。唯一允許
+   * 由內容決定高度的就是收起來的那一排快速存取。
+   */
+  --gap: clamp(0.6rem, 1.2vw, 1rem);
+  --row: 12rem;
+  grid-auto-rows: min-content;
+  gap: var(--gap);
   width: min(58rem, 88%);
   margin-top: clamp(1rem, 2.5vh, 2rem);
   align-items: stretch;
@@ -2211,8 +2225,9 @@ body::-webkit-scrollbar {
   border: 1px solid var(--glass-line);
   /* 卡片跟它底下那一屏的底色很接近，一道淺影才分得開 */
   box-shadow: 0 2px 12px -8px rgba(0, 0, 0, 0.55);
-  /* 高度由格線決定，卡片自己不准撐高；內容多的在自己那一層捲 */
+  /* 高度由跨幾列算出來，卡片自己不准撐高；內容多的在自己那一層捲 */
   min-height: 0;
+  height: calc(var(--h, 1) * var(--row) + (var(--h, 1) - 1) * var(--gap));
   overflow: hidden;
   position: relative;
   grid-column: span var(--w, 2);
@@ -4000,6 +4015,11 @@ body::-webkit-scrollbar {
  * CSS 這邊沒有第二套算法，只是跟著它走。
  */
 .card.linkcard:has(.links[data-rows="1"]) {
+  /*
+   * 這是唯一一張高度由內容決定的卡。收起來之後那一列也跟著收 ——
+   * 沒有 height: auto 的話卡片縮了、列沒縮，空只是從卡片裡面搬到卡片下面。
+   */
+  height: auto;
   align-self: start;
 }
 
