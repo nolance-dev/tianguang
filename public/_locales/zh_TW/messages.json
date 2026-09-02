@@ -926,6 +926,9 @@
     "message": "一張裝 $1 個。要放更多就多開一張，不會自己長出來。"
   },
   "links_hint": {
-    "message": "左鍵開啟，Shift＋右鍵編輯，Shift＋右鍵拖動換位置"
+    "message": "左鍵開啟，拖動換位置，滑過去可以編輯或刪除"
+  },
+  "links_edit": {
+    "message": "編輯"
   }
 }

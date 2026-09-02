@@ -1421,7 +1421,8 @@ body::-webkit-scrollbar {
   border-style: dashed;
 }
 
-.slot .rm {
+.slot .rm,
+.slot .edit {
   position: absolute;
   top: -0.32rem;
   right: -0.32rem;
@@ -1442,8 +1443,17 @@ body::-webkit-scrollbar {
   transition: opacity 0.15s;
 }
 
+/* 編輯鈕跟刪除鈕同一套長相，位置在另一角 —— 兩顆並排在同一角會誤按 */
+.slot .edit {
+  left: -0.32rem;
+  right: auto;
+  font-size: 0.6rem;
+}
+
 .slot:hover .rm,
-.slot:focus-within .rm {
+.slot:focus-within .rm,
+.slot:hover .edit,
+.slot:focus-within .edit {
   opacity: 1;
 }
 
@@ -3577,6 +3587,22 @@ body::-webkit-scrollbar {
 /* 卡片再寬，表單也不必跟著拉長 —— 一行網址不需要 60rem */
 .card.linkcard .links.editing form.addform {
   width: min(22rem, 100%);
+}
+
+/*
+ * 卡片裡的兩顆小鈕要收進磚塊內側。
+ *
+ * 第一屏那排磚塊四周有空間，鈕可以掛在角上凸出去一點；卡片裡上緣就貼著標題列，
+ * 凸出去的部分會被裁掉半顆。
+ */
+.card.linkcard .slot .rm {
+  top: 0.12rem;
+  right: 0.12rem;
+}
+
+.card.linkcard .slot .edit {
+  top: 0.12rem;
+  left: 0.12rem;
 }
 
 /* 磚塊填滿自己那一欄。留著原本的固定寬度就會撐破格線 */

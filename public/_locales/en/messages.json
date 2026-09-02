@@ -890,6 +890,9 @@
     "message": "$1 per card. Add a card to hold more - they never appear on their own."
   },
   "links_hint": {
-    "message": "Left click opens, Shift+right click edits, Shift+right drag reorders"
+    "message": "Click opens, drag reorders, hover to edit or remove"
+  },
+  "links_edit": {
+    "message": "Edit"
   }
 }

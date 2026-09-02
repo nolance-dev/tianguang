@@ -852,7 +852,7 @@ describe("快速存取的張數由設定決定", () => {
 });
 
 
-describe("快速存取：Shift＋右鍵編輯與拖動", () => {
+describe("快速存取：編輯與拖動", () => {
   const seed = (n: number) =>
     Array.from({ length: n }, (_, i) => ({
       id: `l${i}`,
@@ -863,25 +863,15 @@ describe("快速存取：Shift＋右鍵編輯與拖動", () => {
   const put = (n: number) =>
     localStorage.setItem("tg.settings", JSON.stringify({ schemaVersion: 1, links: seed(n) }));
 
-  /** jsdom 沒有 PointerEvent，用 MouseEvent 補上 pointerId 就夠這幾個處理函式用 */
-  const ptr = (type: string, init: MouseEventInit & { pointerId?: number }) => {
-    const e = new MouseEvent(type, { bubbles: true, ...init });
-    Object.defineProperty(e, "pointerId", { value: init.pointerId ?? 1 });
-    return e;
-  };
-
-  it("Shift＋右鍵按一下不動 = 編輯，網址和名稱都帶進表單", async () => {
+  it("編輯鈕會帶著網址和名稱開表單", async () => {
     put(3);
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3));
 
     const slot = el.querySelector('.card.linkcard [data-i="1"]') as HTMLElement;
-    slot.dispatchEvent(ptr("pointerdown", { button: 2, shiftKey: true, clientX: 10, clientY: 10 }));
-    slot.dispatchEvent(ptr("pointerup", { button: 2, shiftKey: true, clientX: 10, clientY: 10 }));
+    (slot.querySelector(".edit") as HTMLButtonElement).click();
 
-    await vi.waitFor(() =>
-      expect(el.querySelector(".card.linkcard form.addform")).not.toBeNull(),
-    );
+    await vi.waitFor(() => expect(el.querySelector(".card.linkcard form.addform")).not.toBeNull());
     const inputs = el.querySelectorAll<HTMLInputElement>(".card.linkcard form.addform input");
     expect(inputs[0]!.value, "網址要帶進來，不然編輯等於重打一次").toBe("https://e1.com/");
     expect(inputs[1]!.value).toBe("站台1");
@@ -894,8 +884,7 @@ describe("快速存取：Shift＋右鍵編輯與拖動", () => {
     await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3));
 
     const slot = el.querySelector('.card.linkcard [data-i="0"]') as HTMLElement;
-    slot.dispatchEvent(ptr("pointerdown", { button: 2, shiftKey: true, clientX: 5, clientY: 5 }));
-    slot.dispatchEvent(ptr("pointerup", { button: 2, shiftKey: true, clientX: 5, clientY: 5 }));
+    (slot.querySelector(".edit") as HTMLButtonElement).click();
     await vi.waitFor(() => expect(el.querySelector("form.addform")).not.toBeNull());
 
     const form = el.querySelector("form.addform") as HTMLFormElement;
@@ -916,38 +905,31 @@ describe("快速存取：Shift＋右鍵編輯與拖動", () => {
     localStorage.removeItem("tg.settings");
   });
 
-  it("沒按 Shift 的右鍵什麼都不做，選單留給瀏覽器", async () => {
+  it("右鍵完全不碰 —— 選單留給瀏覽器", async () => {
     put(3);
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3));
 
     const slot = el.querySelector('.card.linkcard [data-i="1"]') as HTMLElement;
-    slot.dispatchEvent(ptr("pointerdown", { button: 2, clientX: 10, clientY: 10 }));
-    slot.dispatchEvent(ptr("pointerup", { button: 2, clientX: 10, clientY: 10 }));
+    for (const shift of [false, true]) {
+      const menu = new MouseEvent("contextmenu", { bubbles: true, cancelable: true, shiftKey: shift });
+      slot.dispatchEvent(menu);
+      expect(menu.defaultPrevented, "攔了瀏覽器選單就等於把它吃掉又不給替代品").toBe(false);
+    }
     expect(el.querySelector("form.addform")).toBeNull();
-
-    // 而且不攔 contextmenu —— 攔了等於把瀏覽器選單吃掉又不給替代品
-    const menu = new MouseEvent("contextmenu", { bubbles: true, cancelable: true });
-    slot.dispatchEvent(menu);
-    expect(menu.defaultPrevented).toBe(false);
     localStorage.removeItem("tg.settings");
   });
 
-  it("Shift＋右鍵拖到另一格 = 換位置", async () => {
+  it("左鍵拖曳換位置", async () => {
     put(3);
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3));
 
     const from = el.querySelector('.card.linkcard [data-i="0"]') as HTMLElement;
     const to = el.querySelector('.card.linkcard [data-i="2"]') as HTMLElement;
-    // jsdom 的 elementFromPoint 永遠回 null，這裡直接指定滑到誰身上
-    const real = document.elementFromPoint;
-    document.elementFromPoint = () => to;
-
-    from.dispatchEvent(ptr("pointerdown", { button: 2, shiftKey: true, clientX: 0, clientY: 0 }));
-    from.dispatchEvent(ptr("pointermove", { clientX: 80, clientY: 0 }));
-    from.dispatchEvent(ptr("pointerup", { clientX: 80, clientY: 0 }));
-    document.elementFromPoint = real;
+    from.dispatchEvent(new Event("dragstart", { bubbles: true }));
+    to.dispatchEvent(new Event("dragover", { bubbles: true, cancelable: true }));
+    to.dispatchEvent(new Event("drop", { bubbles: true, cancelable: true }));
 
     await vi.waitFor(() => {
       const saved = JSON.parse(localStorage.getItem("tg.settings")!);

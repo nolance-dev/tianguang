@@ -39,8 +39,6 @@ export function Links({ links, onChange, max }: Props) {
   const cols = useSignal(0);
   /** 正在編輯的那一個的 id。右鍵按著不動放開就進這個狀態 */
   const editing = useSignal<string | null>(null);
-  /** 右鍵拖曳的過程。from 是起點，moved 記有沒有真的移動過 */
-  const drag = useRef<{ from: number; x: number; y: number; moved: boolean } | null>(null);
   const rows = useSignal(0);
   const box = useRef<HTMLDivElement>(null);
 
@@ -119,49 +117,6 @@ export function Links({ links, onChange, max }: Props) {
           title={t("links_hint")}
           class={`slot${dragging.value === i ? " dragging" : ""}${over.value === i ? " over" : ""}`}
           draggable
-          /*
-           * Shift 加右鍵按著拖 = 換位置，Shift 加右鍵按一下不動 = 編輯。
-           *
-           * 左鍵留給「打開這個網站」—— 那是這張卡九成九的用途，不該為了換位置
-           * 而讓每一次點擊都先猜使用者要不要拖。
-           *
-           * 為什麼要多按一個 Shift：單純的右鍵在 Edge 上叫得出瀏覽器自己的選單，
-           * 頁面攔不乾淨。與其跟瀏覽器搶同一個手勢，不如換一個它不碰的組合 ——
-           * 而且沒按 Shift 的右鍵照樣有瀏覽器選單可用，不會被我們吃掉。
-           */
-          onContextMenu={(e) => {
-            // 只擋我們自己要用的那一種，其餘留給瀏覽器
-            if (e.shiftKey) e.preventDefault();
-          }}
-          onPointerDown={(e) => {
-            if (e.button !== 2 || !e.shiftKey) return;
-            e.preventDefault();
-            (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
-            drag.current = { from: i, x: e.clientX, y: e.clientY, moved: false };
-            dragging.value = i;
-          }}
-          onPointerMove={(e) => {
-            const d = drag.current;
-            if (!d) return;
-            // 幾個像素的手抖不算拖曳，否則右鍵一按就變成換位置，永遠進不了編輯
-            if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6) d.moved = true;
-            if (!d.moved) return;
-            const under = document.elementFromPoint?.(e.clientX, e.clientY);
-            const slot = under instanceof Element ? under.closest("[data-i]") : null;
-            const idx = slot ? Number((slot as HTMLElement).dataset.i) : NaN;
-            over.value = Number.isFinite(idx) ? idx : null;
-          }}
-          onPointerUp={(e) => {
-            const d = drag.current;
-            drag.current = null;
-            if (!d) return;
-            (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
-            const to = over.value;
-            dragging.value = null;
-            over.value = null;
-            if (!d.moved) editing.value = link.id;
-            else if (to !== null && to !== d.from) onChange(reorder(links, d.from, to));
-          }}
           onDragStart={() => (dragging.value = i)}
           onDragEnd={() => {
             dragging.value = null;
@@ -183,6 +138,21 @@ export function Links({ links, onChange, max }: Props) {
             <Icon link={link} />
             <span class="cap">{link.title}</span>
           </a>
+          {/*
+            * 編輯走一顆按鈕，不走右鍵。
+            *
+            * 右鍵在 Edge 上叫得出瀏覽器自己的選單，加不加 Shift 都攔不乾淨 ——
+            * 跟瀏覽器搶同一個手勢只會輸。一顆跟刪除並排的鈕沒有這個問題，
+            * 而且看得見：右鍵是要人猜的，鈕不用。
+            */}
+          <button
+            type="button"
+            class="edit"
+            aria-label={t("links_edit")}
+            onClick={() => (editing.value = link.id)}
+          >
+            ✎
+          </button>
           <button
             type="button"
             class="rm"

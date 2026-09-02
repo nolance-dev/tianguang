@@ -615,6 +615,9 @@
     "message": "一张装 $1 个。要放更多就多开一张，不会自己长出来。"
   },
   "links_hint": {
-    "message": "左键打开，Shift＋右键编辑，Shift＋右键拖动换位置"
+    "message": "左键打开，拖动换位置，滑过去可以编辑或删除"
+  },
+  "links_edit": {
+    "message": "编辑"
   }
 }
