@@ -1,5 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { t } from "../lib/i18n";
+import { useDialog } from "./useDialog";
 import { ENGINES } from "../lib/search";
 import { DEFAULT_DESK, DEFAULT_HOME_DESK, LINKS_PER_CARD } from "../lib/desk";
 import { SECOND_CALS } from "../lib/secondcal";
@@ -60,17 +61,10 @@ export function SettingsPanel({
   onRestore,
 }: Props) {
   const first = useRef<HTMLInputElement>(null);
-  useLayoutEffect(() => first.current?.focus(), []);
   const [tab, setTab] = useState<Tab>("general");
   const body = useRef<HTMLDivElement>(null);
 
-  const close = useRef(onClose);
-  close.current = onClose;
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close.current();
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
+  const box = useDialog<HTMLElement>(onClose, first);
 
   return (
     <div
@@ -78,6 +72,8 @@ export function SettingsPanel({
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <aside
+        ref={box}
+        tabIndex={-1}
         class="panel"
         role="dialog"
         aria-modal="true"

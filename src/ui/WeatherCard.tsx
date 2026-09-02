@@ -1,7 +1,12 @@
 import { useSignal } from "@preact/signals";
-import { useEffect } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
 import { isEnglish, t } from "../lib/i18n";
-import { condition, fetchWeather, formatTemp, type Weather as W } from "../lib/weather";
+import {
+  condition,
+  fetchWeather,
+  formatTemp,
+  type Weather as W,
+} from "../lib/weather";
 import { Radar } from "./Radar";
 
 /**
@@ -47,17 +52,27 @@ export function WeatherCard({ lat, lon, place, unit, dark }: Props) {
 
   const w = data.value;
 
-  const measure = (el: HTMLDivElement | null) => {
+  /*
+   * ref callback 每次 render 都是新的函式，Preact 每次都會再叫一遍 ——
+   * 而這張卡跟著時鐘每秒重繪。原本寫在 callback 裡，等於每秒新建一個
+   * ResizeObserver 而且從來沒有 disconnect（實測六次掛載就漏了八個）。
+   *
+   * 改成 effect + cleanup，跟 Links.tsx 和 Radar.tsx 一樣的寫法。
+   */
+  const boxRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const el = boxRef.current;
     if (!el || typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(([entry]) => {
       const r = entry!.contentRect;
       big.value = r.width >= RADAR_MIN.w && r.height >= RADAR_MIN.h;
     });
     ro.observe(el);
-  };
+    return () => ro.disconnect();
+  }, []);
 
   return (
-    <div class="wxcard" ref={measure} data-grab>
+    <div class="wxcard" ref={boxRef} data-grab>
       <div class="wx-now">
         {w ? (
           <>

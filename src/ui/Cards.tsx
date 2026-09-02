@@ -181,14 +181,21 @@ export function Cards({
       );
     };
     document.addEventListener("pointermove", onMove);
-    document.addEventListener(
-      "pointerup",
-      () => {
-        document.removeEventListener("pointermove", onMove);
-        commit();
-      },
-      { once: true },
-    );
+    /*
+     * pointercancel 也要收尾。
+     *
+     * 系統隨時可能把這次指標互動收回去（切到別的視窗、觸控被判成捲動、
+     * 筆離開感應範圍）。那時候 pointerup 永遠不會來，於是 held 一直是真，
+     * 卡片就黏在半透明的拖曳狀態上，放不下也拖不動，只能重新整理。
+     */
+    const done = () => {
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", done);
+      document.removeEventListener("pointercancel", done);
+      commit();
+    };
+    document.addEventListener("pointerup", done);
+    document.addEventListener("pointercancel", done);
   }
 
   function startResize(e: PointerEvent, tile: Tile) {
@@ -231,14 +238,21 @@ export function Cards({
       slide(grid.current, () => (live.value = next));
     };
     document.addEventListener("pointermove", onMove);
-    document.addEventListener(
-      "pointerup",
-      () => {
-        document.removeEventListener("pointermove", onMove);
-        commit();
-      },
-      { once: true },
-    );
+    /*
+     * pointercancel 也要收尾。
+     *
+     * 系統隨時可能把這次指標互動收回去（切到別的視窗、觸控被判成捲動、
+     * 筆離開感應範圍）。那時候 pointerup 永遠不會來，於是 held 一直是真，
+     * 卡片就黏在半透明的拖曳狀態上，放不下也拖不動，只能重新整理。
+     */
+    const done = () => {
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", done);
+      document.removeEventListener("pointercancel", done);
+      commit();
+    };
+    document.addEventListener("pointerup", done);
+    document.addEventListener("pointercancel", done);
   }
 
   /** 一個把手同時管大小與位置：方向鍵改大小，Shift 加方向鍵換位置 */
@@ -248,9 +262,38 @@ export function Cards({
     if (!dx && !dy) return;
     e.preventDefault();
     const next = e.shiftKey
-      ? nudge(order, tile.id, dx || dy)
+      ? nudgeVisible(order, tile.id, dx || dy, new Set(tiles.map((t) => t.id)))
       : resize(order, tile.id, tile.w + dx, tile.h + dy);
     slide(grid.current, () => onDesk(next));
+  }
+
+  /*
+   * Shift+方向鍵換位置，要跳過畫面上沒有的那幾張。
+   *
+   * order 裡有全部的卡（關掉的也留著，開回來還在原位），但畫面上只有 tiles。
+   * 直接 nudge 一格，如果隔壁那張正好是關掉的，看起來就是「按了沒反應」——
+   * 而使用者只能再按一次，多按幾次才動一格。
+   *
+   * 所以一直推到「看得見的順序」真的變了為止。推不動就還原，不要留下一個
+   * 只換了隱藏卡片位置的結果。
+   */
+  function nudgeVisible(
+    list: Tile[],
+    id: TileId,
+    dir: number,
+    shown: Set<TileId>,
+  ): Tile[] {
+    const seen = (l: Tile[]) =>
+      l.filter((t) => shown.has(t.id)).findIndex((t) => t.id === id);
+    const from = seen(list);
+    let next = list;
+    for (let i = 0; i < list.length; i++) {
+      const step = nudge(next, id, dir);
+      if (step === next) return list; // already at the end
+      next = step;
+      if (seen(next) !== from) return next;
+    }
+    return list;
   }
 
   if (tiles.length === 0) return null;

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import {
   isEnglish,
   outerRingName,
@@ -10,6 +10,7 @@ import { roman } from "../lib/roman";
 import { indexAt } from "../lib/shichen";
 import { moonIndex, jieqiIndex, sunTimes } from "../lib/solar";
 import { FourSymbols } from "./FourSymbols";
+import { useDialog } from "./useDialog";
 import { Margins } from "./Margins";
 
 /**
@@ -111,37 +112,41 @@ export function Dial({ now, lat, lon, onClose }: Props) {
    * 收掉之後才觸發。state 要等重繪才看得到新值，擋不住同一輪裡的第二次。
    */
   const going = useRef(false);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape" || going.current) return;
-      going.current = true;
-      /*
-       * 收起來要看得見。
-       *
-       * 原本按下 Esc 是直接卸載 —— 進場鋪了五秒，出場是一刀切回主畫面，
-       * 兩邊對不上。拿掉 .in 就會沿著進場那條路倒著走回去，方向本來就是對的，
-       * 只是要快得多（見 .dial.out）。
-       *
-       * 關掉動畫的人不該為了看不見的過場等這 260 毫秒，直接卸載。
-       */
-      const still =
-        typeof matchMedia === "function" &&
-        matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (still) {
-        close.current();
-        return;
-      }
-      setLeaving(true);
-      setTimeout(() => close.current(), EXIT_MS);
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
 
-  // 盤面沒有關閉鈕，出口只有 Esc。焦點必須落進對話框本身，
-  // 否則焦點還留在底下那顆看不見的按鈕上，讀屏會唸盤面外面的東西。
-  const boxRef = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => boxRef.current?.focus(), []);
+  /*
+   * 收起來要看得見。
+   *
+   * 原本按下 Esc 是直接卸載 —— 進場鋪了五秒，出場是一刀切回主畫面，
+   * 兩邊對不上。拿掉 .in 就會沿著進場那條路倒著走回去，方向本來就是對的，
+   * 只是要快得多（見 .dial.out）。
+   *
+   * 關掉動畫的人不該為了看不見的過場等這 260 毫秒，直接卸載。
+   *
+   * going 是 ref 不是 state：連按兩下 Esc 會排兩個計時器，第二個在畫面已經
+   * 收掉之後才觸發。state 要等重繪才看得到新值，擋不住同一輪裡的第二次。
+   */
+  function leave() {
+    if (going.current) return;
+    going.current = true;
+    const still =
+      typeof matchMedia === "function" &&
+      matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (still) {
+      close.current();
+      return;
+    }
+    setLeaving(true);
+    setTimeout(() => close.current(), EXIT_MS);
+  }
+
+  /*
+   * Esc、焦點鎖、關閉後歸位都走共用的 hook，只是關法換成上面那個帶過場的。
+   *
+   * 盤面裡一個可聚焦的元素都沒有（連關閉鈕都沒有），所以 hook 會把焦點留在
+   * 盤本身，Tab 也哪裡都不去 —— 不然一個 Tab 就會落到盤底下那些看不見、
+   * 也點不到的控制項上，讀屏會開始唸盤面外面的東西。
+   */
+  const boxRef = useDialog<HTMLDivElement>(leave);
 
   const en = isEnglish();
   const minute = now.getMinutes();

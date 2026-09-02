@@ -1,6 +1,7 @@
 import { useSignal } from "@preact/signals";
-import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
+import { useEffect, useRef } from "preact/hooks";
 import { t } from "../lib/i18n";
+import { useDialog } from "./useDialog";
 import {
   activate,
   bookmarks,
@@ -24,7 +25,13 @@ import { resolve } from "../lib/search";
  * 沒有任何結果時，Enter 直接拿去搜尋。這個框不該有死路。
  */
 
-const SOURCES: SourceId[] = ["tabs", "bookmarks", "history", "sessions", "downloads"];
+const SOURCES: SourceId[] = [
+  "tabs",
+  "bookmarks",
+  "history",
+  "sessions",
+  "downloads",
+];
 
 interface Props {
   engineId: string;
@@ -42,7 +49,14 @@ export function Palette({ engineId, onClose }: Props) {
   const inExtension = typeof chrome !== "undefined" && !!chrome.permissions;
   const listRef = useRef<HTMLUListElement>(null);
 
-  useLayoutEffect(() => input.current?.focus(), []);
+  /*
+   * Esc 原本只綁在下面那個 input 的 onKeyDown 上。
+   *
+   * 焦點一離開輸入框（按一次 Tab 就會），就再也沒有鍵盤的出口了 ——
+   * 其他三個整屏畫面都是掛在 document 上的，只有這裡不是。
+   * 改用共用的 hook，順便一併拿到焦點鎖與關閉後歸位。
+   */
+  const box = useDialog<HTMLDivElement>(onClose, input);
 
   const close = useRef(onClose);
   close.current = onClose;
@@ -105,7 +119,14 @@ export function Palette({ engineId, onClose }: Props) {
 
   return (
     <div class="pal" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div class="pal-box" role="dialog" aria-modal="true" aria-label={t("pal_title")}>
+      <div
+        ref={box}
+        tabIndex={-1}
+        class="pal-box"
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("pal_title")}
+      >
         <div class="pal-head">
           <span aria-hidden="true">⌕</span>
           <input
@@ -118,8 +139,8 @@ export function Palette({ engineId, onClose }: Props) {
             spellcheck={false}
             onInput={(e) => (query.value = e.currentTarget.value)}
             onKeyDown={(e) => {
-              if (e.key === "Escape") onClose();
-              else if (e.key === "ArrowDown") {
+              // Esc 交給 useDialog 的 document 監聽器，這裡不必再攔一次
+              if (e.key === "ArrowDown") {
                 e.preventDefault();
                 go(1);
               } else if (e.key === "ArrowUp") {
@@ -146,7 +167,9 @@ export function Palette({ engineId, onClose }: Props) {
                 onClick={async () => {
                   // 必須在使用者手勢裡呼叫，所以請求寫在 onClick
                   try {
-                    if (await chrome.permissions.request(SOURCE_PERMISSIONS[s])) {
+                    if (
+                      await chrome.permissions.request(SOURCE_PERMISSIONS[s])
+                    ) {
                       await refreshGrants();
                     }
                   } catch {
@@ -188,9 +211,9 @@ export function Palette({ engineId, onClose }: Props) {
               ? t("pal_devmode")
               : granted.value.length === 0
                 ? t("pal_empty_nogrant")
-              : query.value
-                ? t("pal_empty_search")
-                : t("pal_empty_type")}
+                : query.value
+                  ? t("pal_empty_search")
+                  : t("pal_empty_type")}
           </p>
         )}
       </div>

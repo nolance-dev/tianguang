@@ -372,6 +372,14 @@ body::-webkit-scrollbar {
   *::after {
     transition-duration: 1ms !important;
     animation-duration: 1ms !important;
+    /*
+     * 迴圈次數也要壓成一次。
+     *
+     * 只壓時長的話，animation: ... infinite 變成每秒重播一千次 —— 那不是
+     * 靜止，是把慢慢的起伏換成高頻抖動，對要求減少動態的人來說比原本更糟。
+     * 實測第一屏那個下捲提示的箭頭，逐幀之間跳動 4.6 像素，而且永遠不停。
+     */
+    animation-iteration-count: 1 !important;
   }
 }
 

@@ -1,6 +1,7 @@
 import { useSignal } from "@preact/signals";
-import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
+import { useEffect, useRef } from "preact/hooks";
 import { t } from "../lib/i18n";
+import { useDialog } from "./useDialog";
 import {
   clock,
   countOnDay,
@@ -48,15 +49,7 @@ export function Focus({ work, onChange, onClose }: Props) {
   const filter = useSignal<string>("");
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  useLayoutEffect(() => closeRef.current?.focus(), []);
-
-  const close = useRef(onClose);
-  close.current = onClose;
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close.current();
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
+  const box = useDialog<HTMLDivElement>(onClose, closeRef);
 
   const p = work.pomodoro;
   const total = durationMs(p.mode, work.durations);
@@ -90,7 +83,14 @@ export function Focus({ work, onChange, onClose }: Props) {
   const peak = Math.max(1, ...bars.map((b) => b.ms));
 
   return (
-    <div class="full solid" role="dialog" aria-modal="true" aria-label={t("c_pomodoro")}>
+    <div
+      ref={box}
+      tabIndex={-1}
+      class="full solid"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t("c_pomodoro")}
+    >
       <header class="full-top">
         <button
           ref={closeRef}
@@ -135,7 +135,10 @@ export function Focus({ work, onChange, onClose }: Props) {
             >
               {t(isRunning(p) ? "c_pomo_pause" : "c_pomo_start")}
             </button>
-            <button type="button" onClick={() => onChange({ pomodoro: reset(p) })}>
+            <button
+              type="button"
+              onClick={() => onChange({ pomodoro: reset(p) })}
+            >
               {t("c_pomo_reset")}
             </button>
             {/* 提交＝把到目前為止的時間記下來就收工，不必等它跑完。
@@ -151,7 +154,9 @@ export function Focus({ work, onChange, onClose }: Props) {
 
           <div class="fo-chips">
             <span>
-              {t("fo_round")} {roundsToday(work) % ROUND || (roundsToday(work) ? ROUND : 0)}/{ROUND}
+              {t("fo_round")}{" "}
+              {roundsToday(work) % ROUND || (roundsToday(work) ? ROUND : 0)}/
+              {ROUND}
             </span>
             <span>{isRunning(p) ? t("fo_running") : t("fo_ready")}</span>
           </div>
@@ -162,7 +167,12 @@ export function Focus({ work, onChange, onClose }: Props) {
               <select
                 value={p.projectId ?? ""}
                 onChange={(e) =>
-                  onChange({ pomodoro: { ...p, projectId: e.currentTarget.value || null } })
+                  onChange({
+                    pomodoro: {
+                      ...p,
+                      projectId: e.currentTarget.value || null,
+                    },
+                  })
                 }
               >
                 <option value="">{t("fo_no_project")}</option>
@@ -180,7 +190,9 @@ export function Focus({ work, onChange, onClose }: Props) {
               <select
                 value={p.todoId ?? ""}
                 onChange={(e) =>
-                  onChange({ pomodoro: { ...p, todoId: e.currentTarget.value || null } })
+                  onChange({
+                    pomodoro: { ...p, todoId: e.currentTarget.value || null },
+                  })
                 }
               >
                 <option value="">{t("fo_no_task")}</option>
@@ -230,7 +242,10 @@ export function Focus({ work, onChange, onClose }: Props) {
                   </button>
                 ))}
               </div>
-              <select value={filter.value} onChange={(e) => (filter.value = e.currentTarget.value)}>
+              <select
+                value={filter.value}
+                onChange={(e) => (filter.value = e.currentTarget.value)}
+              >
                 <option value="">{t("fo_all_projects")}</option>
                 {work.projects.map((pr) => (
                   <option key={pr.id} value={pr.id}>
@@ -241,9 +256,17 @@ export function Focus({ work, onChange, onClose }: Props) {
             </div>
 
             {/* 圖自己畫。一排長條加一條基線，圖表套件的體積比這件事大十倍 */}
-            <div class="fo-chart" role="img" aria-label={t("fo_chart", String(span.value))}>
+            <div
+              class="fo-chart"
+              role="img"
+              aria-label={t("fo_chart", String(span.value))}
+            >
               {bars.map((b) => (
-                <span key={b.day} class="bar" title={`${b.day} · ${minutes(b.ms)}`}>
+                <span
+                  key={b.day}
+                  class="bar"
+                  title={`${b.day} · ${minutes(b.ms)}`}
+                >
                   <i style={{ height: `${(b.ms / peak) * 100}%` }} />
                 </span>
               ))}
@@ -256,7 +279,13 @@ export function Focus({ work, onChange, onClose }: Props) {
   );
 }
 
-function Projects({ work, onChange }: { work: Workspace; onChange: (p: Partial<Workspace>) => void }) {
+function Projects({
+  work,
+  onChange,
+}: {
+  work: Workspace;
+  onChange: (p: Partial<Workspace>) => void;
+}) {
   const draft = useSignal("");
   const active = work.pomodoro.projectId;
 
@@ -289,7 +318,10 @@ function Projects({ work, onChange }: { work: Workspace; onChange: (p: Partial<W
       <ul class="fo-list">
         {work.projects.map((pr) => (
           <li key={pr.id} class={pr.id === active ? "on" : undefined}>
-            <i class="hue" style={{ background: `oklch(0.72 0.13 ${pr.hue})` }} />
+            <i
+              class="hue"
+              style={{ background: `oklch(0.72 0.13 ${pr.hue})` }}
+            />
             <span class="name">{pr.name}</span>
             <button
               type="button"
@@ -326,7 +358,9 @@ function Projects({ work, onChange }: { work: Workspace; onChange: (p: Partial<W
             </button>
           </li>
         ))}
-        {work.projects.length === 0 && <li class="empty">{t("fo_no_projects")}</li>}
+        {work.projects.length === 0 && (
+          <li class="empty">{t("fo_no_projects")}</li>
+        )}
       </ul>
     </div>
   );

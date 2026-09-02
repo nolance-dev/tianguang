@@ -1,5 +1,6 @@
 import { useSignal } from "@preact/signals";
-import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
+import { useDialog } from "./useDialog";
+import { useRef } from "preact/hooks";
 import { isEnglish, t } from "../lib/i18n";
 import {
   byDay,
@@ -50,7 +51,9 @@ export function CalendarCard({ events, now, secondCal, holiday }: CardProps) {
         {sub && <i>{sub.text}</i>}
       </span>
       {holiday && <span class="cal-holi">{holiday}</span>}
-      {busy > 0 && <span class="cal-busy">{t("cal_today_count", String(busy))}</span>}
+      {busy > 0 && (
+        <span class="cal-busy">{t("cal_today_count", String(busy))}</span>
+      )}
     </div>
   );
 }
@@ -79,15 +82,8 @@ export function CalendarDetail({
   const picked = useSignal(ymd(now));
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  useLayoutEffect(() => closeRef.current?.focus(), []);
-
-  const close = useRef(onClose);
-  close.current = onClose;
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close.current();
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
+  // 焦點鎖在框裡、Esc 關閉、關掉之後還給打開它的那個元素，都在這個 hook 裡
+  const box = useDialog<HTMLDivElement>(onClose, closeRef);
 
   const grouped = byDay(events);
   const cells = monthGrid(year.value, month.value);
@@ -104,7 +100,14 @@ export function CalendarDetail({
   }
 
   return (
-    <div class="full" role="dialog" aria-modal="true" aria-label={t("c_calendar")}>
+    <div
+      ref={box}
+      tabIndex={-1}
+      class="full"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t("c_calendar")}
+    >
       <header class="full-top">
         <button
           ref={closeRef}
@@ -129,13 +132,24 @@ export function CalendarDetail({
           >
             {t("cal_today")}
           </button>
-          <button type="button" onClick={() => jump(-1)} aria-label={t("cal_prev")}>
+          <button
+            type="button"
+            onClick={() => jump(-1)}
+            aria-label={t("cal_prev")}
+          >
             ‹
           </button>
           <b class="cal-when">
-            {label(new Date(year.value, month.value, 1), { year: "numeric", month: "long" })}
+            {label(new Date(year.value, month.value, 1), {
+              year: "numeric",
+              month: "long",
+            })}
           </b>
-          <button type="button" onClick={() => jump(1)} aria-label={t("cal_next")}>
+          <button
+            type="button"
+            onClick={() => jump(1)}
+            aria-label={t("cal_next")}
+          >
             ›
           </button>
         </div>
@@ -146,7 +160,10 @@ export function CalendarDetail({
           <div class="cal-grid">
             <span class="cal-head wk">{t("cal_week")}</span>
             {cells.slice(0, 7).map((d) => (
-              <span key={`h${d.getDay()}`} class={`cal-head${d.getDay() === 0 ? " sun" : ""}`}>
+              <span
+                key={`h${d.getDay()}`}
+                class={`cal-head${d.getDay() === 0 ? " sun" : ""}`}
+              >
                 {label(d, { weekday: "short" })}
               </span>
             ))}
@@ -176,7 +193,9 @@ export function CalendarDetail({
                 >
                   <span class="row1">
                     <span class="num">{d.getDate()}</span>
-                    {sub && <i class={sub.lead ? "sub lead" : "sub"}>{sub.text}</i>}
+                    {sub && (
+                      <i class={sub.lead ? "sub lead" : "sub"}>{sub.text}</i>
+                    )}
                   </span>
                   {holi && <span class="holiname">{holi[0]}</span>}
                   {mine.slice(0, PER_CELL).map((e) => (
@@ -186,7 +205,9 @@ export function CalendarDetail({
                     </span>
                   ))}
                   {mine.length > PER_CELL && (
-                    <span class="more">{t("cal_more", String(mine.length - PER_CELL))}</span>
+                    <span class="more">
+                      {t("cal_more", String(mine.length - PER_CELL))}
+                    </span>
                   )}
                 </button>
               );
@@ -211,7 +232,10 @@ export function CalendarDetail({
             </span>
           ))}
 
-          <AddEvent date={picked.value} onAdd={(e) => onChange([...events, e])} />
+          <AddEvent
+            date={picked.value}
+            onAdd={(e) => onChange([...events, e])}
+          />
 
           <ul class="cal-list">
             {dayEvents.map((e) => (
@@ -236,7 +260,13 @@ export function CalendarDetail({
   );
 }
 
-function AddEvent({ date, onAdd }: { date: string; onAdd: (e: Event) => void }) {
+function AddEvent({
+  date,
+  onAdd,
+}: {
+  date: string;
+  onAdd: (e: Event) => void;
+}) {
   const text = useSignal("");
   const time = useSignal("");
 
