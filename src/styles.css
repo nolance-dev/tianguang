@@ -570,9 +570,61 @@ body::-webkit-scrollbar {
   animation-delay: 1.4s;
 }
 
+/*
+ * 當令的那幾個字改用光暈參與呼吸，不用亮度。
+ *
+ * 它們的亮度已經是滿的，再往上沒有空間 —— 上下限都設成 1 是為了讓動畫不要
+ * 反過來把它們拉暗。結果是整個盤都在呼吸，只有你正在看的那幾個字是死的。
+ * 光暈是另一條路：不動亮度，改讓它們在氣走到的時候發一點金光。
+ */
 .dial :is(.rn, .ar, .hr, .jq, .bch).on {
   --fo: 1;
   --fo-hi: 1;
+  filter: drop-shadow(0 0 calc(5px * var(--v)) var(--gold));
+}
+
+/*
+ * 刻線也要呼吸。
+ *
+ * 本來只有字會亮 —— 氣走過一圈，那一圈的數字亮起來，旁邊的刻線卻不動，
+ * 看起來像是字在自己閃，不是有東西掃過這一圈。刻線一起亮，那口氣才是
+ * 「穿過這一環」。
+ *
+ * 動的是 opacity 不是 stroke-opacity：每根刻線本來就有自己的 stroke-opacity
+ * （逢五的 .34、其餘 .14、節氣 .18、時辰 .22），opacity 是乘上去的，
+ * 所以一條規則就能讓每根線各自按自己的底亮起來，不必逐根掛變數。
+ *
+ * 波形和延遲跟同一環的字一致 —— 兩者本來就該同時亮。
+ */
+.dial .rg line {
+  opacity: calc(0.7 + 0.3 * var(--v));
+  animation: var(--wave, wave-near) 5s ease-in-out infinite;
+  animation-delay: var(--wd, 0s);
+}
+
+.dial .rg-sun {
+  --wave: wave-near;
+  --wd: 0.16s;
+}
+
+.dial .rg-sc {
+  --wave: wave-near;
+  --wd: 0.4s;
+}
+
+.dial .rg-jq {
+  --wave: wave-mid;
+  --wd: 0.72s;
+}
+
+.dial .rg-hour {
+  --wave: wave-far;
+  --wd: 1.06s;
+}
+
+.dial .rg-min {
+  --wave: wave-far;
+  --wd: 1.4s;
 }
 
 /*
@@ -730,13 +782,21 @@ body::-webkit-scrollbar {
   .dial .marg .mrow,
   .dial .sunarc,
   .dial .sunmark,
+  .dial .rg line,
+  .dial .sx-line,
+  .dial .dial-mark,
   .dial :is(.rn, .ar, .hr, .jq, .bch, .sunlab) {
     animation: none;
   }
 
-  /* 弧不畫了就要整條在，不能停在「畫到一半」 */
-  .dial .sunarc {
+  /* 線不畫了就要整條在，不能停在「畫到一半」 */
+  .dial :is(.sunarc, .sx-line) {
     stroke-dasharray: none;
+  }
+
+  /* --v 停在 0，刻線的 opacity 會卡在 0.7；不呼吸就該是滿的 */
+  .dial .rg line {
+    opacity: 1;
   }
 
   /* --v 停在 0 就是各自的谷底。字的谷底本來就是原本的亮度，
@@ -895,6 +955,27 @@ body::-webkit-scrollbar {
 }
 
 /*
+ * 頂端那個記號先落下來。
+ *
+ * 盤上每一環最後都停在它底下 —— 它是「現在」在哪的那個參考點。參考點跟著
+ * 整層一起淡出來，等於它跟其他東西同時到；先落下、再讓環轉進來，
+ * 才是「這裡是現在，其他東西對過來」。
+ *
+ * 掛在 .dial-wrap > svg 裡面，那一層自己也在做 scale 進場，所以這裡只動
+ * translate 和 opacity，不再疊第二個縮放。
+ */
+.dial .dial-mark {
+  animation: mark-drop 0.66s cubic-bezier(0.16, 1, 0.3, 1) 0.1s backwards;
+}
+
+@keyframes mark-drop {
+  from {
+    opacity: 0;
+    translate: 0 -14px;
+  }
+}
+
+/*
  * 中央讀數自己浮上來，不只是跟著整層一起淡。
  *
  * 只給 0.12 秒的延遲：這裡是來看時間的，把時間吊在後面三秒才給不是設計是刁難。
@@ -1000,24 +1081,28 @@ body::-webkit-scrollbar {
  */
 .dial .sx-0 {
   transition-delay: 2.6s;
+  --draw: 2.6s;
   top: 2.5vh;
   left: 2vw;
 }
 
 .dial .sx-3 {
   transition-delay: 3.14s;
+  --draw: 3.14s;
   top: 2.5vh;
   right: 2vw;
 }
 
 .dial .sx-1 {
   transition-delay: 2.78s;
+  --draw: 2.78s;
   bottom: 2.5vh;
   left: 2vw;
 }
 
 .dial .sx-2 {
   transition-delay: 2.96s;
+  --draw: 2.96s;
   bottom: 2.5vh;
   right: 2vw;
 }
@@ -1026,12 +1111,33 @@ body::-webkit-scrollbar {
   opacity: 1;
 }
 
+/*
+ * 四象的連線自己畫出來，一角接一角。
+ *
+ * 那條折線就是這隻獸的形狀 —— 七個點誰接誰，接起來才看得出是龍是虎。
+ * 直接畫好，它是一團線；讓它從頭畫到尾，那個形狀才被說了一次。
+ *
+ * 延遲接著各角自己淡入的時間（見 .sx-0 到 .sx-3 的 transition-delay），
+ * 所以順序仍然是東、北、西、南，跟盤上每一環轉的方向同一個手勢。
+ */
 .sx-line {
   stroke: var(--sx);
   stroke-opacity: 0.3;
   stroke-width: 1;
   stroke-linecap: round;
   stroke-linejoin: round;
+  stroke-dasharray: 1;
+  animation: sx-draw 1.4s cubic-bezier(0.33, 1, 0.68, 1) var(--draw, 2.6s)
+    backwards;
+}
+
+@keyframes sx-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 .sx-dot {

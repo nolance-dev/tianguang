@@ -226,7 +226,7 @@ export function Dial({ now, lat, lon, onClose }: Props) {
           ))}
 
           {/* 一環：六十分刻，一小時一圈，整分才跳。逢五羅馬數字，其餘小阿拉伯數字 */}
-          <g style={spin(minAngle, 1.97)}>
+          <g class="rg rg-min" style={spin(minAngle, 1.97)}>
             {Array.from({ length: 60 }, (_, i) => {
               const m = i + 1;
               const five = m % 5 === 0;
@@ -256,7 +256,7 @@ export function Dial({ now, lat, lon, onClose }: Props) {
           </g>
 
           {/* 二環：二十四小時，一天一圈，整點才跳 */}
-          <g style={spin(hourAngle, 1.47)}>
+          <g class="rg rg-hour" style={spin(hourAngle, 1.47)}>
             {Array.from({ length: 24 }, (_, h) => (
               <g key={h} transform={`rotate(${h * 15} ${C} ${C})`}>
                 <text
@@ -282,7 +282,7 @@ export function Dial({ now, lat, lon, onClose }: Props) {
           </g>
 
           {/* 三環：節氣（中）／月名（英），一年一圈。標籤置於格中央，所以偏移半格 */}
-          <g style={spin(outerAngle, 1.17)}>
+          <g class="rg rg-jq" style={spin(outerAngle, 1.17)}>
             {Array.from({ length: outerCount }, (_, i) => (
               <g
                 key={i}
@@ -310,7 +310,7 @@ export function Dial({ now, lat, lon, onClose }: Props) {
           </g>
 
           {/* 四環：十二時辰／十二光相，兩小時跳一格 */}
-          <g style={spin(scAngle, 1.27)}>
+          <g class="rg rg-sc" style={spin(scAngle, 1.27)}>
             {Array.from({ length: 12 }, (_, k) => (
               <g key={k} transform={`rotate(${k * 30} ${C} ${C})`}>
                 <text
@@ -336,7 +336,7 @@ export function Dial({ now, lat, lon, onClose }: Props) {
           </g>
 
           {/* 五環：日照弧 */}
-          <g style={spin(sunAngle, 0.92)}>
+          <g class="rg rg-sun" style={spin(sunAngle, 0.92)}>
             <circle
               class="nitearc"
               cx={C}
