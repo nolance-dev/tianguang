@@ -1424,6 +1424,13 @@ body::-webkit-scrollbar {
 .slot .rm,
 .slot .edit {
   position: absolute;
+  /*
+   * 按鈕預設有 padding: 1px 6px。這顆鈕只有 18px 見方，左右各扣掉 6 之後
+   * 內容區只剩 4px 寬 —— 比裡面的圖示還窄。格線的置中在「東西比容器大」時
+   * 會退回靠起點（避免溢出到看不見的那一邊），所以圖示就被推到偏右 2.8px，
+   * 看起來永遠不正。量出來的：鈕中心 147.50、圖中心 150.26。
+   */
+  padding: 0;
   top: -0.32rem;
   right: -0.32rem;
   width: 1.15rem;
