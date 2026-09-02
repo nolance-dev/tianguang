@@ -12,8 +12,20 @@
  * 兩個地方用它：工作區的卡片換位置改大小（.card），
  * 以及快速存取裡的磚塊互換順序（.slot）。兩邊的手感要一樣。
  *
- * 只補位移，不補縮放：東西變大變小是瞬間的，但拉伸中的文字很難看，
- * 而且那 200 毫秒裡使用者看的是自己拉的那一個，不是它的字。
+ * 位移和大小都補，但用的不是同一招：
+ *
+ * 位移走 transform（合成器處理，不觸發版面）。大小走 width / height ——
+ * 不是 scale。scale 會把字一起拉長，200 毫秒的變形文字很難看；動真正的寬高
+ * 是讓內容照新尺寸重新排版一次，字從頭到尾都是正的。代價是這段期間每一幀
+ * 都要算版面，所以只有真的改了大小的那一個會走這條路（差不到一像素就跳過），
+ * 拖著換位置的那幾張只有 transform。
+ *
+ * 卡片身上有 container-type: inline-size，寬度動的時候容器查詢會跟著重算 ——
+ * 那是好事：卡片變寬，裡面「變寬就多顯示一點」的規則是一路跟著長出來的，
+ * 不是最後一幀才突然跳出來。
+ *
+ * 收尾不留痕跡：fill 用預設的 none，動畫一結束 width / height 就交還給格線，
+ * 而格線算出來的正好是動畫的終點值，所以不會回彈。
  *
  * 用 element.animate() 不是 CSS transition，所以 styles.css 那條全域的
  * prefers-reduced-motion 管不到它 —— 這裡自己問一次。
@@ -54,11 +66,30 @@ export function slide(
       const b = node.getBoundingClientRect();
       const dx = a.left - b.left;
       const dy = a.top - b.top;
-      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) continue;
-      const anim = node.animate(
-        [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "none" }],
-        { duration: FLIP_MS, easing: EASE },
-      );
+      const dw = a.width - b.width;
+      const dh = a.height - b.height;
+      const moved = Math.abs(dx) >= 1 || Math.abs(dy) >= 1;
+      const sized = Math.abs(dw) >= 1 || Math.abs(dh) >= 1;
+      if (!moved && !sized) continue;
+
+      const from: Keyframe = {};
+      const to: Keyframe = {};
+      if (moved) {
+        from.transform = `translate(${dx}px, ${dy}px)`;
+        to.transform = "none";
+      }
+      if (sized) {
+        // border-box 是全域設定，所以量到的外框尺寸就是 width / height 的值
+        from.width = `${a.width}px`;
+        from.height = `${a.height}px`;
+        to.width = `${b.width}px`;
+        to.height = `${b.height}px`;
+      }
+
+      const anim = node.animate([from, to], {
+        duration: FLIP_MS,
+        easing: EASE,
+      });
       flying.set(node, anim);
     }
   });

@@ -1,5 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
-import { isEnglish, outerRingName, shichenAlt, shichenName, t } from "../lib/i18n";
+import {
+  isEnglish,
+  outerRingName,
+  shichenAlt,
+  shichenName,
+  t,
+} from "../lib/i18n";
 import { roman } from "../lib/roman";
 import { indexAt } from "../lib/shichen";
 import { moonIndex, jieqiIndex, sunTimes } from "../lib/solar";
@@ -32,6 +38,14 @@ const LITE = [
   { r: 204, lo: 0.07, hi: 0.38, glow: 7, delay: 0.85, wave: "wave-mid" },
   { r: 250, lo: 0.06, hi: 0.36, glow: 8, delay: 1.2, wave: "wave-far" },
 ];
+/*
+ * 收盤要跑多久。
+ *
+ * 比進場短很多：進場可以鋪陳，退場拖就是擋路 —— 按了 Esc 的人已經要去別的地方了。
+ * 這個值跟 styles.css 裡 .dial.out 那幾條的時長綁在一起，改一邊要改兩邊。
+ */
+const EXIT_MS = 260;
+
 const TAU_SEC = 6; // 每秒六度
 const TAU_MIN = 6; // 每分六度
 const TAU_HOUR = 15; // 每小時十五度
@@ -76,6 +90,7 @@ function useMonotonicAngle(target: number, active: boolean): number {
 export function Dial({ now, lat, lon, onClose }: Props) {
   const [shown, setShown] = useState(false);
   const [ready, setReady] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => setShown(true));
@@ -91,12 +106,37 @@ export function Dial({ now, lat, lon, onClose }: Props) {
   // 用 ref 接住最新的，監聽器只掛一次。
   const close = useRef(onClose);
   close.current = onClose;
+  /*
+   * going 是 ref 不是 state：連按兩下 Esc 會排兩個計時器，第二個在畫面已經
+   * 收掉之後才觸發。state 要等重繪才看得到新值，擋不住同一輪裡的第二次。
+   */
+  const going = useRef(false);
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close.current();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || going.current) return;
+      going.current = true;
+      /*
+       * 收起來要看得見。
+       *
+       * 原本按下 Esc 是直接卸載 —— 進場鋪了五秒，出場是一刀切回主畫面，
+       * 兩邊對不上。拿掉 .in 就會沿著進場那條路倒著走回去，方向本來就是對的，
+       * 只是要快得多（見 .dial.out）。
+       *
+       * 關掉動畫的人不該為了看不見的過場等這 260 毫秒，直接卸載。
+       */
+      const still =
+        typeof matchMedia === "function" &&
+        matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (still) {
+        close.current();
+        return;
+      }
+      setLeaving(true);
+      setTimeout(() => close.current(), EXIT_MS);
+    };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, []);
-
 
   // 盤面沒有關閉鈕，出口只有 Esc。焦點必須落進對話框本身，
   // 否則焦點還留在底下那顆看不見的按鈕上，讀屏會唸盤面外面的東西。
@@ -113,7 +153,8 @@ export function Dial({ now, lat, lon, onClose }: Props) {
   const secAngleRef = useRef(0);
   {
     const target = second * TAU_SEC;
-    const forward = (((target - (secAngleRef.current % 360)) % 360) + 360) % 360;
+    const forward =
+      (((target - (secAngleRef.current % 360)) % 360) + 360) % 360;
     secAngleRef.current += forward;
   }
 
@@ -123,11 +164,17 @@ export function Dial({ now, lat, lon, onClose }: Props) {
 
   // 分段的環一律停在「當下這一格」的正中央，換格才轉。標籤本來就畫在格中央
   // （下面那個 +0.5），所以角度也要算到格中央，否則會差半格。
-  const outerAngle = useMonotonicAngle((-(outerActive + 0.5) * 360) / outerCount, true);
+  const outerAngle = useMonotonicAngle(
+    (-(outerActive + 0.5) * 360) / outerCount,
+    true,
+  );
   const scAngle = useMonotonicAngle(-scActive * 30, true);
   // 日照弧不是分段的環，是實際刻度：日出日落那兩點要對得準頂端的「現在」，
   // 所以跟著分環一分鐘跳一次，不跟時辰環兩小時跳一次。
-  const sunAngle = useMonotonicAngle((-(hour * 60 + minute) / 1440) * 360, true);
+  const sunAngle = useMonotonicAngle(
+    (-(hour * 60 + minute) / 1440) * 360,
+    true,
+  );
 
   const sun = sunTimes(now, lat, lon);
 
@@ -148,7 +195,9 @@ export function Dial({ now, lat, lon, onClose }: Props) {
     <div
       ref={boxRef}
       tabIndex={-1}
-      class={`dial${shown ? " in" : ""}${ready ? " ready" : ""}`}
+      class={`dial${shown && !leaving ? " in" : ""}${ready ? " ready" : ""}${
+        leaving ? " out" : ""
+      }`}
       role="dialog"
       aria-modal="true"
       aria-label={t("dial_title")}
@@ -235,7 +284,10 @@ export function Dial({ now, lat, lon, onClose }: Props) {
           {/* 三環：節氣（中）／月名（英），一年一圈。標籤置於格中央，所以偏移半格 */}
           <g style={spin(outerAngle, 1.17)}>
             {Array.from({ length: outerCount }, (_, i) => (
-              <g key={i} transform={`rotate(${((i + 0.5) * 360) / outerCount} ${C} ${C})`}>
+              <g
+                key={i}
+                transform={`rotate(${((i + 0.5) * 360) / outerCount} ${C} ${C})`}
+              >
                 <text
                   class={`jq${i === outerActive ? " on" : ""}`}
                   x={C}
@@ -245,7 +297,14 @@ export function Dial({ now, lat, lon, onClose }: Props) {
                 >
                   {outerRingName(i)}
                 </text>
-                <line x1={C} y1={C - 175} x2={C} y2={C - 168} stroke="currentColor" stroke-opacity=".18" />
+                <line
+                  x1={C}
+                  y1={C - 175}
+                  x2={C}
+                  y2={C - 168}
+                  stroke="currentColor"
+                  stroke-opacity=".18"
+                />
               </g>
             ))}
           </g>
@@ -278,20 +337,54 @@ export function Dial({ now, lat, lon, onClose }: Props) {
 
           {/* 五環：日照弧 */}
           <g style={spin(sunAngle, 0.92)}>
-            <circle class="nitearc" cx={C} cy={C} r="114" fill="none" stroke-width="3.5" />
+            <circle
+              class="nitearc"
+              cx={C}
+              cy={C}
+              r="114"
+              fill="none"
+              stroke-width="3.5"
+            />
             {sun.sunrise !== null && sun.sunset !== null && (
               <>
+                {/*
+                 * pathLength 把弧長正規化成 1，dash 就不必去量真正的長度 ——
+                 * 而這條弧的長度每天都不一樣（白晝多長它就多長），
+                 * 量出來的值寫死在 CSS 裡隔天就錯了。
+                 */}
                 <path
                   class="sunarc"
                   fill="none"
                   stroke-width="3.5"
                   stroke-linecap="round"
-                  d={arcPath(114, (sun.sunrise / 24) * 360, (sun.sunset / 24) * 360)}
+                  pathLength={1}
+                  d={arcPath(
+                    114,
+                    (sun.sunrise / 24) * 360,
+                    (sun.sunset / 24) * 360,
+                  )}
                 />
-                {([[sun.sunrise, "sunrise"], [sun.sunset, "sunset"]] as const).map(([h, kind]) => (
-                  <g key={kind} transform={`rotate(${((h / 24) * 360).toFixed(2)} ${C} ${C})`}>
+                {/* 整組包一層才有地方掛「弧畫到這裡了」的淡入 —— 點和字各自
+                    已經有呼吸燈在動 animation 了，同一個屬性不能掛兩次 */}
+                {(
+                  [
+                    [sun.sunrise, "sunrise"],
+                    [sun.sunset, "sunset"],
+                  ] as const
+                ).map(([h, kind]) => (
+                  <g
+                    key={kind}
+                    class="sunmark"
+                    transform={`rotate(${((h / 24) * 360).toFixed(2)} ${C} ${C})`}
+                  >
                     <circle class="sundot" cx={C} cy={C - 114} r="3" />
-                    <text class="sunlab" x={C} y={C - 99} text-anchor="middle" dominant-baseline="central">
+                    <text
+                      class="sunlab"
+                      x={C}
+                      y={C - 99}
+                      text-anchor="middle"
+                      dominant-baseline="central"
+                    >
                       {t(kind === "sunrise" ? "sun_rise" : "sun_set")} {hhmm(h)}
                     </text>
                   </g>
@@ -302,7 +395,10 @@ export function Dial({ now, lat, lon, onClose }: Props) {
 
           {/* 秒針。軸心藏在中央時間後面，只露外半截 —— 不必為了指針把時間縮小 */}
           <g class="sec" style={spin(secAngleRef.current, -3.19)}>
-            <path class="sec-hand" d={`M${C} ${C - 140} L${C + 1.8} ${C - 86} L${C - 1.8} ${C - 86} Z`} />
+            <path
+              class="sec-hand"
+              d={`M${C} ${C - 140} L${C + 1.8} ${C - 86} L${C - 1.8} ${C - 86} Z`}
+            />
             <circle class="sec-hub" cx={C} cy={C - 86} r="4.5" />
           </g>
 

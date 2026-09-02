@@ -172,8 +172,42 @@ describe("時辰盤與設定", () => {
     await vi.waitFor(() =>
       expect(document.querySelector(".dial.in")).not.toBeNull(),
     );
+    /*
+     * 收盤是有過場的：按下 Esc 之後盤還在，換上 .out，過完場才卸載。
+     * 進場鋪了五秒，出場直接卸載會是一刀切回主畫面。
+     *
+     * class 的變化用 MutationObserver 記下來，不輪詢 —— 那個過場只有 260 毫秒，
+     * 輪詢在機器忙的時候會整個錯過這段窗口。而錯過時報的錯（expected null not
+     * to be null）跟「功能真的壞了」長得一模一樣，查起來很花時間。
+     */
+    const dial = document.querySelector(".dial")!;
+    const seen: string[][] = [];
+    const obs = new MutationObserver(() => seen.push([...dial.classList]));
+    obs.observe(dial, { attributes: true, attributeFilter: ["class"] });
+
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    // 這一句不牽涉時機：卸載是排在計時器上的，同一輪裡盤一定還在
+    expect(
+      document.querySelector(".dial"),
+      "按下去不該當場消失",
+    ).not.toBeNull();
+
+    // 再按幾次不該多排幾個計時器
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+
+    // 過場跑完才真的卸載
     await vi.waitFor(() => expect(document.querySelector(".dial")).toBeNull());
+    obs.disconnect();
+
+    expect(
+      seen.some((c) => c.includes("out")),
+      "收的時候要換上 .out",
+    ).toBe(true);
+    expect(
+      seen.every((c) => !(c.includes("out") && c.includes("in"))),
+      "進場和退場那兩個 class 不能同時掛著",
+    ).toBe(true);
   });
 
   it("設定面板列出所有搜尋引擎，選了會存起來", async () => {

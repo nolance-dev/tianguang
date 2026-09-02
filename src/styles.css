@@ -450,6 +450,29 @@ body::-webkit-scrollbar {
   opacity: 1;
 }
 
+/*
+ * 收盤。
+ *
+ * 拿掉 .in，盤就會沿著進場那條路倒著走回去 —— 方向本來就是對的，時間不對：
+ * 進場可以鋪五秒，退場鋪五秒就是擋路。所以只縮時間，不換路徑。
+ *
+ * 縮的幅度也比進場小（0.97 不是 0.93）：退場是「放開」，不是「縮回盒子裡」。
+ * 時長跟 Dial.tsx 的 EXIT_MS 綁在一起，改一邊要改兩邊。
+ */
+.dial.out {
+  transition-duration: 0.24s;
+}
+
+.dial.out .dial-wrap > svg {
+  transform: scale(0.97);
+  transition-duration: 0.26s;
+}
+
+/* 進場時角落是最後到的，退場就讓它們先走 —— 同一個順序倒過來 */
+.dial.out :is(.sx, .marg) {
+  transition: opacity 0.16s ease;
+}
+
 .dial-wrap {
   position: relative;
   width: min(96vh, 96vw);
@@ -705,8 +728,15 @@ body::-webkit-scrollbar {
   .dial .lite,
   .dial .sx-in,
   .dial .marg .mrow,
+  .dial .sunarc,
+  .dial .sunmark,
   .dial :is(.rn, .ar, .hr, .jq, .bch, .sunlab) {
     animation: none;
+  }
+
+  /* 弧不畫了就要整條在，不能停在「畫到一半」 */
+  .dial .sunarc {
+    stroke-dasharray: none;
   }
 
   /* --v 停在 0 就是各自的谷底。字的谷底本來就是原本的亮度，
@@ -800,9 +830,44 @@ body::-webkit-scrollbar {
 }
 
 /* SVG 呈現屬性吃不到 CSS 變數，顏色一律走樣式表 */
+/*
+ * 日照弧自己畫出來，從日出畫到日落。
+ *
+ * 盤上其他東西的長度都是固定的（六十刻、二十四格），只有這一條的長度就是內容
+ * 本身 —— 弧多長，白晝就多長。讓它長出來，那個長度才被看見一次；
+ * 直接畫好，它就只是一段裝飾線。
+ *
+ * dash 用的是正規化長度（path 上掛了 pathLength="1"），所以冬至夏至弧長差一截，
+ * 這裡的值也不用跟著改。
+ *
+ * backwards 是必要的：延遲那 1.5 秒裡要停在「還沒開始畫」的狀態，
+ * 不然它會先整條出現，等到 1.5 秒才消失再畫一次。
+ */
 .dial .sunarc {
   stroke: var(--gold);
   stroke-opacity: 0.45;
+  stroke-dasharray: 1;
+  animation: sunarc-draw 1.5s cubic-bezier(0.33, 1, 0.68, 1) 1.5s backwards;
+}
+
+@keyframes sunarc-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* 日出日落那兩點等弧畫到了才亮 —— 弧是路，點是路的兩端 */
+.dial .sunmark {
+  animation: sunmark-in 0.5s ease 2.8s backwards;
+}
+
+@keyframes sunmark-in {
+  from {
+    opacity: 0;
+  }
 }
 
 .dial .nitearc {
@@ -829,10 +894,31 @@ body::-webkit-scrollbar {
   fill: var(--gold);
 }
 
+/*
+ * 中央讀數自己浮上來，不只是跟著整層一起淡。
+ *
+ * 只給 0.12 秒的延遲：這裡是來看時間的，把時間吊在後面三秒才給不是設計是刁難。
+ * 環在外面轉五秒，中間這一塊早早就定住 —— 動的是周圍，定的是你要讀的那個字。
+ */
 .dial-center {
   position: relative;
   z-index: 1;
   text-align: center;
+  opacity: 0;
+  transform: translateY(1.4vh) scale(0.985);
+  transition:
+    opacity 0.7s ease 0.12s,
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.12s;
+}
+
+.dial.in .dial-center {
+  opacity: 1;
+  transform: none;
+}
+
+.dial.out .dial-center {
+  transition-duration: 0.2s;
+  transition-delay: 0s;
 }
 
 .dc-time {
@@ -907,22 +993,31 @@ body::-webkit-scrollbar {
   }
 }
 
+/*
+ * 四角不是一起亮的，照盤面自己的手勢逆時針先後到：東、北、西、南 ——
+ * 跟二十八宿的順序、跟每一環轉的方向同一個。一起亮會像四張圖同時貼上去，
+ * 錯開就成了一圈掃過去。
+ */
 .dial .sx-0 {
+  transition-delay: 2.6s;
   top: 2.5vh;
   left: 2vw;
 }
 
 .dial .sx-3 {
+  transition-delay: 3.14s;
   top: 2.5vh;
   right: 2vw;
 }
 
 .dial .sx-1 {
+  transition-delay: 2.78s;
   bottom: 2.5vh;
   left: 2vw;
 }
 
 .dial .sx-2 {
+  transition-delay: 2.96s;
   bottom: 2.5vh;
   right: 2vw;
 }
