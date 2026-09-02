@@ -101,10 +101,17 @@ export function roundsToday(w: Workspace, now = new Date()): number {
  * 整段長度要從外面傳進來 —— 長度是使用者可以改的設定，
  * 讓這支函式自己去讀設定的話，它就得知道設定存在哪裡。
  */
+/**
+ * 這一段還剩多久。
+ *
+ * 上限夾在 total：剩餘時間不可能比這一段本身還長。沒有這個夾子的話，
+ * 只要傳進來的 now 比 endsAt 的起算點早（畫面上那個時間戳晚一拍、或使用者
+ * 改短了這個模式的長度），畫面就會出現「十五分鐘的倒數顯示 15:02」再跳回來。
+ */
 export function remaining(p: Pomodoro, now = Date.now(), total = FALLBACK): number {
-  if (p.pausedLeft !== null) return p.pausedLeft;
+  if (p.pausedLeft !== null) return Math.min(total, p.pausedLeft);
   if (p.endsAt === null) return total;
-  return Math.max(0, p.endsAt - now);
+  return Math.max(0, Math.min(total, p.endsAt - now));
 }
 
 /** 沒傳長度時的退路：預設的工作長度。 */

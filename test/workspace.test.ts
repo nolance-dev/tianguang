@@ -138,3 +138,17 @@ describe("遷移", () => {
     expect(w.pomodoro.rounds).toBe(0);
   });
 });
+
+describe("剩餘時間不會比這一段本身還長", () => {
+  it("時間戳落後一拍也不會冒出 15:02 這種數字", () => {
+    const started = start(fresh(), 1_000, WORK_MS);
+    // 畫面上那個時間戳停在按下開始之前 —— 相減會多出那一段
+    expect(remaining(started, 0, WORK_MS)).toBe(WORK_MS);
+    expect(formatLeft(remaining(started, 0, WORK_MS))).toBe(formatLeft(WORK_MS));
+  });
+
+  it("這個模式被改短之後，暫停剩下的那一段也跟著夾住", () => {
+    const paused = { ...fresh(), endsAt: null, pausedLeft: WORK_MS };
+    expect(remaining(paused, Date.now(), 5 * 60_000)).toBe(5 * 60_000);
+  });
+});

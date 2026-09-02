@@ -938,3 +938,31 @@ describe("快速存取：編輯與拖動", () => {
     localStorage.removeItem("tg.settings");
   });
 });
+
+describe("番茄鐘按下開始不會先跳一格", () => {
+  it("卡片開著幾秒之後才按開始，數字仍然從整段長度起跑", async () => {
+    localStorage.setItem(
+      "tg.settings",
+      JSON.stringify({
+        schemaVersion: 1,
+        cards: {
+          todos: false, note: false, pomodoro: true, quote: false, links: false,
+          photos: false, calendar: false, weather: false, media: false, clock: false,
+        },
+      }),
+    );
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector(".card.pomo")).not.toBeNull());
+
+    const face = () => el.querySelector(".clockface text.left")!.textContent;
+    const idle = face();
+
+    // 卡片先擺著五秒 —— 這五秒就是舊版多出來的那一段
+    await vi.advanceTimersByTimeAsync(5000);
+    (el.querySelector(".pomo-side .acts button") as HTMLButtonElement).click();
+
+    await vi.waitFor(() => expect(el.querySelector(".pomo-side .acts button")!.textContent).toBeTruthy());
+    expect(face(), "按下開始的第一格不該比整段還長").toBe(idle);
+    localStorage.removeItem("tg.settings");
+  });
+});

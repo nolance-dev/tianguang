@@ -151,7 +151,14 @@ export function Links({ links, onChange, max }: Props) {
             aria-label={t("links_edit")}
             onClick={() => (editing.value = link.id)}
           >
-            ✎
+            {/* 畫的不是字。✎ 這個字在多數字型裡側邊留白不對稱，
+                塞進圓鈕就是看起來偏一邊，怎麼微調都只是在補某一種字型 */}
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path
+                d="M10.6 2.4a1.4 1.4 0 0 1 2 2l-.7.7-2-2 .7-.7ZM9.2 3.8l2 2L5 12H3v-2l6.2-6.2Z"
+                fill="currentColor"
+              />
+            </svg>
           </button>
           <button
             type="button"

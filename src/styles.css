@@ -1447,7 +1447,13 @@ body::-webkit-scrollbar {
 .slot .edit {
   left: -0.32rem;
   right: auto;
-  font-size: 0.6rem;
+}
+
+/* 圖是 SVG 不是字，所以居中就是真的居中，不看字型的側邊留白 */
+.slot .edit svg {
+  width: 0.62rem;
+  height: 0.62rem;
+  display: block;
 }
 
 .slot:hover .rm,

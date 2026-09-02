@@ -1,5 +1,5 @@
 import { useSignal } from "@preact/signals";
-import { useEffect, useRef } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
 import { t } from "../lib/i18n";
 import { Links } from "./Links";
 import { PhotoWall } from "./PhotoWall";
@@ -452,8 +452,19 @@ function PomodoroCard({ value, onChange }: Body) {
   const p = value.pomodoro;
   const tick = useSignal(Date.now());
 
-  useEffect(() => {
+  /*
+   * 用 useLayoutEffect，而且進來第一件事就是對時。
+   *
+   * tick 只在跑的時候才更新，所以按下開始的那一瞬間，它還停在上一次停下來的
+   * 時間戳上 —— 那個值可能是幾分鐘前。endsAt 是用「現在」算的，兩者相減就會
+   * 多出那幾分鐘，畫面先閃一格 15:02 再跳回 14:59。
+   *
+   * useEffect 是畫完才跑的，那一格錯的畫面看得到；useLayoutEffect 在畫之前跑，
+   * 看不到。上面 remaining() 的夾子是第二道保險，兩個都要。
+   */
+  useLayoutEffect(() => {
     if (!isRunning(p)) return;
+    tick.value = Date.now();
     const id = setInterval(() => (tick.value = Date.now()), 500);
     return () => clearInterval(id);
   }, [p.endsAt, p.pausedLeft]);
