@@ -37,6 +37,7 @@ export function Links({ links, onChange, max }: Props) {
   const dragging = useSignal<number | null>(null);
   const over = useSignal<number | null>(null);
   const cols = useSignal(0);
+  const rows = useSignal(0);
   const box = useRef<HTMLDivElement>(null);
 
   /*
@@ -54,9 +55,11 @@ export function Links({ links, onChange, max }: Props) {
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
       const gap = parseFloat(getComputedStyle(el).columnGap) || 0;
       const fit = Math.max(1, Math.floor((el.clientWidth + gap) / (MIN_TILE * rem + gap)));
-      const rows = Math.max(1, Math.ceil(total / fit));
+      const need = Math.max(1, Math.ceil(total / fit));
       // 列數定了，欄數就是把總數平均分到每一列 —— 這一步才是「上下對齊」
-      cols.value = Math.max(1, Math.ceil(total / rows));
+      cols.value = Math.max(1, Math.ceil(total / need));
+      // 排成一排的時候卡片要收起來，所以列數也要讓 CSS 看得到
+      rows.value = need;
     };
     measure();
     const ro = new ResizeObserver(measure);
@@ -142,7 +145,12 @@ export function Links({ links, onChange, max }: Props) {
   const cells = adder ? [...slots, adder] : slots;
 
   return (
-    <div ref={box} class="links" style={cols.value ? `--cols: ${cols.value}` : undefined}>
+    <div
+      ref={box}
+      class="links"
+      data-rows={rows.value || undefined}
+      style={cols.value ? `--cols: ${cols.value}` : undefined}
+    >
       {cells}
     </div>
   );
