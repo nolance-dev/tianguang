@@ -13,6 +13,7 @@ import { wheelPixels } from "../lib/wheel";
 import { SettingsPanel } from "./Settings";
 import { Weather } from "./Weather";
 import { Cards } from "./Cards";
+import type { CardId, Tile } from "../lib/desk";
 import { CalendarDetail } from "./Calendar";
 import { around, byDate, hasHolidayAccess, loadHolidays, supported } from "../lib/holidays";
 import { Focus } from "./Focus";
@@ -305,13 +306,22 @@ export function App() {
   );
   const search = <SearchBar engineId={cfg.searchEngine} />;
   const quote = cfg.cards.quote ? <QuoteLine text={cfg.quoteText} by={cfg.quoteBy} /> : null;
-  const cards = (
+  /*
+   * 兩屏共用同一個 Cards。差別只有三件事：顯示哪幾張、吃哪一份版面、寫回哪裡。
+   * 抽成函式而不是複製一份，是為了讓「主頁面那一排的大小和編輯跟工作區一樣」
+   * 這件事在程式裡是同一段程式碼，不是兩段長得像的程式碼。
+   */
+  const cardsFor = (
+    show: Record<CardId, boolean>,
+    desk: Tile[],
+    onDesk: (desk: Tile[]) => void,
+  ) => (
     <Cards
       value={work.value}
       onChange={patchWork}
-      show={cfg.cards}
-      desk={cfg.desk}
-      onDesk={(desk) => patch({ desk })}
+      show={show}
+      desk={desk}
+      onDesk={onDesk}
       links={cfg.links}
       onLinks={(l) => patch({ links: l })}
       linkGrid={cfg.linkGrid}
@@ -342,6 +352,28 @@ export function App() {
       }
     />
   );
+
+  const cards = cardsFor(cfg.cards, cfg.desk, (desk) => patch({ desk }));
+
+  // 主頁面那一排只認這兩張，其餘一律關掉
+  const homeOn = cfg.home.links || cfg.home.photos;
+  const homeCards = homeOn
+    ? cardsFor(
+        {
+          todos: false,
+          note: false,
+          pomodoro: false,
+          calendar: false,
+          weather: false,
+          media: false,
+          clock: false,
+          links: cfg.home.links,
+          photos: cfg.home.photos,
+        },
+        cfg.homeDesk,
+        (homeDesk) => patch({ homeDesk }),
+      )
+    : null;
   const notices = (
     <footer class="bottom">{notice.value && <p class="notice">{notice.value}</p>}</footer>
   );
@@ -361,6 +393,7 @@ export function App() {
           <main class="core">
             {hero}
             {search}
+            {homeCards}
           </main>
 
           {/* 往下還有一屏。不給提示的話沒人知道要捲。 */}

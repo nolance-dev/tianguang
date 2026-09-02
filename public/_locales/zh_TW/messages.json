@@ -918,5 +918,14 @@
   },
   "sx_season_3": {
     "message": "夏"
+  },
+  "s_home": {
+    "message": "主頁面元件"
+  },
+  "s_home_hint": {
+    "message": "擺在搜尋框下面。大小和排法跟工作區一樣，直接拖就能改。"
+  },
+  "s_desk_reset_home": {
+    "message": "重設主頁面版面"
   }
 }

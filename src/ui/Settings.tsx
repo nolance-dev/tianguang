@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { t } from "../lib/i18n";
 import { ENGINES } from "../lib/search";
-import { DEFAULT_DESK } from "../lib/desk";
+import { DEFAULT_DESK, DEFAULT_HOME_DESK } from "../lib/desk";
 import { SECOND_CALS } from "../lib/secondcal";
 import { hasHolidayAccess, requestHolidayAccess, supported } from "../lib/holidays";
 import { MAX_LINKS, suggestFromTopSites } from "../lib/links";
@@ -250,10 +250,34 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
           </section>
 
           <section>
+            <h3>{t("s_home")}</h3>
+            <p class="note">{t("s_home_hint")}</p>
+            {(["links", "photos"] as const).map((k) => (
+              <label class="row switch" key={k}>
+                <span>{t(`s_card_${k}`)}</span>
+                <input
+                  type="checkbox"
+                  checked={value.home[k]}
+                  onChange={(e) =>
+                    onChange({ home: { ...value.home, [k]: e.currentTarget.checked } })
+                  }
+                />
+              </label>
+            ))}
+          </section>
+
+          <section>
             <h3>{t("s_desk")}</h3>
             <p class="note">{t("s_desk_hint")}</p>
             <button type="button" class="wide" onClick={() => onChange({ desk: DEFAULT_DESK })}>
               {t("s_desk_reset")}
+            </button>
+            <button
+              type="button"
+              class="wide"
+              onClick={() => onChange({ homeDesk: DEFAULT_HOME_DESK })}
+            >
+              {t("s_desk_reset_home")}
             </button>
           </section>
 

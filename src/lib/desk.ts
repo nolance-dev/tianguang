@@ -42,6 +42,18 @@ const IDS: CardId[] = [
   "clock",
 ];
 
+/**
+ * 主頁面（第一屏）那一排的預設版面。
+ *
+ * 只列快速存取和照片牆 —— 其餘的卡由 show 關掉，normalize() 還是會把它們補在
+ * 後面，那不影響畫面，但保證使用者之後想換的時候尺寸是現成的。
+ * 兩張都是兩欄兩列，跟它們在工作區的預設一模一樣。
+ */
+export const DEFAULT_HOME_DESK: Tile[] = [
+  { id: "links", w: 2, h: 2 },
+  { id: "photos", w: 2, h: 2 },
+];
+
 export const DEFAULT_DESK: Tile[] = [
   { id: "links", w: 2, h: 2 },
   { id: "todos", w: 2, h: 1 },

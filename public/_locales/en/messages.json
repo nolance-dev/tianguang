@@ -882,5 +882,14 @@
   },
   "sx_season_3": {
     "message": "Summer"
+  },
+  "s_home": {
+    "message": "Home screen widgets"
+  },
+  "s_home_hint": {
+    "message": "Sits under the search box. Same sizes and dragging as the workspace."
+  },
+  "s_desk_reset_home": {
+    "message": "Reset home layout"
   }
 }

@@ -719,3 +719,37 @@ describe("時辰盤", () => {
     for (const el of marg) expect(el.closest(".dial-wrap")).toBeNull();
   });
 });
+
+describe("主頁面元件", () => {
+  it("開了才出現，而且是在搜尋框那一屏、不是工作區", async () => {
+    localStorage.setItem(
+      "tg.settings",
+      JSON.stringify({ schemaVersion: 1, home: { links: true, photos: false } }),
+    );
+    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector("main.core .cards")).not.toBeNull());
+
+    // 第一屏那一排在搜尋框後面
+    const core = el.querySelector("main.core")!;
+    const kids = [...core.children];
+    expect(kids.indexOf(core.querySelector(".cards")!)).toBeGreaterThan(
+      kids.indexOf(core.querySelector("form.search")!),
+    );
+
+    // 只有快速存取那一張，照片牆沒開
+    const home = core.querySelector(".cards")!;
+    expect(home.querySelectorAll(".card")).toHaveLength(1);
+
+    // 工作區那一屏還是照 cards 的設定走，兩份版面互不影響
+    const deskGrid = el.querySelector(".screen.desk .cards")!;
+    expect(deskGrid).not.toBe(home);
+    expect(deskGrid.querySelectorAll(".card").length).toBeGreaterThan(1);
+    localStorage.removeItem("tg.settings");
+  });
+
+  it("兩個都關就完全不畫那一排", async () => {
+    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector(".screen.desk .cards")).not.toBeNull());
+    expect(el.querySelector("main.core .cards")).toBeNull();
+  });
+});

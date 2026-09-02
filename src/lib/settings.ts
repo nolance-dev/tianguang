@@ -15,7 +15,7 @@
 
 import { paletteAt } from "./mesh";
 import type { Link } from "./links";
-import { DEFAULT_DESK, type Tile } from "./desk";
+import { DEFAULT_DESK, DEFAULT_HOME_DESK, type Tile } from "./desk";
 import type { SecondCal } from "./secondcal";
 
 export const SCHEMA_VERSION = 1;
@@ -49,6 +49,18 @@ export interface Settings {
     media: boolean;
     clock: boolean;
   };
+  /**
+   * 主頁面（第一屏）也要顯示的元件，擺在搜尋框下面。
+   *
+   * 跟 cards 各記各的：同一張卡可以只在工作區、只在主頁面，或兩邊都有。
+   * 一個開關管兩屏的話，想在主頁面看快速存取就得把工作區那張也拖出來。
+   */
+  home: {
+    links: boolean;
+    photos: boolean;
+  };
+  /** 主頁面那一排的順序與尺寸。跟 desk 各記各的，兩屏的版面互不影響。 */
+  homeDesk: Tile[];
   /** 快速連結的呈現：true 是九個一組的九宮格，false 是一個一個排開 */
   linkGrid: boolean;
   /** 工作區卡片的順序與尺寸。畫之前一律過 desk.normalize()。 */
@@ -102,6 +114,13 @@ export const DEFAULTS: Settings = {
     media: false,
     clock: false,
   },
+  // 主頁面預設乾淨 —— 第一屏本來就是「時間、搜尋、一句話」，
+  // 要多擺東西是使用者的決定，不是預設
+  home: {
+    links: false,
+    photos: false,
+  },
+  homeDesk: DEFAULT_HOME_DESK,
   linkGrid: true,
   desk: DEFAULT_DESK,
   photoId: null,

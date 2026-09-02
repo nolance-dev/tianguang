@@ -4103,6 +4103,16 @@ html::-webkit-scrollbar {
   font-size: 0.7rem;
 }
 
+/*
+ * 主頁面那一排。
+ *
+ * 寬度沿用基礎的 min(58rem, 88%) —— 第一屏的留白是刻意的，不像工作區那樣收窄兩側。
+ * 上方間距交給 .core 自己的 gap，這裡只補一點點，不要疊兩層。
+ */
+.core .cards {
+  margin-top: clamp(0.2rem, 1vh, 0.8rem);
+}
+
 /* 工作區是拿來擺東西的，留白讓給第一屏就好 —— 這裡把兩側收窄，
    四欄制才有空間拉得開，一張四欄寬的卡不會擠成一條 */
 .screen.desk .cards {
