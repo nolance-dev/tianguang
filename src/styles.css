@@ -3517,11 +3517,37 @@ body::-webkit-scrollbar {
  * 切成一眼數得完的塊，位置才記得住 —— 「第二塊左下角」是記得住的，
  * 「第十一個」不是。加號也佔一格，所以一塊滿了會自己開下一塊。
  */
+/*
+ * 快速存取的高度跟著內容走，不被格線撐滿。
+ *
+ * 一列圖示的卡片沒有理由跟兩列的一樣高 —— 撐滿的結果是下面一大塊空白，
+ * 而空白會讓人以為那裡本來該有東西。align-self: start 讓它縮到內容的高度，
+ * 上限仍是自己那幾列（max-height: 100%），不會溢到隔壁。
+ */
+.card.linkcard {
+  align-self: start;
+  max-height: 100%;
+}
+
 .card.linkcard .links {
   margin-top: 0;
   max-width: none;
+  /* 卡片裡靠左排。置中的話第二列只有幾個時會浮在中間，看起來像排錯了 */
+  justify-content: flex-start;
   overflow-y: auto;
   scrollbar-width: none;
+}
+
+/*
+ * 一張卡最多兩列圖示，再多的自己捲。
+ *
+ * 一列排得下幾個由卡片多寬決定（flex-wrap 自己會算），列數由圖示的數量決定，
+ * 但到兩列就停 —— 再長下去這張卡會把整屏吃掉，而快速存取本來就是「常用的那幾個」。
+ */
+.card.linkcard .links:not(.nine) {
+  --lrow: clamp(3.2rem, 5.2vw, 4.2rem);
+  --lgap: clamp(0.5rem, 1vw, 0.9rem);
+  max-height: calc(var(--lrow) * 2 + var(--lgap));
 }
 
 .card.linkcard .links::-webkit-scrollbar {

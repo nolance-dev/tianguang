@@ -195,28 +195,34 @@ export function SettingsPanel({ value, onChange, onClose }: Props) {
               </label>
             )}
 
-            <label class="row">
-              <span>{t("s_grain")}</span>
-              <input
-                type="range"
-                min="0"
-                max="0.16"
-                step="0.005"
-                value={value.grain}
-                onInput={(e) => onChange({ grain: Number(e.currentTarget.value) })}
-              />
-            </label>
-            <label class="row">
-              <span>{t("s_dim")}</span>
-              <input
-                type="range"
-                min="0"
-                max="0.6"
-                step="0.02"
-                value={value.dim}
-                onInput={(e) => onChange({ dim: Number(e.currentTarget.value) })}
-              />
-            </label>
+            {/* 顆粒與變暗只在圖片上有作用，其餘背景不顯示 —— 拉了沒反應的滑桿
+                比沒有還糟 */}
+            {value.background === "image" && (
+              <label class="row">
+                <span>{t("s_grain")}</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="0.16"
+                  step="0.005"
+                  value={value.grain}
+                  onInput={(e) => onChange({ grain: Number(e.currentTarget.value) })}
+                />
+              </label>
+            )}
+            {value.background === "image" && (
+              <label class="row">
+                <span>{t("s_dim")}</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="0.6"
+                  step="0.02"
+                  value={value.dim}
+                  onInput={(e) => onChange({ dim: Number(e.currentTarget.value) })}
+                />
+              </label>
+            )}
           </section>
 
           <section>

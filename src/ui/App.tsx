@@ -252,8 +252,16 @@ export function App() {
     r.style.setProperty("--fg-ink", p.light ? "#F7F5F1" : "#12161F");
     // 節日與星期天的紅。亮底要深一點才咬得住，暗底要淺一點才不會糊成褐色
     r.style.setProperty("--holi", p.light ? "#B3382F" : "#E8776C");
-    r.style.setProperty("--grain", String(s.grain));
-    r.style.setProperty("--dim", String(s.dim));
+    /*
+      * 顆粒與變暗只對自訂圖有意義。
+      *
+      * 時辰漸層和純色是設計好的顏色 —— 蓋一層黑會把整片壓成灰、蓋一層噪點會把
+      * 彩度洗掉，那不是「調整」，是把原本的東西弄壞。照片才需要壓一層底讓字站得住。
+      * 值照樣留著，換回圖片時原封不動。
+      */
+    const onImage = s.background === "image";
+    r.style.setProperty("--grain", String(onImage ? s.grain : 0));
+    r.style.setProperty("--dim", String(onImage ? s.dim : 0));
     // 模糊只對自訂圖有意義，而且只有真的要模糊時才掛濾鏡 ——
     // filter 有值就會讓背景層自成合成層，顆粒層混不到它，漸層會被洗成灰的。
     const blur = s.background === "image" ? s.blur : 0;

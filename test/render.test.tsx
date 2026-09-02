@@ -260,9 +260,19 @@ describe("拖滑桿不該重讀背景圖", () => {
     (el.querySelector(".gear") as HTMLButtonElement).click();
     await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
 
+    // 顆粒只在圖片背景下才有滑桿 —— 先切過去（沒選圖，所以不會真的讀任何 blob）
+    const bg = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[data-seg="background"] button'),
+    );
+    bg[2]!.click();
+    await vi.waitFor(() =>
+      expect(document.querySelectorAll('.panel input[type="range"]').length).toBeGreaterThan(0),
+    );
+
     const before = spy.mock.calls.length;
-    // 顆粒滑桿連拖十格，模擬實際拖曳
-    const grain = Array.from(document.querySelectorAll<HTMLInputElement>('.panel input[type="range"]'))[0]!;
+    // 顆粒滑桿連拖十格，模擬實際拖曳。圖片模式下的第一根就是模糊，第二根才是顆粒
+    const ranges = Array.from(document.querySelectorAll<HTMLInputElement>('.panel input[type="range"]'));
+    const grain = ranges.find((r) => r.max === "0.16")!;
     for (let i = 0; i < 10; i++) {
       grain.value = String(0.01 * i);
       grain.dispatchEvent(new Event("input", { bubbles: true }));
@@ -751,5 +761,32 @@ describe("主頁面元件", () => {
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelector(".screen.desk .cards")).not.toBeNull());
     expect(el.querySelector("main.core .cards")).toBeNull();
+  });
+});
+
+describe("顆粒與變暗只作用在圖片上", () => {
+  it("漸層背景下，存著的值不會蓋到畫面上", async () => {
+    localStorage.setItem(
+      "tg.settings",
+      JSON.stringify({ schemaVersion: 1, background: "mesh", dim: 0.4, grain: 0.12 }),
+    );
+    mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+
+    // 時辰漸層是設計好的顏色，蓋一層黑或一層噪點就是把它弄壞
+    expect(cssVar("--dim")).toBe("0");
+    expect(cssVar("--grain")).toBe("0");
+    localStorage.removeItem("tg.settings");
+  });
+
+  it("換成圖片就照存著的值套上去 —— 值一直都在，只是沒作用", async () => {
+    localStorage.setItem(
+      "tg.settings",
+      JSON.stringify({ schemaVersion: 1, background: "image", dim: 0.4, grain: 0.12 }),
+    );
+    mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--dim")).toBe("0.4"));
+    expect(cssVar("--grain")).toBe("0.12");
+    localStorage.removeItem("tg.settings");
   });
 });

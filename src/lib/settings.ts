@@ -184,7 +184,11 @@ export function mirrorBoot(s: Settings, now = new Date()): void {
   try {
     const color =
       s.background === "solid" ? s.solidColor : paletteAt(now.getHours() + now.getMinutes() / 60).boot;
-    localStorage.setItem(BOOT_KEY, JSON.stringify({ color, dim: s.dim }));
+    // 變暗只跟著圖片走，首屏也要一樣 —— 不然漸層背景會先暗一下再彈回來
+    localStorage.setItem(
+      BOOT_KEY,
+      JSON.stringify({ color, dim: s.background === "image" ? s.dim : 0 }),
+    );
   } catch {
     // 無痕視窗或封鎖站台資料時會丟例外。首屏會退回內建色表，不影響功能。
   }

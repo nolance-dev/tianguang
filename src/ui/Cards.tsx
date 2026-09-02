@@ -215,7 +215,16 @@ export function Cards({
     const gap = parseFloat(getComputedStyle(box).columnGap) || 0;
     // 一格的跨距要含間隙，否則拖到第二欄時會差一個 gap，永遠慢半拍
     const unitX = (box.getBoundingClientRect().width - gap * (COLS - 1)) / COLS + gap;
-    const unitY = (card.getBoundingClientRect().height + gap) / tile.h;
+    /*
+     * 一列的高度要問格線，不要量卡片。
+     *
+     * 快速存取那張卡的高度是跟著內容走的（align-self: start），量它會比一格短，
+     * 縱向就越拉越快。grid-auto-rows 是那個唯一不會騙人的值。
+     */
+    const rowPx = parseFloat(getComputedStyle(box).gridAutoRows);
+    const unitY = Number.isFinite(rowPx)
+      ? rowPx + gap
+      : (card.getBoundingClientRect().height + gap) / tile.h;
     const x0 = e.clientX;
     const y0 = e.clientY;
 
