@@ -784,6 +784,8 @@ body::-webkit-scrollbar {
   .dial .sunmark,
   .dial .rg line,
   .dial .sx-line,
+  .dial .sx-dot,
+  .dial .sx-star,
   .dial .dial-mark,
   .dial :is(.rn, .ar, .hr, .jq, .bch, .sunlab) {
     animation: none;
@@ -986,18 +988,44 @@ body::-webkit-scrollbar {
   z-index: 1;
   text-align: center;
   opacity: 0;
-  transform: translateY(1.4vh) scale(0.985);
-  transition:
-    opacity 0.7s ease 0.12s,
-    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.12s;
+  transition: opacity 0.7s ease 0.12s;
 }
 
 .dial.in .dial-center {
   opacity: 1;
-  transform: none;
 }
 
-.dial.out .dial-center {
+/*
+ * 四行各自往上就位，前後錯開 90 毫秒：時間、日期、時辰名、副標。
+ *
+ * 整塊一起浮上來是一片，錯開才有先後 —— 而時間永遠是第一個，
+ * 開盤是來看時間的，不能為了排場把它壓到後面。
+ *
+ * 錯開只動 translate 不動 opacity：日期和副標本來就各有自己的透明度
+ * （0.55、0.42），一起動 opacity 會把那個設計洗掉，變成四行一樣亮。
+ */
+.dial-center > * {
+  translate: 0 1.1vh;
+  transition: translate 0.7s cubic-bezier(0.16, 1, 0.3, 1) var(--in, 0.12s);
+}
+
+.dial.in .dial-center > * {
+  translate: none;
+}
+
+.dc-date {
+  --in: 0.21s;
+}
+
+.dc-name {
+  --in: 0.3s;
+}
+
+.dc-sub {
+  --in: 0.39s;
+}
+
+.dial.out :is(.dial-center, .dial-center > *) {
   transition-duration: 0.2s;
   transition-delay: 0s;
 }
@@ -1140,9 +1168,34 @@ body::-webkit-scrollbar {
   }
 }
 
+/*
+ * 宿點等線畫到自己才亮，宿名再晚一點點。
+ *
+ * 延遲 = 這一角開始畫的時間（--draw）+ 這一宿在線上的位置（--at，0 到 1）
+ * × 畫完全程的 1.4 秒。所以七顆是順著線一顆一顆點起來的。
+ *
+ * scale 要先把 transform-box 設成 fill-box —— SVG 的變換原點預設在 viewBox
+ * 的 (0,0)，不設的話這顆點不是從自己的中心長出來，是從左上角飛過來。
+ */
 .sx-dot {
   fill: var(--sx);
   fill-opacity: 0.55;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: dot-pop 0.42s cubic-bezier(0.34, 1.5, 0.64, 1)
+    calc(var(--draw, 2.6s) + var(--at, 0) * 1.4s) backwards;
+}
+
+.sx-star {
+  animation: dot-pop 0.42s ease
+    calc(var(--draw, 2.6s) + var(--at, 0) * 1.4s + 0.14s) backwards;
+}
+
+@keyframes dot-pop {
+  from {
+    opacity: 0;
+    scale: 0.3;
+  }
 }
 
 /* 宿名。一宿一個字，推到宿點的外側，永遠不往盤裡擠 */

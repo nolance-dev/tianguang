@@ -98,6 +98,24 @@ export function FourSymbols({ now }: Props) {
         const stars = t("sx_stars_" + i).split(" ");
         const cx = s.pts.reduce((a, p) => a + p[0], 0) / s.pts.length;
         const cy = s.pts.reduce((a, p) => a + p[1], 0) / s.pts.length;
+        /*
+         * 每一宿落在折線上的幾成位置。
+         *
+         * 線是自己畫出來的（見 styles.css 的 sx-draw），宿點要等線畫到自己才亮 ——
+         * 這樣才是線把星子一顆一顆點起來，而不是七顆先亮著等線來連。
+         * 值是累積線長除以總長，交給 CSS 當延遲的倍率。
+         */
+        const run: number[] = [];
+        s.pts.reduce((sum, p, k) => {
+          const step =
+            k === 0
+              ? 0
+              : Math.hypot(p[0] - s.pts[k - 1]![0], p[1] - s.pts[k - 1]![1]);
+          run.push(sum + step);
+          return sum + step;
+        }, 0);
+        const whole = run[run.length - 1] || 1;
+        const at = run.map((d) => d / whole);
 
         return (
           <svg
@@ -127,7 +145,7 @@ export function FourSymbols({ now }: Props) {
                 const vy = y - cy;
                 const n = Math.hypot(vx, vy) || 1;
                 return (
-                  <g key={k}>
+                  <g key={k} style={`--at: ${at[k]!.toFixed(3)}`}>
                     <circle
                       class="sx-dot"
                       cx={x}
