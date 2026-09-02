@@ -493,7 +493,8 @@ describe("工作區卡片", () => {
     // 欄數由 CSS 依 data-w 決定（一欄四個），這裡確認那兩個屬性有掛上去
     const card = el.querySelector(".card.linkcard") as HTMLElement;
     expect(card.dataset.w).toBe("3");
-    expect(card.dataset.h).toBe("2");
+    // 高度是鎖死的：存成兩列也會被拉回一列
+    expect(card.dataset.h).toBe("1");
     // 十六個都在同一張卡裡，沒有再被切成小塊
     expect(card.querySelectorAll(".slot")).toHaveLength(16);
     expect(el.querySelector(".links.nine"), "九宮格已經拿掉了").toBeNull();

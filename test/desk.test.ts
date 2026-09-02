@@ -132,3 +132,23 @@ describe("好幾張快速存取", () => {
     expect(LINKS_PER_CARD).toBe(16);
   });
 });
+
+describe("快速存取只能左右拉", () => {
+  it("存成幾列都會被拉回一列", () => {
+    const out = normalize([
+      { id: "links", w: 3, h: 3 },
+      { id: "links2", w: 2, h: 2 },
+      { id: "note", w: 2, h: 3 },
+    ], ["links", "links2"]);
+    expect(out.find((t) => t.id === "links")!.h).toBe(1);
+    expect(out.find((t) => t.id === "links2")!.h).toBe(1);
+    // 其他卡不受影響
+    expect(out.find((t) => t.id === "note")!.h).toBe(3);
+  });
+
+  it("拉大小的時候，寬度改得動、高度改不動", () => {
+    const list = normalize([{ id: "links", w: 2, h: 1 }]);
+    const wider = resize(list, "links", 4, 3);
+    expect(wider.find((t) => t.id === "links")).toEqual({ id: "links", w: 4, h: 1 });
+  });
+});
