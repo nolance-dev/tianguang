@@ -2130,6 +2130,17 @@ body::-webkit-scrollbar {
   animation: full-in 0.3s cubic-bezier(0.22, 1, 0.28, 1) both;
 }
 
+/*
+ * 番茄鐘那一屏走純色。
+ *
+ * 月曆蓋在半透明的底上還說得過去 —— 底下是自己的桌面，看得見沒關係。
+ * 專注那一屏的用途正好相反：它存在的理由就是把其他東西擋掉，
+ * 底下的漸層還在動的話，那層「看得見但碰不到」反而更吵。
+ */
+.full.solid {
+  background: var(--solid, #12161f);
+}
+
 @keyframes full-in {
   from {
     opacity: 0;

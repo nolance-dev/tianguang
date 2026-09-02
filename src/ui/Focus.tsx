@@ -90,7 +90,7 @@ export function Focus({ work, onChange, onClose }: Props) {
   const peak = Math.max(1, ...bars.map((b) => b.ms));
 
   return (
-    <div class="full" role="dialog" aria-modal="true" aria-label={t("c_pomodoro")}>
+    <div class="full solid" role="dialog" aria-modal="true" aria-label={t("c_pomodoro")}>
       <header class="full-top">
         <button
           ref={closeRef}

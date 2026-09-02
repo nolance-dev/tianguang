@@ -966,3 +966,49 @@ describe("番茄鐘按下開始不會先跳一格", () => {
     localStorage.removeItem("tg.settings");
   });
 });
+
+describe("整屏畫面蓋著的時候，底下不該還能操作", () => {
+  const openCalendar = async (el: HTMLElement) => {
+    await vi.waitFor(() => expect(el.querySelector(".card.calcard")).not.toBeNull());
+    (el.querySelector(".card.calcard .expand") as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(document.querySelector(".full")).not.toBeNull());
+  };
+
+  it("月曆開著的時候滾輪不翻頁", async () => {
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+    const app = el.querySelector(".app") as HTMLElement;
+    expect(app.dataset.page).toBe("0");
+
+    await openCalendar(el);
+    for (let i = 0; i < 6; i++) {
+      window.dispatchEvent(
+        new WheelEvent("wheel", { deltaY: 120, bubbles: true, cancelable: true }),
+      );
+    }
+    await vi.advanceTimersByTimeAsync(100);
+    expect(app.dataset.page, "蓋著一層的時候底下那一屏不該自己翻").toBe("0");
+  });
+
+  it("番茄鐘那一屏是純色，透不出後面", async () => {
+    localStorage.setItem(
+      "tg.settings",
+      JSON.stringify({
+        schemaVersion: 1,
+        cards: {
+          todos: false, note: false, pomodoro: true, quote: false, links: false,
+          photos: false, calendar: false, weather: false, media: false, clock: false,
+        },
+      }),
+    );
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector(".card.pomo")).not.toBeNull());
+    (el.querySelector(".card.pomo .expand") as HTMLButtonElement).click();
+
+    await vi.waitFor(() => expect(document.querySelector(".full")).not.toBeNull());
+    expect(document.querySelector(".full")!.classList.contains("solid")).toBe(true);
+    // 那個純色是主題給的，不是寫死在樣式表裡
+    expect(cssVar("--solid")).toMatch(/^#|rgb/);
+    localStorage.removeItem("tg.settings");
+  });
+});

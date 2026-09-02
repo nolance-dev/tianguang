@@ -137,7 +137,9 @@ export function App() {
     let until = 0;
 
     const onWheel = (e: WheelEvent) => {
-      if (dialOpen.peek() || palOpen.peek() || panelOpen.peek()) return;
+      // sheet 是月曆／番茄鐘那些整屏畫面。少了它，蓋著一層的時候滾輪還在翻
+      // 底下那一屏 —— 蓋子後面的東西自己在動，比沒有蓋子還怪
+      if (dialOpen.peek() || palOpen.peek() || panelOpen.peek() || sheet.peek()) return;
       const dy = wheelPixels(e);
       if (!dy) return;
 
@@ -247,6 +249,12 @@ export function App() {
     // 暗底用比背景更暗的底做深度，亮底用白 —— 反過來會把字吃掉。
     r.style.setProperty("--card", p.light ? "rgba(255,255,255,.70)" : "rgba(13,17,27,.50)");
     r.style.setProperty("--veil", p.light ? "rgba(250,249,246,.90)" : "rgba(8,11,18,.86)");
+    /*
+     * 這個主題的純色。番茄鐘那一屏用它當底 —— 不透明，所以後面什麼都不透出來。
+     * 純色背景就用使用者選的那一色，其餘（時辰漸層、自訂圖）用這個時刻的
+     * 代表色，也就是首屏那個 inline script 先塗的同一色。
+     */
+    r.style.setProperty("--solid", s.background === "solid" ? s.solidColor : p.boot);
     // 壓在 --fg 那個色塊上的字。它是 --fg 的反面，不是背景色 ——
     // 用半透明的 --card 當字色會糊成灰的。
     r.style.setProperty("--fg-ink", p.light ? "#F7F5F1" : "#12161F");
