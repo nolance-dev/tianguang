@@ -4,3 +4,7 @@ dist/
 .DS_Store
 boot-colors.json
 graphify-out/
+
+# Playwright
+test-results/
+playwright-report/

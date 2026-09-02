@@ -10,9 +10,11 @@
     "build": "npm run colors && tsc --noEmit && vite build",
     "icons": "node scripts/make-icons.mjs",
     "test": "vitest run",
-    "zip": "cd dist && powershell Compress-Archive -Path * -DestinationPath ../tianguang.zip -Force"
+    "zip": "cd dist && powershell Compress-Archive -Path * -DestinationPath ../tianguang.zip -Force",
+    "e2e": "npm run build && playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/chrome": "^0.2.7",
     "@types/node": "^26.4.0",
     "jsdom": "^29.1.1",
