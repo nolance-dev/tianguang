@@ -7,7 +7,8 @@
 :root {
   --f-cjk: "Noto Serif TC", "Songti TC", serif;
   --f-latin: "Times New Roman", Times, serif;
-  --f-body: "IBM Plex Sans", "Noto Sans TC", -apple-system, "Segoe UI", sans-serif;
+  --f-body:
+    "IBM Plex Sans", "Noto Sans TC", -apple-system, "Segoe UI", sans-serif;
   --f-mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Menlo, monospace;
 
   /* App 掛載後覆寫。這裡的值只是為了讓 inline boot 塗底之後、
@@ -255,7 +256,9 @@ body::-webkit-scrollbar {
    */
   background: var(--glass-solid, rgba(255, 255, 255, 0.14));
   border: 1px solid var(--glass-line);
-  transition: border-color 0.2s, background 0.2s;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
 }
 
 .search:focus-within {
@@ -336,6 +339,31 @@ body::-webkit-scrollbar {
   outline: 2px solid var(--fg);
   outline-offset: 3px;
   border-radius: 6px;
+}
+
+/*
+ * 按下去要有回音。
+ *
+ * 這幾類東西一天會被按上幾十次，所以只給一點點 —— 0.97 倍、90 毫秒，
+ * 快到不會覺得在等，但手指離開之前就知道「按到了」。再多就變成拖累。
+ *
+ * 磚塊懸停時本來就抬起 2px，這裡要把它一起寫進來：兩條規則同權重，
+ * 後面這條會整個蓋掉 transform，只寫 scale 的話按下去反而會掉回去。
+ *
+ * 拖曳把手（.grow、卡片標題列）不在名單裡：它們按下去的意思是「開始拖」，
+ * 縮一下會跟接下來的位移打架。
+ */
+.tile:active,
+.icon-btn:active,
+.panel-tabs button:active,
+.slot .rm:active,
+.slot .edit:active {
+  transform: scale(0.97);
+  transition-duration: 0.09s;
+}
+
+.tile:active {
+  transform: translateY(-2px) scale(0.97);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -438,7 +466,9 @@ body::-webkit-scrollbar {
   height: 100%;
   transform: scale(0.93) rotate(-5deg);
   opacity: 0;
-  transition: transform 0.72s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.55s ease;
+  transition:
+    transform 0.72s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.55s ease;
 }
 
 .dial.in .dial-wrap > svg {
@@ -689,7 +719,9 @@ body::-webkit-scrollbar {
 
 .dial text {
   fill: currentColor;
-  transition: fill-opacity 0.3s, font-size 0.3s;
+  transition:
+    fill-opacity 0.3s,
+    font-size 0.3s;
 }
 
 .dial .rn {
@@ -1124,7 +1156,10 @@ body::-webkit-scrollbar {
   font-size: 0.74rem;
   letter-spacing: 0.1em;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
 }
 
 :root[lang^="en"] .panel-tabs button {
@@ -1150,6 +1185,24 @@ body::-webkit-scrollbar {
 
 .panel-body {
   padding: 0.6rem 1.2rem 3rem;
+}
+
+/*
+ * 換分頁的時候整頁內容是抽換掉的，而且捲軸同時歸零 —— 兩件事一起發生，
+ * 不補一下就像畫面閃了一格。一段很短的淡入把它接起來。
+ *
+ * 靠 key={tab} 讓 Preact 重建這個節點，動畫才會重播；分頁沒換的時候
+ * （時鐘每秒重繪）節點沿用，不會一直閃。
+ */
+@keyframes tab-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.tabpage {
+  animation: tab-in 0.18s cubic-bezier(0.22, 1, 0.28, 1);
 }
 
 .panel section {
@@ -1271,14 +1324,15 @@ body::-webkit-scrollbar {
   color: var(--fg-2);
   background: var(--glass);
   border: 1px solid var(--glass-line);
-  transition: color 0.2s, background 0.2s;
+  transition:
+    color 0.2s,
+    background 0.2s;
 }
 
 .seg button[aria-pressed="true"] {
   color: var(--fg);
   background: var(--glass-line);
 }
-
 
 /* ---------- 挑圖 ---------- */
 
@@ -1295,7 +1349,9 @@ body::-webkit-scrollbar {
   font-size: 0.8rem;
   color: var(--fg-2);
   cursor: pointer;
-  transition: border-color 0.2s, color 0.2s;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
 }
 
 .drop:hover,
@@ -1407,12 +1463,44 @@ body::-webkit-scrollbar {
   position: relative;
 }
 
+/*
+ * 被拖的那一塊淡下去，留在原地當佔位。
+ *
+ * 沒有「滑過的那一格畫一圈外框」那條規則了：磚塊現在是邊拖邊讓路的，
+ * 空出來的位置本身就是提示，再加一圈框是同一件事講兩次。
+ */
 .slot.dragging {
   opacity: 0.35;
 }
 
-.slot.over .tile {
-  border-color: var(--fg-2);
+/*
+ * 新磚塊長出來。
+ *
+ * 只在真的多了一個節點時會跑 —— 排序是同一批 key 換位置，Preact 搬節點
+ * 不重建，所以拖曳的時候這段不會被觸發（不然每讓一次路就閃一次）。
+ * 收掉編輯表單、整片格線換回來的時候會跑，那正是要的：它剛回來。
+ */
+@keyframes tile-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+.slot,
+.links > .tile.add {
+  animation: tile-in 0.22s cubic-bezier(0.22, 1, 0.28, 1);
+}
+
+/*
+ * 排序中不播進場。
+ *
+ * Preact 換順序是 insertBefore，那會讓 CSS 動畫重播一次 —— 每讓一次路
+ * 就閃一下，還跟 FLIP 的位移疊在一起。位移已經在講「它去了那裡」，
+ * 再閃一次是雜訊。
+ */
+.links.sorting .slot {
+  animation: none;
 }
 
 .tile {
@@ -1431,7 +1519,10 @@ body::-webkit-scrollbar {
   border: 1px solid var(--glass-line);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  transition: background 0.18s, border-color 0.18s, transform 0.18s;
+  transition:
+    background 0.18s,
+    border-color 0.18s,
+    transform 0.18s;
   cursor: pointer;
   font-family: inherit;
 }
@@ -1581,7 +1672,9 @@ body::-webkit-scrollbar {
   cursor: pointer;
   text-align: right;
   font-family: inherit;
-  transition: background 0.2s, border-color 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
 }
 
 .wx.open .now b {
@@ -3054,7 +3147,11 @@ body::-webkit-scrollbar {
  */
 .wxcard:has(.radar) .wx-now {
   padding-bottom: 1.6rem;
-  background: linear-gradient(180deg, var(--veil, rgba(8, 11, 18, 0.86)) 12%, transparent);
+  background: linear-gradient(
+    180deg,
+    var(--veil, rgba(8, 11, 18, 0.86)) 12%,
+    transparent
+  );
 }
 
 /* 城市與天況在地圖上比在卡片上難讀，這裡把它拉回主色 */
@@ -3694,7 +3791,6 @@ body::-webkit-scrollbar {
   display: none;
 }
 
-
 /* 窄視窗上跨距要收斂，否則一張兩欄寬的卡會把整排擠爆 */
 @media (max-width: 52rem) {
   .cards {
@@ -3882,6 +3978,18 @@ body::-webkit-scrollbar {
   overflow-y: auto;
 }
 
+/* 新加的那一項是滑進來的，不是憑空出現在清單底下 */
+@keyframes todo-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.todos li {
+  animation: todo-in 0.2s cubic-bezier(0.22, 1, 0.28, 1);
+}
+
 .todos li {
   display: flex;
   align-items: center;
@@ -4014,7 +4122,9 @@ body::-webkit-scrollbar {
   color: var(--fg-2);
   background: none;
   border: 1px solid var(--glass-line);
-  transition: color 0.18s, background 0.18s;
+  transition:
+    color 0.18s,
+    background 0.18s;
 }
 
 .card.pomo .acts button:first-child {
@@ -4373,7 +4483,9 @@ html::-webkit-scrollbar {
   color: var(--fg);
   background: none;
   border: 1px dashed var(--glass-line);
-  transition: background 0.18s, border-style 0.18s;
+  transition:
+    background 0.18s,
+    border-style 0.18s;
 }
 
 .pal-grants button:hover {

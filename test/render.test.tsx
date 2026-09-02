@@ -9,6 +9,7 @@ import zhTW from "../public/_locales/zh_TW/messages.json";
 import { ENGINES } from "../src/lib/search";
 import { paletteForColor } from "../src/lib/mesh";
 import { DEFAULT_DESK } from "../src/lib/desk";
+import type { Link } from "../src/lib/links";
 
 /**
  * 冒煙測試。不驗長相 —— 那要載進 Edge 用眼睛看。
@@ -19,10 +20,11 @@ import { DEFAULT_DESK } from "../src/lib/desk";
  * 因為 Preact 的 effect 靠它們排程 —— 一起假掉就永遠等不到重繪。
  */
 
-
 /** 設定分頁了：開了面板還要先切到那一頁，控制項才在畫面上 */
 async function openTab(id: "general" | "look" | "cards" | "data") {
-  await vi.waitFor(() => expect(document.getElementById(`tab-${id}`)).not.toBeNull());
+  await vi.waitFor(() =>
+    expect(document.getElementById(`tab-${id}`)).not.toBeNull(),
+  );
   (document.getElementById(`tab-${id}`) as HTMLButtonElement).click();
 }
 
@@ -47,12 +49,15 @@ function mount(at: Date) {
   return host;
 }
 
-const cssVar = (name: string) => document.documentElement.style.getPropertyValue(name);
+const cssVar = (name: string) =>
+  document.documentElement.style.getPropertyValue(name);
 
 describe("新分頁掛載", () => {
   it("深夜也掛得起來，時鐘、問候、搜尋列都在", async () => {
     const el = mount(new Date(2026, 7, 30, 23, 41, 0));
-    await vi.waitFor(() => expect(el.querySelector(".clock")?.textContent).toContain("23:41"));
+    await vi.waitFor(() =>
+      expect(el.querySelector(".clock")?.textContent).toContain("23:41"),
+    );
     expect(el.querySelector(".greet")?.textContent).toBeTruthy();
     expect(el.querySelector("input[type=text]")).not.toBeNull();
     expect(el.querySelector(".mesh")).not.toBeNull();
@@ -70,7 +75,9 @@ describe("新分頁掛載", () => {
 
   it("背景漸層有寫進 :root", async () => {
     mount(new Date(2026, 7, 30, 18, 0, 0));
-    await vi.waitFor(() => expect(cssVar("--mesh")).toContain("linear-gradient"));
+    await vi.waitFor(() =>
+      expect(cssVar("--mesh")).toContain("linear-gradient"),
+    );
   });
 
   it("日期列帶著外環的名字，不會露出鍵名", async () => {
@@ -78,7 +85,9 @@ describe("新分頁掛載", () => {
     // jsdom 的 navigator.language 是 en-US，所以走的是 Aubade 那一套。
     // 真正要驗的是「有拿到字」而不是「露出 moon_7」。
     const expected = isEnglish() ? "Sturgeon Moon" : "處暑";
-    await vi.waitFor(() => expect(el.querySelector(".datel")?.textContent).toContain(expected));
+    await vi.waitFor(() =>
+      expect(el.querySelector(".datel")?.textContent).toContain(expected),
+    );
     expect(el.querySelector(".datel")?.textContent).not.toMatch(/(jq|moon)_\d/);
   });
 
@@ -89,7 +98,9 @@ describe("新分頁掛載", () => {
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     expect(el.querySelector(".clock")?.textContent).toContain("09:00");
     await vi.advanceTimersByTimeAsync(1500);
-    await vi.waitFor(() => expect(el.querySelector(".clock")?.textContent).toContain("09:01"));
+    await vi.waitFor(() =>
+      expect(el.querySelector(".clock")?.textContent).toContain("09:01"),
+    );
   });
 });
 
@@ -132,11 +143,16 @@ describe("時辰盤與設定", () => {
     const el = mount(new Date(2026, 7, 30, 22, 48, 12));
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     (el.querySelector(".clock") as HTMLButtonElement).click();
-    await vi.waitFor(() => expect(document.querySelector(".dial")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(document.querySelector(".dial")).not.toBeNull(),
+    );
 
     const dial = document.querySelector(".dial")!;
     expect(dial.querySelectorAll(".rn").length, "羅馬分刻逢五十二個").toBe(12);
-    expect(dial.querySelectorAll(".ar").length, "其餘四十八個小阿拉伯數字").toBe(48);
+    expect(
+      dial.querySelectorAll(".ar").length,
+      "其餘四十八個小阿拉伯數字",
+    ).toBe(48);
     expect(dial.querySelectorAll(".hr").length, "二十四小時").toBe(24);
     expect(dial.querySelectorAll(".bch").length, "十二時辰").toBe(12);
     expect(dial.querySelector(".sunarc"), "日照弧").not.toBeNull();
@@ -153,7 +169,9 @@ describe("時辰盤與設定", () => {
     (el.querySelector(".clock") as HTMLButtonElement).click();
     // 等 .in —— 那個 class 是在 effect 裡加的，代表 keydown 監聽器已經掛好了。
     // 只等 DOM 出現的話，Esc 會打在還沒註冊監聽的空檔上。
-    await vi.waitFor(() => expect(document.querySelector(".dial.in")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(document.querySelector(".dial.in")).not.toBeNull(),
+    );
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     await vi.waitFor(() => expect(document.querySelector(".dial")).toBeNull());
   });
@@ -162,7 +180,9 @@ describe("時辰盤與設定", () => {
     const el = mount(new Date(2026, 7, 30, 10, 0, 0));
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     (el.querySelector(".gear") as HTMLButtonElement).click();
-    await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(document.querySelector(".panel")).not.toBeNull(),
+    );
 
     const select = document.querySelector(".panel select") as HTMLSelectElement;
     expect(select.options.length).toBe(ENGINES.length);
@@ -171,7 +191,9 @@ describe("時辰盤與設定", () => {
     select.value = "google";
     select.dispatchEvent(new Event("change", { bubbles: true }));
     await vi.waitFor(() =>
-      expect((document.querySelector(".panel select") as HTMLSelectElement).value).toBe("google"),
+      expect(
+        (document.querySelector(".panel select") as HTMLSelectElement).value,
+      ).toBe("google"),
     );
   });
 
@@ -179,12 +201,16 @@ describe("時辰盤與設定", () => {
     const el = mount(new Date(2026, 7, 30, 10, 0, 0));
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     (el.querySelector(".gear") as HTMLButtonElement).click();
-    await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(document.querySelector(".panel")).not.toBeNull(),
+    );
     await openTab("data");
 
     const about = document.querySelector(".panel .about")!;
     expect(about.textContent).toContain("edge://extensions");
-    expect(about.querySelector('a[href="https://open-meteo.com/"]')).not.toBeNull();
+    expect(
+      about.querySelector('a[href="https://open-meteo.com/"]'),
+    ).not.toBeNull();
     expect(about.textContent).toContain("CC BY 4.0");
   });
 });
@@ -200,12 +226,20 @@ describe("背景來源", () => {
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
     await vi.waitFor(() => expect(cssVar("--fg")).toBe("#1B2230")); // 漸層模式，白天暗字
     (el.querySelector(".gear") as HTMLButtonElement).click();
-    await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(document.querySelector(".panel")).not.toBeNull(),
+    );
     await openTab("look");
 
     const solid = Array.from(
-      document.querySelectorAll<HTMLButtonElement>('[data-seg="background"] button'),
-    ).find((b) => b.textContent === zhTW.s_bg_solid.message || b.textContent === "Solid colour")!;
+      document.querySelectorAll<HTMLButtonElement>(
+        '[data-seg="background"] button',
+      ),
+    ).find(
+      (b) =>
+        b.textContent === zhTW.s_bg_solid.message ||
+        b.textContent === "Solid colour",
+    )!;
     solid.click();
     await vi.waitFor(() => expect(cssVar("--fg")).toBe("#F4F2EE"));
   });
@@ -214,18 +248,26 @@ describe("背景來源", () => {
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     (el.querySelector(".gear") as HTMLButtonElement).click();
-    await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(document.querySelector(".panel")).not.toBeNull(),
+    );
     await openTab("look");
     // 用 aria-label 鎖定背景那一組 —— 溫度單位也是 .seg，選擇器不能只看 class
-    expect(document.querySelectorAll('[data-seg="background"] button').length).toBe(3);
+    expect(
+      document.querySelectorAll('[data-seg="background"] button').length,
+    ).toBe(3);
   });
 
   it("搜尋引擎下拉只寫引擎名，不塞前綴", async () => {
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     (el.querySelector(".gear") as HTMLButtonElement).click();
-    await vi.waitFor(() => expect(document.querySelector(".panel select")).not.toBeNull());
-    for (const opt of Array.from(document.querySelectorAll(".panel select option"))) {
+    await vi.waitFor(() =>
+      expect(document.querySelector(".panel select")).not.toBeNull(),
+    );
+    for (const opt of Array.from(
+      document.querySelectorAll(".panel select option"),
+    )) {
       expect(opt.textContent).not.toMatch(/\+/);
     }
   });
@@ -249,10 +291,14 @@ describe("背景濾鏡", () => {
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     (el.querySelector(".gear") as HTMLButtonElement).click();
-    await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(document.querySelector(".panel")).not.toBeNull(),
+    );
     await openTab("look");
     const buttons = Array.from(
-      document.querySelectorAll<HTMLButtonElement>('[data-seg="background"] button'),
+      document.querySelectorAll<HTMLButtonElement>(
+        '[data-seg="background"] button',
+      ),
     );
     buttons[1]!.click();
     await vi.waitFor(() => expect(cssVar("--fg")).toBe("#F4F2EE"));
@@ -269,21 +315,29 @@ describe("拖滑桿不該重讀背景圖", () => {
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     (el.querySelector(".gear") as HTMLButtonElement).click();
-    await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(document.querySelector(".panel")).not.toBeNull(),
+    );
     await openTab("look");
 
     // 顆粒只在圖片背景下才有滑桿 —— 先切過去（沒選圖，所以不會真的讀任何 blob）
     const bg = Array.from(
-      document.querySelectorAll<HTMLButtonElement>('[data-seg="background"] button'),
+      document.querySelectorAll<HTMLButtonElement>(
+        '[data-seg="background"] button',
+      ),
     );
     bg[2]!.click();
     await vi.waitFor(() =>
-      expect(document.querySelectorAll('.panel input[type="range"]').length).toBeGreaterThan(0),
+      expect(
+        document.querySelectorAll('.panel input[type="range"]').length,
+      ).toBeGreaterThan(0),
     );
 
     const before = spy.mock.calls.length;
     // 顆粒滑桿連拖十格，模擬實際拖曳。圖片模式下的第一根就是模糊，第二根才是顆粒
-    const ranges = Array.from(document.querySelectorAll<HTMLInputElement>('.panel input[type="range"]'));
+    const ranges = Array.from(
+      document.querySelectorAll<HTMLInputElement>('.panel input[type="range"]'),
+    );
     const grain = ranges.find((r) => r.max === "0.16")!;
     for (let i = 0; i < 10; i++) {
       grain.value = String(0.01 * i);
@@ -291,7 +345,10 @@ describe("拖滑桿不該重讀背景圖", () => {
     }
     await vi.waitFor(() => expect(cssVar("--grain")).toBe("0.09"));
 
-    expect(spy.mock.calls.length - before, "拖滑桿期間不該產生任何新的 blob 網址").toBe(0);
+    expect(
+      spy.mock.calls.length - before,
+      "拖滑桿期間不該產生任何新的 blob 網址",
+    ).toBe(0);
     spy.mockRestore();
   });
 });
@@ -299,14 +356,18 @@ describe("拖滑桿不該重讀背景圖", () => {
 describe("快速連結與天氣", () => {
   it("沒有連結時顯示空狀態，不是一排空格子", async () => {
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelector(".links.empty")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(el.querySelector(".links.empty")).not.toBeNull(),
+    );
     expect(el.querySelectorAll(".slot").length).toBe(0);
     expect(el.querySelector(".links.empty .msg")?.textContent).toBeTruthy();
   });
 
   it("加一個連結：沒寫協定會補 https，磚上顯示網域", async () => {
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelector(".links.empty")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(el.querySelector(".links.empty")).not.toBeNull(),
+    );
     (el.querySelector(".tile.add") as HTMLButtonElement).click();
     await vi.waitFor(() => expect(el.querySelector(".addform")).not.toBeNull());
 
@@ -336,7 +397,9 @@ describe("快速連結與天氣", () => {
 describe("焦點不該被搶走", () => {
   it("新增連結表單只在掛上時聚焦一次，時鐘每秒重繪不會把游標拉回網址欄", async () => {
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelector(".links.empty")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(el.querySelector(".links.empty")).not.toBeNull(),
+    );
     (el.querySelector(".tile.add") as HTMLButtonElement).click();
     await vi.waitFor(() => expect(el.querySelector(".addform")).not.toBeNull());
 
@@ -352,9 +415,13 @@ describe("焦點不該被搶走", () => {
 
     // 時鐘走三秒，畫面重繪三次
     await vi.advanceTimersByTimeAsync(3200);
-    await vi.waitFor(() => expect(el.querySelector(".clock")?.textContent).toContain("11:00"));
+    await vi.waitFor(() =>
+      expect(el.querySelector(".clock")?.textContent).toContain("11:00"),
+    );
 
-    expect(document.activeElement, "重繪之後焦點還要留在名稱欄").toBe(titleField);
+    expect(document.activeElement, "重繪之後焦點還要留在名稱欄").toBe(
+      titleField,
+    );
   });
 });
 
@@ -397,7 +464,9 @@ describe("工作區卡片", () => {
     // preact 有 inert 這個屬性就設屬性，沒有就落成 attribute，兩種都算
     const off = (n: HTMLElement) => n.inert === true || n.hasAttribute("inert");
     const notch = (dy: number) =>
-      window.dispatchEvent(new WheelEvent("wheel", { deltaY: dy, cancelable: true }));
+      window.dispatchEvent(
+        new WheelEvent("wheel", { deltaY: dy, cancelable: true }),
+      );
 
     expect(app.dataset.page).toBe("0");
     expect(off(desk), "收在下面的第二屏不該吃到焦點").toBe(true);
@@ -430,15 +499,26 @@ describe("工作區卡片", () => {
         schemaVersion: 1,
         clock24: true,
         cards: {
-          todos: true, note: true, pomodoro: false, quote: true, links: true,
-          photos: false, calendar: false, weather: false, media: false, clock: true,
+          todos: true,
+          note: true,
+          pomodoro: false,
+          quote: true,
+          links: true,
+          photos: false,
+          calendar: false,
+          weather: false,
+          media: false,
+          clock: true,
         },
       }),
     );
     const el = mount(new Date(2026, 7, 31, 9, 5, 7));
-    await vi.waitFor(() => expect(el.querySelector(".clockcard")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(el.querySelector(".clockcard")).not.toBeNull(),
+    );
 
-    const time = () => el.querySelector(".cc-time")!.textContent!.replace(/\s+/g, "");
+    const time = () =>
+      el.querySelector(".cc-time")!.textContent!.replace(/\s+/g, "");
     expect(time(), "秒一定顯示 —— 這張卡就是為了秒存在的").toBe("09:0507");
 
     // 整頁只有一個時間來源，所以它跟著那個走
@@ -451,28 +531,47 @@ describe("工作區卡片", () => {
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelector(".cards")).not.toBeNull());
 
-    const order = () => [...el.querySelectorAll<HTMLElement>(".card")].map((c) => c.dataset.id);
-    const todos = () => el.querySelector<HTMLElement>('.card[data-id="todos"]')!;
+    const order = () =>
+      [...el.querySelectorAll<HTMLElement>(".card")].map((c) => c.dataset.id);
+    const todos = () =>
+      el.querySelector<HTMLElement>('.card[data-id="todos"]')!;
     expect(order()).toEqual(["links", "todos", "note", "calendar"]);
     expect(todos().style.getPropertyValue("--w")).toBe("2");
 
     const grow = todos().querySelector<HTMLButtonElement>(".grow")!;
     const key = (k: string, shift = false) =>
-      grow.dispatchEvent(new KeyboardEvent("keydown", { key: k, shiftKey: shift, bubbles: true }));
+      grow.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: k,
+          shiftKey: shift,
+          bubbles: true,
+        }),
+      );
 
     key("ArrowRight");
-    await vi.waitFor(() => expect(todos().style.getPropertyValue("--w")).toBe("3"));
+    await vi.waitFor(() =>
+      expect(todos().style.getPropertyValue("--w")).toBe("3"),
+    );
     key("ArrowDown");
-    await vi.waitFor(() => expect(todos().style.getPropertyValue("--h")).toBe("2"));
+    await vi.waitFor(() =>
+      expect(todos().style.getPropertyValue("--h")).toBe("2"),
+    );
 
     // 到頂就停住，不會繞回一欄
     key("ArrowRight");
     key("ArrowRight");
-    await vi.waitFor(() => expect(todos().style.getPropertyValue("--w")).toBe("4"));
+    await vi.waitFor(() =>
+      expect(todos().style.getPropertyValue("--w")).toBe("4"),
+    );
 
     key("ArrowRight", true);
     await vi.waitFor(() =>
-      expect(order(), "Shift 是換位置").toEqual(["links", "note", "todos", "calendar"]),
+      expect(order(), "Shift 是換位置").toEqual([
+        "links",
+        "note",
+        "todos",
+        "calendar",
+      ]),
     );
   });
 
@@ -494,7 +593,11 @@ describe("工作區卡片", () => {
     }));
     localStorage.setItem(
       "tg.settings",
-      JSON.stringify({ schemaVersion: 1, links, desk: [{ id: "links", w: 3, h: 2 }] }),
+      JSON.stringify({
+        schemaVersion: 1,
+        links,
+        desk: [{ id: "links", w: 3, h: 2 }],
+      }),
     );
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
     // 設定是非同步載進來的：等到連結真的到位，不是等卡片出現（那時還是預設版面）
@@ -510,6 +613,84 @@ describe("工作區卡片", () => {
     // 十六個都在同一張卡裡，沒有再被切成小塊
     expect(card.querySelectorAll(".slot")).toHaveLength(16);
     expect(el.querySelector(".links.nine"), "九宮格已經拿掉了").toBeNull();
+    localStorage.removeItem("tg.settings");
+  });
+
+  it("拖曳時磚塊就先讓路，放手才寫回設定", async () => {
+    const links = ["a", "b", "c"].map((k) => ({
+      id: k,
+      title: k,
+      url: `https://example.com/${k}`,
+    }));
+    localStorage.setItem(
+      "tg.settings",
+      JSON.stringify({
+        schemaVersion: 1,
+        links,
+        desk: [{ id: "links", w: 3, h: 1 }],
+      }),
+    );
+    const el = mount(new Date(2026, 7, 31, 11, 0, 0));
+    await vi.waitFor(() =>
+      expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3),
+    );
+
+    const caps = () =>
+      [...el.querySelectorAll(".card.linkcard .slot .cap")].map(
+        (n) => n.textContent,
+      );
+    const slots = () => [
+      ...el.querySelectorAll<HTMLElement>(".card.linkcard .slot"),
+    ];
+    const fire = (node: HTMLElement, type: string) =>
+      node.dispatchEvent(new Event(type, { bubbles: true, cancelable: true }));
+
+    expect(caps()).toEqual(["a", "b", "c"]);
+    const saved = localStorage.getItem("tg.settings");
+
+    // 抓第一塊，拖到第三格：這一刻畫面上就要換好，不是等放手
+    fire(slots()[0]!, "dragstart");
+    fire(slots()[2]!, "dragover");
+    // Preact 的重繪是排程的，等它畫完再看
+    await vi.waitFor(() =>
+      expect(caps(), "經過就讓路").toEqual(["b", "c", "a"]),
+    );
+    expect(localStorage.getItem("tg.settings"), "還沒放手，不落盤").toBe(saved);
+
+    // 換完之後游標底下就是被拖的那一塊自己，再來一次不該抖回去
+    fire(slots()[2]!, "dragover");
+    expect(caps()).toEqual(["b", "c", "a"]);
+
+    /*
+     * 拖曳中要關掉進場動畫。Preact 換順序走 insertBefore，而 insertBefore
+     * 會讓 CSS 動畫重播（量過：同一個節點兩次 animationstart）—— 不關的話
+     * 每讓一次路就閃一下，還跟 FLIP 的位移疊在一起。
+     */
+    expect(
+      el.querySelector(".card.linkcard .links")?.classList.contains("sorting"),
+      "拖曳中要掛 sorting，進場動畫才不會每讓一次路就重播",
+    ).toBe(true);
+
+    fire(slots()[2]!, "drop");
+    // 放手的瞬間 live 歸零、新排法同時往上報：兩件事同一批渲染，
+    // 中間不該閃回舊的順序
+    expect(caps(), "放手不該跳回去").toEqual(["b", "c", "a"]);
+    await vi.waitFor(() =>
+      expect(
+        el
+          .querySelector(".card.linkcard .links")
+          ?.classList.contains("sorting"),
+        "放手就不再是排序中",
+      ).toBe(false),
+    );
+    expect(caps(), "重繪之後也還是新的順序").toEqual(["b", "c", "a"]);
+    await vi.waitFor(() =>
+      expect(
+        JSON.parse(localStorage.getItem("tg.settings")!).links.map(
+          (l: Link) => l.id,
+        ),
+      ).toEqual(["b", "c", "a"]),
+    );
     localStorage.removeItem("tg.settings");
   });
 
@@ -530,7 +711,9 @@ describe("工作區卡片", () => {
       }),
     );
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelector(".card.pomo")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(el.querySelector(".card.pomo")).not.toBeNull(),
+    );
 
     const has = (id: string) =>
       el.querySelector(`.card[data-id="${id}"] .expand`) !== null;
@@ -539,8 +722,12 @@ describe("工作區卡片", () => {
     expect(has("todos"), "沒有詳細畫面的卡不長那顆鈕").toBe(false);
 
     // 按下去出現整屏
-    el.querySelector<HTMLButtonElement>('.card[data-id="pomodoro"] .expand')!.click();
-    await vi.waitFor(() => expect(document.querySelector(".full")).not.toBeNull());
+    el.querySelector<HTMLButtonElement>(
+      '.card[data-id="pomodoro"] .expand',
+    )!.click();
+    await vi.waitFor(() =>
+      expect(document.querySelector(".full")).not.toBeNull(),
+    );
     // 用返回鍵關，不用 Esc —— Esc 的監聽掛在 effect 裡，
     // 而 .full 一出現在畫面上時那個 effect 還沒跑
     document.querySelector<HTMLButtonElement>(".full .icon-btn")!.click();
@@ -551,7 +738,10 @@ describe("工作區卡片", () => {
   it("照片牆預設關著，開了才出現在第二屏", async () => {
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
     await vi.waitFor(() => expect(el.querySelector(".cards")).not.toBeNull());
-    expect(el.querySelector(".card.photocard"), "剛裝好一張圖都沒有，不該擺一個空框").toBeNull();
+    expect(
+      el.querySelector(".card.photocard"),
+      "剛裝好一張圖都沒有，不該擺一個空框",
+    ).toBeNull();
 
     render(null, host!);
     host!.remove();
@@ -559,17 +749,28 @@ describe("工作區卡片", () => {
       "tg.settings",
       JSON.stringify({
         schemaVersion: 1,
-        cards: { todos: true, note: true, pomodoro: false, quote: true, links: true, photos: true },
+        cards: {
+          todos: true,
+          note: true,
+          pomodoro: false,
+          quote: true,
+          links: true,
+          photos: true,
+        },
       }),
     );
     const on = mount(new Date(2026, 7, 31, 11, 0, 0));
-    await vi.waitFor(() => expect(on.querySelector(".card.photocard")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(on.querySelector(".card.photocard")).not.toBeNull(),
+    );
     // 還沒挑照片就直接是編輯模式，跟設定抽屜共用同一個圖庫元件
     expect(on.querySelector(".card.photocard .picker.wall")).not.toBeNull();
     expect(on.querySelector(".photoframe"), "沒有照片就沒有相框").toBeNull();
 
     // 輪播間隔就在編輯模式的標題列上，預設不輪播
-    const every = on.querySelector<HTMLSelectElement>(".card.photocard header select")!;
+    const every = on.querySelector<HTMLSelectElement>(
+      ".card.photocard header select",
+    )!;
     expect(every.value).toBe("0");
     expect(every.options.length, "關閉加四個間隔").toBe(5);
     localStorage.removeItem("tg.settings");
@@ -590,20 +791,30 @@ describe("工作區卡片", () => {
     const input = todoForm.querySelector("input")!;
     input.value = "整理上架截圖";
     input.dispatchEvent(new Event("input", { bubbles: true }));
-    todoForm.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    todoForm.dispatchEvent(
+      new Event("submit", { bubbles: true, cancelable: true }),
+    );
 
-    await vi.waitFor(() => expect(el.querySelectorAll(".todos li").length).toBe(1));
-    expect(el.querySelector(".todos li span")?.textContent).toBe("整理上架截圖");
+    await vi.waitFor(() =>
+      expect(el.querySelectorAll(".todos li").length).toBe(1),
+    );
+    expect(el.querySelector(".todos li span")?.textContent).toBe(
+      "整理上架截圖",
+    );
 
     (el.querySelector(".todos li button") as HTMLButtonElement).click();
-    await vi.waitFor(() => expect(el.querySelector(".todos .done")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(el.querySelector(".todos .done")).not.toBeNull(),
+    );
   });
 
   it("語錄每開一次抽一次，不是整天同一句", async () => {
     // 亂數固定成第一句與最後一句，才驗得出「換了沒」而不是碰運氣
     const seq = [0, 0.999];
     let i = 0;
-    const rand = vi.spyOn(Math, "random").mockImplementation(() => seq[i++ % seq.length]!);
+    const rand = vi
+      .spyOn(Math, "random")
+      .mockImplementation(() => seq[i++ % seq.length]!);
 
     const a = mount(new Date(2026, 7, 31, 9, 0, 0));
     await vi.waitFor(() => expect(a.querySelector(".quote")).not.toBeNull());
@@ -613,7 +824,9 @@ describe("工作區卡片", () => {
     host!.remove();
     const b = mount(new Date(2026, 7, 31, 9, 0, 0));
     await vi.waitFor(() => expect(b.querySelector(".quote")).not.toBeNull());
-    expect(b.querySelector(".quote")?.textContent, "重開就換一句").not.toBe(first);
+    expect(b.querySelector(".quote")?.textContent, "重開就換一句").not.toBe(
+      first,
+    );
     rand.mockRestore();
   });
 
@@ -623,18 +836,29 @@ describe("工作區卡片", () => {
     const shown = el.querySelector(".quote")?.textContent;
 
     await vi.advanceTimersByTimeAsync(3200);
-    await vi.waitFor(() => expect(el.querySelector(".clock")?.textContent).toContain("09:00"));
-    expect(el.querySelector(".quote")?.textContent, "時鐘走三秒，名言不該跟著跳").toBe(shown);
+    await vi.waitFor(() =>
+      expect(el.querySelector(".clock")?.textContent).toContain("09:00"),
+    );
+    expect(
+      el.querySelector(".quote")?.textContent,
+      "時鐘走三秒，名言不該跟著跳",
+    ).toBe(shown);
   });
 
   it("填了自訂名言就固定顯示那一句", async () => {
     localStorage.setItem(
       "tg.settings",
-      JSON.stringify({ schemaVersion: 1, quoteText: "早八是一種心境", quoteBy: "我自己" }),
+      JSON.stringify({
+        schemaVersion: 1,
+        quoteText: "早八是一種心境",
+        quoteBy: "我自己",
+      }),
     );
     const el = mount(new Date(2026, 7, 31, 9, 0, 0));
     await vi.waitFor(() =>
-      expect(el.querySelector(".quote")?.textContent).toContain("早八是一種心境"),
+      expect(el.querySelector(".quote")?.textContent).toContain(
+        "早八是一種心境",
+      ),
     );
     expect(el.querySelector(".quote cite")?.textContent).toBe("我自己");
     localStorage.removeItem("tg.settings");
@@ -646,7 +870,12 @@ describe("開頁馬上輸入", () => {
     // 磁碟上有一份舊資料，載入會晚一個微任務回來
     localStorage.setItem(
       "tg.workspace",
-      JSON.stringify({ schemaVersion: 1, todos: [], note: "磁碟上的舊筆記", focus: null }),
+      JSON.stringify({
+        schemaVersion: 1,
+        todos: [],
+        note: "磁碟上的舊筆記",
+        focus: null,
+      }),
     );
 
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
@@ -660,7 +889,9 @@ describe("開頁馬上輸入", () => {
     // 讓載入的 promise 有機會回來
     await vi.advanceTimersByTimeAsync(50);
     await vi.waitFor(() =>
-      expect((el.querySelector(".card.note textarea") as HTMLTextAreaElement).value).toBe("我剛打的"),
+      expect(
+        (el.querySelector(".card.note textarea") as HTMLTextAreaElement).value,
+      ).toBe("我剛打的"),
     );
     localStorage.removeItem("tg.workspace");
   });
@@ -671,11 +902,17 @@ describe("指令面板", () => {
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
 
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }));
-    await vi.waitFor(() => expect(document.querySelector(".pal")).not.toBeNull());
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "k", ctrlKey: true }),
+    );
+    await vi.waitFor(() =>
+      expect(document.querySelector(".pal")).not.toBeNull(),
+    );
 
     const input = document.querySelector(".pal-head input") as HTMLInputElement;
-    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    input.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+    );
     await vi.waitFor(() => expect(document.querySelector(".pal")).toBeNull());
     expect(el).toBeTruthy();
   });
@@ -683,15 +920,23 @@ describe("指令面板", () => {
   it("Cmd K 也要能開 —— Mac 上沒有 Ctrl 這個習慣", async () => {
     mount(new Date(2026, 7, 31, 11, 0, 0));
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "K", metaKey: true }));
-    await vi.waitFor(() => expect(document.querySelector(".pal")).not.toBeNull());
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "K", metaKey: true }),
+    );
+    await vi.waitFor(() =>
+      expect(document.querySelector(".pal")).not.toBeNull(),
+    );
   });
 
   it("一個來源都沒授權時，講清楚要做什麼，不是丟一片空白", async () => {
     mount(new Date(2026, 7, 31, 11, 0, 0));
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
-    document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }));
-    await vi.waitFor(() => expect(document.querySelector(".pal-empty")).not.toBeNull());
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "k", ctrlKey: true }),
+    );
+    await vi.waitFor(() =>
+      expect(document.querySelector(".pal-empty")).not.toBeNull(),
+    );
     expect(document.querySelector(".pal-empty")?.textContent).toBeTruthy();
   });
 });
@@ -708,7 +953,9 @@ describe("時辰盤", () => {
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
 
     (document.querySelector("button.clock") as HTMLButtonElement).click();
-    await vi.waitFor(() => expect(document.querySelector(".dial")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(document.querySelector(".dial")).not.toBeNull(),
+    );
 
     const sx = document.querySelectorAll(".dial svg.sx");
     expect(sx).toHaveLength(4);
@@ -725,7 +972,9 @@ describe("時辰盤", () => {
     mount(new Date(2026, 7, 31, 11, 0, 0));
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     (document.querySelector("button.clock") as HTMLButtonElement).click();
-    await vi.waitFor(() => expect(document.querySelector(".dial")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(document.querySelector(".dial")).not.toBeNull(),
+    );
 
     const marg = document.querySelectorAll(".dial .marg");
     expect(marg).toHaveLength(2);
@@ -737,10 +986,15 @@ describe("主頁面元件", () => {
   it("開了才出現，而且是在搜尋框那一屏、不是工作區", async () => {
     localStorage.setItem(
       "tg.settings",
-      JSON.stringify({ schemaVersion: 1, home: { links: true, photos: false } }),
+      JSON.stringify({
+        schemaVersion: 1,
+        home: { links: true, photos: false },
+      }),
     );
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelector("main.core .cards")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(el.querySelector("main.core .cards")).not.toBeNull(),
+    );
 
     // 第一屏那一排在搜尋框後面
     const core = el.querySelector("main.core")!;
@@ -762,7 +1016,9 @@ describe("主頁面元件", () => {
 
   it("兩個都關就完全不畫那一排", async () => {
     const el = mount(new Date(2026, 7, 31, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelector(".screen.desk .cards")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(el.querySelector(".screen.desk .cards")).not.toBeNull(),
+    );
     expect(el.querySelector("main.core .cards")).toBeNull();
   });
 });
@@ -771,7 +1027,12 @@ describe("顆粒與變暗只作用在圖片上", () => {
   it("漸層背景下，存著的值不會蓋到畫面上", async () => {
     localStorage.setItem(
       "tg.settings",
-      JSON.stringify({ schemaVersion: 1, background: "mesh", dim: 0.4, grain: 0.12 }),
+      JSON.stringify({
+        schemaVersion: 1,
+        background: "mesh",
+        dim: 0.4,
+        grain: 0.12,
+      }),
     );
     mount(new Date(2026, 7, 30, 11, 0, 0));
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
@@ -785,7 +1046,12 @@ describe("顆粒與變暗只作用在圖片上", () => {
   it("換成圖片就照存著的值套上去 —— 值一直都在，只是沒作用", async () => {
     localStorage.setItem(
       "tg.settings",
-      JSON.stringify({ schemaVersion: 1, background: "image", dim: 0.4, grain: 0.12 }),
+      JSON.stringify({
+        schemaVersion: 1,
+        background: "image",
+        dim: 0.4,
+        grain: 0.12,
+      }),
     );
     mount(new Date(2026, 7, 30, 11, 0, 0));
     await vi.waitFor(() => expect(cssVar("--dim")).toBe("0.4"));
@@ -816,14 +1082,18 @@ describe("快速存取的張數由設定決定", () => {
     );
     expect(el.querySelectorAll(".card.linkcard")).toHaveLength(1);
     // 裝得下的就是前十六個，其餘的在設定加一張之前不顯示
-    expect(el.querySelector(".card.linkcard")!.querySelectorAll(".slot")).toHaveLength(16);
+    expect(
+      el.querySelector(".card.linkcard")!.querySelectorAll(".slot"),
+    ).toHaveLength(16);
     localStorage.removeItem("tg.settings");
   });
 
   it("設定兩張就切成兩段，第十七個之後落在第二張", async () => {
     put(20, 2);
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard").length).toBe(2));
+    await vi.waitFor(() =>
+      expect(el.querySelectorAll(".card.linkcard").length).toBe(2),
+    );
     const cards = el.querySelectorAll(".card.linkcard");
     expect(cards[0]!.querySelectorAll(".slot")).toHaveLength(16);
     expect(cards[1]!.querySelectorAll(".slot")).toHaveLength(4);
@@ -839,14 +1109,18 @@ describe("快速存取的張數由設定決定", () => {
     await vi.waitFor(() =>
       expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(16),
     );
-    expect(el.querySelector(".card.linkcard")!.querySelector(".tile.add")).toBeNull();
+    expect(
+      el.querySelector(".card.linkcard")!.querySelector(".tile.add"),
+    ).toBeNull();
     localStorage.removeItem("tg.settings");
   });
 
   it("在第二張刪掉一個，刪的是第二張那一段裡的那一個", async () => {
     put(18, 2);
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard").length).toBe(2));
+    await vi.waitFor(() =>
+      expect(el.querySelectorAll(".card.linkcard").length).toBe(2),
+    );
 
     const second = el.querySelectorAll(".card.linkcard")[1]!;
     const first = second.querySelector(".slot") as HTMLElement;
@@ -854,15 +1128,17 @@ describe("快速存取的張數由設定決定", () => {
     (first.querySelector(".rm") as HTMLButtonElement).click();
 
     await vi.waitFor(() =>
-      expect(el.querySelectorAll(".card.linkcard")[1]!.querySelector(".cap")!.textContent).toBe(
-        "站台17",
-      ),
+      expect(
+        el.querySelectorAll(".card.linkcard")[1]!.querySelector(".cap")!
+          .textContent,
+      ).toBe("站台17"),
     );
-    expect(el.querySelectorAll(".card.linkcard")[0]!.querySelectorAll(".slot")).toHaveLength(16);
+    expect(
+      el.querySelectorAll(".card.linkcard")[0]!.querySelectorAll(".slot"),
+    ).toHaveLength(16);
     localStorage.removeItem("tg.settings");
   });
 });
-
 
 describe("快速存取：編輯與拖動", () => {
   const seed = (n: number) =>
@@ -873,19 +1149,30 @@ describe("快速存取：編輯與拖動", () => {
     }));
 
   const put = (n: number) =>
-    localStorage.setItem("tg.settings", JSON.stringify({ schemaVersion: 1, links: seed(n) }));
+    localStorage.setItem(
+      "tg.settings",
+      JSON.stringify({ schemaVersion: 1, links: seed(n) }),
+    );
 
   it("編輯鈕會帶著網址和名稱開表單", async () => {
     put(3);
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3));
+    await vi.waitFor(() =>
+      expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3),
+    );
 
     const slot = el.querySelector('.card.linkcard [data-i="1"]') as HTMLElement;
     (slot.querySelector(".edit") as HTMLButtonElement).click();
 
-    await vi.waitFor(() => expect(el.querySelector(".card.linkcard form.addform")).not.toBeNull());
-    const inputs = el.querySelectorAll<HTMLInputElement>(".card.linkcard form.addform input");
-    expect(inputs[0]!.value, "網址要帶進來，不然編輯等於重打一次").toBe("https://e1.com/");
+    await vi.waitFor(() =>
+      expect(el.querySelector(".card.linkcard form.addform")).not.toBeNull(),
+    );
+    const inputs = el.querySelectorAll<HTMLInputElement>(
+      ".card.linkcard form.addform input",
+    );
+    expect(inputs[0]!.value, "網址要帶進來，不然編輯等於重打一次").toBe(
+      "https://e1.com/",
+    );
     expect(inputs[1]!.value).toBe("站台1");
     localStorage.removeItem("tg.settings");
   });
@@ -893,17 +1180,23 @@ describe("快速存取：編輯與拖動", () => {
   it("改網址之後，位置不動、id 不變", async () => {
     put(3);
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3));
+    await vi.waitFor(() =>
+      expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3),
+    );
 
     const slot = el.querySelector('.card.linkcard [data-i="0"]') as HTMLElement;
     (slot.querySelector(".edit") as HTMLButtonElement).click();
-    await vi.waitFor(() => expect(el.querySelector("form.addform")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(el.querySelector("form.addform")).not.toBeNull(),
+    );
 
     const form = el.querySelector("form.addform") as HTMLFormElement;
     const url = form.querySelector("input") as HTMLInputElement;
     url.value = "https://changed.example/";
     url.dispatchEvent(new Event("input", { bubbles: true }));
-    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    form.dispatchEvent(
+      new Event("submit", { bubbles: true, cancelable: true }),
+    );
 
     await vi.waitFor(() => expect(el.querySelector("form.addform")).toBeNull());
     // 設定是延遲寫入的，等它真的落盤再看
@@ -913,20 +1206,33 @@ describe("快速存取：編輯與拖動", () => {
     });
     const saved = JSON.parse(localStorage.getItem("tg.settings")!);
     expect(saved.links[0].id, "id 換掉的話那一格會跳到最後面").toBe("l0");
-    expect(saved.links.map((l: { title: string }) => l.title)).toEqual(["站台0", "站台1", "站台2"]);
+    expect(saved.links.map((l: { title: string }) => l.title)).toEqual([
+      "站台0",
+      "站台1",
+      "站台2",
+    ]);
     localStorage.removeItem("tg.settings");
   });
 
   it("右鍵完全不碰 —— 選單留給瀏覽器", async () => {
     put(3);
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3));
+    await vi.waitFor(() =>
+      expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3),
+    );
 
     const slot = el.querySelector('.card.linkcard [data-i="1"]') as HTMLElement;
     for (const shift of [false, true]) {
-      const menu = new MouseEvent("contextmenu", { bubbles: true, cancelable: true, shiftKey: shift });
+      const menu = new MouseEvent("contextmenu", {
+        bubbles: true,
+        cancelable: true,
+        shiftKey: shift,
+      });
       slot.dispatchEvent(menu);
-      expect(menu.defaultPrevented, "攔了瀏覽器選單就等於把它吃掉又不給替代品").toBe(false);
+      expect(
+        menu.defaultPrevented,
+        "攔了瀏覽器選單就等於把它吃掉又不給替代品",
+      ).toBe(false);
     }
     expect(el.querySelector("form.addform")).toBeNull();
     localStorage.removeItem("tg.settings");
@@ -935,17 +1241,25 @@ describe("快速存取：編輯與拖動", () => {
   it("左鍵拖曳換位置", async () => {
     put(3);
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3));
+    await vi.waitFor(() =>
+      expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3),
+    );
 
     const from = el.querySelector('.card.linkcard [data-i="0"]') as HTMLElement;
     const to = el.querySelector('.card.linkcard [data-i="2"]') as HTMLElement;
     from.dispatchEvent(new Event("dragstart", { bubbles: true }));
-    to.dispatchEvent(new Event("dragover", { bubbles: true, cancelable: true }));
+    to.dispatchEvent(
+      new Event("dragover", { bubbles: true, cancelable: true }),
+    );
     to.dispatchEvent(new Event("drop", { bubbles: true, cancelable: true }));
 
     await vi.waitFor(() => {
       const saved = JSON.parse(localStorage.getItem("tg.settings")!);
-      expect(saved.links.map((l: { id: string }) => l.id)).toEqual(["l1", "l2", "l0"]);
+      expect(saved.links.map((l: { id: string }) => l.id)).toEqual([
+        "l1",
+        "l2",
+        "l0",
+      ]);
     });
     localStorage.removeItem("tg.settings");
   });
@@ -958,13 +1272,23 @@ describe("番茄鐘按下開始不會先跳一格", () => {
       JSON.stringify({
         schemaVersion: 1,
         cards: {
-          todos: false, note: false, pomodoro: true, quote: false, links: false,
-          photos: false, calendar: false, weather: false, media: false, clock: false,
+          todos: false,
+          note: false,
+          pomodoro: true,
+          quote: false,
+          links: false,
+          photos: false,
+          calendar: false,
+          weather: false,
+          media: false,
+          clock: false,
         },
       }),
     );
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelector(".card.pomo")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(el.querySelector(".card.pomo")).not.toBeNull(),
+    );
 
     const face = () => el.querySelector(".clockface text.left")!.textContent;
     const idle = face();
@@ -973,7 +1297,11 @@ describe("番茄鐘按下開始不會先跳一格", () => {
     await vi.advanceTimersByTimeAsync(5000);
     (el.querySelector(".pomo-side .acts button") as HTMLButtonElement).click();
 
-    await vi.waitFor(() => expect(el.querySelector(".pomo-side .acts button")!.textContent).toBeTruthy());
+    await vi.waitFor(() =>
+      expect(
+        el.querySelector(".pomo-side .acts button")!.textContent,
+      ).toBeTruthy(),
+    );
     expect(face(), "按下開始的第一格不該比整段還長").toBe(idle);
     localStorage.removeItem("tg.settings");
   });
@@ -981,9 +1309,13 @@ describe("番茄鐘按下開始不會先跳一格", () => {
 
 describe("整屏畫面蓋著的時候，底下不該還能操作", () => {
   const openCalendar = async (el: HTMLElement) => {
-    await vi.waitFor(() => expect(el.querySelector(".card.calcard")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(el.querySelector(".card.calcard")).not.toBeNull(),
+    );
     (el.querySelector(".card.calcard .expand") as HTMLButtonElement).click();
-    await vi.waitFor(() => expect(document.querySelector(".full")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(document.querySelector(".full")).not.toBeNull(),
+    );
   };
 
   it("月曆開著的時候滾輪不翻頁", async () => {
@@ -995,7 +1327,11 @@ describe("整屏畫面蓋著的時候，底下不該還能操作", () => {
     await openCalendar(el);
     for (let i = 0; i < 6; i++) {
       window.dispatchEvent(
-        new WheelEvent("wheel", { deltaY: 120, bubbles: true, cancelable: true }),
+        new WheelEvent("wheel", {
+          deltaY: 120,
+          bubbles: true,
+          cancelable: true,
+        }),
       );
     }
     await vi.advanceTimersByTimeAsync(100);
@@ -1008,17 +1344,31 @@ describe("整屏畫面蓋著的時候，底下不該還能操作", () => {
       JSON.stringify({
         schemaVersion: 1,
         cards: {
-          todos: false, note: false, pomodoro: true, quote: false, links: false,
-          photos: false, calendar: false, weather: false, media: false, clock: false,
+          todos: false,
+          note: false,
+          pomodoro: true,
+          quote: false,
+          links: false,
+          photos: false,
+          calendar: false,
+          weather: false,
+          media: false,
+          clock: false,
         },
       }),
     );
     const el = mount(new Date(2026, 7, 30, 11, 0, 0));
-    await vi.waitFor(() => expect(el.querySelector(".card.pomo")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(el.querySelector(".card.pomo")).not.toBeNull(),
+    );
     (el.querySelector(".card.pomo .expand") as HTMLButtonElement).click();
 
-    await vi.waitFor(() => expect(document.querySelector(".full")).not.toBeNull());
-    expect(document.querySelector(".full")!.classList.contains("solid")).toBe(true);
+    await vi.waitFor(() =>
+      expect(document.querySelector(".full")).not.toBeNull(),
+    );
+    expect(document.querySelector(".full")!.classList.contains("solid")).toBe(
+      true,
+    );
     // 那個純色是主題給的，不是寫死在樣式表裡
     expect(cssVar("--solid")).toMatch(/^#|rgb/);
     localStorage.removeItem("tg.settings");
@@ -1029,7 +1379,9 @@ describe("設定分頁", () => {
   const openPanel = async (el: HTMLElement) => {
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     (el.querySelector(".gear") as HTMLButtonElement).click();
-    await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+    await vi.waitFor(() =>
+      expect(document.querySelector(".panel")).not.toBeNull(),
+    );
   };
 
   it("一次只顯示一頁的內容", async () => {
@@ -1057,10 +1409,14 @@ describe("設定分頁", () => {
 
     const first = document.getElementById("tab-general") as HTMLButtonElement;
     expect(first.getAttribute("aria-selected")).toBe("true");
-    first.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    first.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }),
+    );
 
     await vi.waitFor(() =>
-      expect(document.getElementById("tab-look")!.getAttribute("aria-selected")).toBe("true"),
+      expect(
+        document.getElementById("tab-look")!.getAttribute("aria-selected"),
+      ).toBe("true"),
     );
     expect(first.getAttribute("aria-selected")).toBe("false");
     // 沒選中的分頁不吃 Tab 鍵 —— 一列分頁應該是一站，不是四站

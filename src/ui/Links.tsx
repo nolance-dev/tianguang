@@ -1,7 +1,14 @@
 import { useSignal } from "@preact/signals";
 import { useLayoutEffect, useRef } from "preact/hooks";
 import { t } from "../lib/i18n";
-import { faviconUrl, initial, makeLink, reorder, type Link } from "../lib/links";
+import {
+  faviconUrl,
+  initial,
+  makeLink,
+  reorder,
+  type Link,
+} from "../lib/links";
+import { slide } from "../lib/flip";
 
 /**
  * 快速連結。
@@ -34,8 +41,15 @@ interface Props {
 
 export function Links({ links, onChange, max }: Props) {
   const adding = useSignal(false);
-  const dragging = useSignal<number | null>(null);
-  const over = useSignal<number | null>(null);
+  /*
+   * 拖曳中的排法放在 live 裡，放手才回報出去。
+   *
+   * 每經過一格就 onChange 一次的話，每一步都會寫進 chrome.storage.sync ——
+   * 那裡每分鐘只給 120 次。而且記的是 id 不是索引：磚塊在拖的過程中一直
+   * 在換位置，索引每動一次就過期，id 不會。
+   */
+  const dragId = useSignal<string | null>(null);
+  const live = useSignal<Link[] | null>(null);
   const cols = useSignal(0);
   /** 正在編輯的那一個的 id。右鍵按著不動放開就進這個狀態 */
   const editing = useSignal<string | null>(null);
@@ -49,14 +63,19 @@ export function Links({ links, onChange, max }: Props) {
    * 推出來的欄數在其中一邊一定是錯的 —— 磚塊會滿出卡片外面。實際寬度只有
    * 版面算完才知道，所以量它，而且用 ResizeObserver 跟著變。
    */
-  const total = links.length + (links.length < max ? 1 : 0);
+  const list = live.value ?? links;
+  const total = list.length + (list.length < max ? 1 : 0);
   useLayoutEffect(() => {
     const el = box.current;
     if (!el || typeof ResizeObserver !== "function") return;
     const measure = () => {
-      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const rem =
+        parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
       const gap = parseFloat(getComputedStyle(el).columnGap) || 0;
-      const fit = Math.max(1, Math.floor((el.clientWidth + gap) / (MIN_TILE * rem + gap)));
+      const fit = Math.max(
+        1,
+        Math.floor((el.clientWidth + gap) / (MIN_TILE * rem + gap)),
+      );
       const need = Math.max(1, Math.ceil(total / fit));
       // 列數定了，欄數就是把總數平均分到每一列 —— 這一步才是「上下對齊」
       cols.value = Math.max(1, Math.ceil(total / need));
@@ -69,6 +88,15 @@ export function Links({ links, onChange, max }: Props) {
     return () => ro.disconnect();
   }, [total]);
 
+  /** 放手的收尾：這時候才落盤 */
+  function commit() {
+    const final = live.peek();
+    live.value = null;
+    dragId.value = null;
+    // drop 之後 dragend 還會再來一次，那時 final 已經是 null，不會重複寫
+    if (final) onChange(final);
+  }
+
   if (links.length === 0 && !adding.value) {
     return (
       <div class="links empty">
@@ -76,7 +104,11 @@ export function Links({ links, onChange, max }: Props) {
           <b>{t("links_empty_title")}</b>
           {t("links_empty_body")}
         </p>
-        <button type="button" class="tile add" onClick={() => (adding.value = true)}>
+        <button
+          type="button"
+          class="tile add"
+          onClick={() => (adding.value = true)}
+        >
           ＋
         </button>
       </div>
@@ -110,71 +142,84 @@ export function Links({ links, onChange, max }: Props) {
     );
   }
 
-  const slots = links.map((link, i) => (
-        <div
-          key={link.id}
-          data-i={i}
-          title={t("links_hint")}
-          class={`slot${dragging.value === i ? " dragging" : ""}${over.value === i ? " over" : ""}`}
-          draggable
-          onDragStart={() => (dragging.value = i)}
-          onDragEnd={() => {
-            dragging.value = null;
-            over.value = null;
-          }}
-          onDragOver={(e) => {
-            e.preventDefault();
-            over.value = i;
-          }}
-          onDrop={(e) => {
-            e.preventDefault();
-            const from = dragging.value;
-            if (from !== null) onChange(reorder(links, from, i));
-            dragging.value = null;
-            over.value = null;
-          }}
-        >
-          <a class="tile" href={link.url} title={`${link.title}\n${link.url}`}>
-            <Icon link={link} />
-            <span class="cap">{link.title}</span>
-          </a>
-          {/*
-            * 編輯走一顆按鈕，不走右鍵。
-            *
-            * 右鍵在 Edge 上叫得出瀏覽器自己的選單，加不加 Shift 都攔不乾淨 ——
-            * 跟瀏覽器搶同一個手勢只會輸。一顆跟刪除並排的鈕沒有這個問題，
-            * 而且看得見：右鍵是要人猜的，鈕不用。
-            */}
-          <button
-            type="button"
-            class="edit"
-            aria-label={t("links_edit")}
-            onClick={() => (editing.value = link.id)}
-          >
-            {/*
-              * 畫的不是字。✎ 這個字在多數字型裡側邊留白不對稱，塞進圓鈕就是偏一邊，
-              * 微調 padding 只是在補某一種字型。
-              *
-              * 那個 translate 也不是憑感覺調的：兩段路徑合起來的外框是
-              * x 3.00、y 2.67、10.33 見方，中心落在 (8.16, 7.84)，離 viewBox 的中心
-              * 差 (0.16, -0.16) —— 這裡把它補回去。筆是斜的，外框置中才是真的置中。
-              */}
-            <svg viewBox="0 0 16 16" aria-hidden="true">
-              <g transform="translate(-0.16 0.16)" fill="currentColor">
-                <path d="M12.9 3.1a1.5 1.5 0 0 0-2.1 0L9.6 4.3l2.1 2.1 1.2-1.2a1.5 1.5 0 0 0 0-2.1Z" />
-                <path d="M8.5 5.4 3 10.9V13h2.1l5.5-5.5-2.1-2.1Z" />
-              </g>
-            </svg>
-          </button>
-          <button
-            type="button"
-            class="rm"
-            aria-label={t("links_remove")}
-            onClick={() => onChange(links.filter((l) => l.id !== link.id))}
-          >
-            ✕
-          </button>
-        </div>
+  const slots = list.map((link, i) => (
+    <div
+      key={link.id}
+      data-i={i}
+      title={t("links_hint")}
+      class={`slot${dragId.value === link.id ? " dragging" : ""}`}
+      draggable
+      onDragStart={() => {
+        dragId.value = link.id;
+        live.value = links;
+      }}
+      onDragEnd={commit}
+      onDragOver={(e) => {
+        // 不擋掉預設行為就收不到 drop，游標也會一直顯示禁止
+        e.preventDefault();
+        /*
+         * 經過就換位置，不是放手才換。
+         *
+         * 原本只在這裡記一個「滑過第幾格」，畫一圈外框，放手才重排 ——
+         * 那一刻整排磚塊同時跳到新位置，看不出來誰去了哪。改成邊拖邊讓路，
+         * 空位就是答案，外框那圈提示反而不必要了。
+         *
+         * 換完之後游標底下就是被拖的那一塊自己，from === i 直接跳過，
+         * 不會在原地來回抖。
+         */
+        const held = dragId.peek();
+        if (held === null) return;
+        const now = live.peek() ?? links;
+        const from = now.findIndex((l) => l.id === held);
+        if (from < 0 || from === i) return;
+        slide(box.current, () => (live.value = reorder(now, from, i)), ".slot");
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        commit();
+      }}
+    >
+      <a class="tile" href={link.url} title={`${link.title}\n${link.url}`}>
+        <Icon link={link} />
+        <span class="cap">{link.title}</span>
+      </a>
+      {/*
+       * 編輯走一顆按鈕，不走右鍵。
+       *
+       * 右鍵在 Edge 上叫得出瀏覽器自己的選單，加不加 Shift 都攔不乾淨 ——
+       * 跟瀏覽器搶同一個手勢只會輸。一顆跟刪除並排的鈕沒有這個問題，
+       * 而且看得見：右鍵是要人猜的，鈕不用。
+       */}
+      <button
+        type="button"
+        class="edit"
+        aria-label={t("links_edit")}
+        onClick={() => (editing.value = link.id)}
+      >
+        {/*
+         * 畫的不是字。✎ 這個字在多數字型裡側邊留白不對稱，塞進圓鈕就是偏一邊，
+         * 微調 padding 只是在補某一種字型。
+         *
+         * 那個 translate 也不是憑感覺調的：兩段路徑合起來的外框是
+         * x 3.00、y 2.67、10.33 見方，中心落在 (8.16, 7.84)，離 viewBox 的中心
+         * 差 (0.16, -0.16) —— 這裡把它補回去。筆是斜的，外框置中才是真的置中。
+         */}
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <g transform="translate(-0.16 0.16)" fill="currentColor">
+            <path d="M12.9 3.1a1.5 1.5 0 0 0-2.1 0L9.6 4.3l2.1 2.1 1.2-1.2a1.5 1.5 0 0 0 0-2.1Z" />
+            <path d="M8.5 5.4 3 10.9V13h2.1l5.5-5.5-2.1-2.1Z" />
+          </g>
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="rm"
+        aria-label={t("links_remove")}
+        onClick={() => onChange(links.filter((l) => l.id !== link.id))}
+      >
+        ✕
+      </button>
+    </div>
   ));
 
   const adder =
@@ -195,7 +240,15 @@ export function Links({ links, onChange, max }: Props) {
   return (
     <div
       ref={box}
-      class="links"
+      /*
+       * 拖曳中要把進場動畫關掉。
+       *
+       * Preact 換順序走的是 insertBefore，而 insertBefore 會讓 CSS 動畫
+       * 從頭再播一次（量過：同一個節點收到兩次 animationstart）。不關的話
+       * 每讓一次路，被移動的那幾塊就閃一下白 —— 而且正好跟 FLIP 的位移疊在
+       * 一起，看起來像壞掉。讓路本來就有位移在講話了，不需要再閃。
+       */
+      class={`links${dragId.value !== null ? " sorting" : ""}`}
       data-rows={rows.value || undefined}
       style={cols.value ? `--cols: ${cols.value}` : undefined}
     >
@@ -207,8 +260,17 @@ export function Links({ links, onChange, max }: Props) {
 function Icon({ link }: { link: Link }) {
   const src = faviconUrl(link.url);
   const failed = useSignal(false);
-  if (!src || failed.value) return <span class="glyph">{initial(link.title)}</span>;
-  return <img class="fav" src={src} alt="" loading="lazy" onError={() => (failed.value = true)} />;
+  if (!src || failed.value)
+    return <span class="glyph">{initial(link.title)}</span>;
+  return (
+    <img
+      class="fav"
+      src={src}
+      alt=""
+      loading="lazy"
+      onError={() => (failed.value = true)}
+    />
+  );
 }
 
 /**

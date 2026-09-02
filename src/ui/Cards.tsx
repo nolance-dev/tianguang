@@ -35,6 +35,7 @@ import {
   type Workspace,
 } from "../lib/workspace";
 import { durationMs } from "../lib/focus";
+import { slide } from "../lib/flip";
 
 /**
  * 工作區的卡片。
@@ -71,57 +72,13 @@ interface Props extends Body {
   /** 月曆卡要的：第二套曆法，以及今天的節日 */
   calendar: { secondCal: SecondCal; todayHoliday: string | null };
   /** 天氣卡要的座標與單位。亮暗由呼叫端判斷，卡片自己不看時間 */
-  weather: { lat: number; lon: number; place: string; unit: "c" | "f"; dark: boolean };
-}
-
-/**
- * 換位置、改大小之後，讓每張卡從舊位置滑到新位置。
- *
- * 先量舊位置，改完版面再量新位置，把差值當成起始 transform 播回零 ——
- * 就是 FLIP。CSS 對 `grid-column: span 2 -> 3` 沒有過場可做，只能這樣補。
- *
- * 第一版用的是 View Transition。它在拖曳時是錯的工具：每跨一格就把整頁
- * 拍成快照、蓋一層 0.3 秒的過場在上面，那 0.3 秒裡的後續變動全發生在
- * 蓋板底下看不到，結束時一次跳到位 —— 拖起來就是卡的。FLIP 只碰這幾張卡，
- * 而且可以隨時被下一次打斷、從當下的位置接著跑。
- *
- * 只補位移，不補縮放：卡片變大變小是瞬間的，但拉伸中的文字很難看，
- * 而且那 200 毫秒裡使用者看的是自己拉的那一張，不是它的字。
- */
-const flying = new WeakMap<HTMLElement, Animation>();
-
-function slide(box: HTMLElement | null, apply: () => void): void {
-  const still =
-    typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (!box || still || typeof box.animate !== "function") {
-    apply();
-    return;
-  }
-
-  const cards = [...box.querySelectorAll<HTMLElement>(".card")];
-  // 量到的是「看起來在哪」，不是「版面上在哪」—— 上一段動畫還在跑的話
-  // 這裡量到的就是它現在飛到一半的位置，接得起來才不會跳回去重來
-  const before = new Map(cards.map((n) => [n, n.getBoundingClientRect()]));
-
-  apply();
-
-  requestAnimationFrame(() => {
-    for (const node of box.querySelectorAll<HTMLElement>(".card")) {
-      const a = before.get(node);
-      if (!a) continue;
-      // 先取消上一段，位置才會回到版面算出來的地方
-      flying.get(node)?.cancel();
-      const b = node.getBoundingClientRect();
-      const dx = a.left - b.left;
-      const dy = a.top - b.top;
-      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) continue;
-      const anim = node.animate(
-        [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "none" }],
-        { duration: 220, easing: "cubic-bezier(.22, 1, .28, 1)" },
-      );
-      flying.set(node, anim);
-    }
-  });
+  weather: {
+    lat: number;
+    lon: number;
+    place: string;
+    unit: "c" | "f";
+    dark: boolean;
+  };
 }
 
 const VARIANT: Record<CardId, string> = {
@@ -166,7 +123,10 @@ export function Cards({
    * 自動長出來的話，加第十七個連結會讓版面突然多一張卡 —— 使用者要的是加一個
    * 連結，不是改版面。所以滿了就是滿了，要更多自己去設定裡加一張。
    */
-  const cardCount = Math.min(Math.max(1, Math.round(linkCards)), MAX_LINKS / LINKS_PER_CARD);
+  const cardCount = Math.min(
+    Math.max(1, Math.round(linkCards)),
+    MAX_LINKS / LINKS_PER_CARD,
+  );
   const linkIds: TileId[] = Array.from({ length: cardCount }, (_, i) =>
     i === 0 ? "links" : (`links${i + 1}` as TileId),
   );
@@ -191,7 +151,12 @@ export function Cards({
     if (e.button !== 0) return;
     // 標題列上的控制項不該變成拖曳把手。select 漏掉的話，
     // 按下去是開始拖卡片，下拉選單永遠打不開。
-    if ((e.target as HTMLElement).closest("button, input, textarea, select, a, label")) return;
+    if (
+      (e.target as HTMLElement).closest(
+        "button, input, textarea, select, a, label",
+      )
+    )
+      return;
     e.preventDefault();
     held.value = id;
     live.value = order;
@@ -210,7 +175,10 @@ export function Cards({
       }
       if (to === over) return;
       over = to;
-      slide(grid.current, () => (live.value = move(live.peek() ?? order, id, to)));
+      slide(
+        grid.current,
+        () => (live.value = move(live.peek() ?? order, id, to)),
+      );
     };
     document.addEventListener("pointermove", onMove);
     document.addEventListener(
@@ -234,7 +202,8 @@ export function Cards({
 
     const gap = parseFloat(getComputedStyle(box).columnGap) || 0;
     // 一格的跨距要含間隙，否則拖到第二欄時會差一個 gap，永遠慢半拍
-    const unitX = (box.getBoundingClientRect().width - gap * (COLS - 1)) / COLS + gap;
+    const unitX =
+      (box.getBoundingClientRect().width - gap * (COLS - 1)) / COLS + gap;
     /*
      * 一列的高度要問格線，不要量卡片。
      *
@@ -298,13 +267,20 @@ export function Cards({
           style={{ "--w": String(tile.w), "--h": String(tile.h) }}
           onPointerDown={(e) => {
             // 沒有標題列的卡（照片、日曆）自己標出哪一塊可以抓
-            if ((e.target as HTMLElement).closest("header, [data-grab]")) startMove(e, tile.id);
+            if ((e.target as HTMLElement).closest("header, [data-grab]"))
+              startMove(e, tile.id);
           }}
         >
-          {tile.id === "todos" && <TodoCard value={value} onChange={onChange} />}
+          {tile.id === "todos" && (
+            <TodoCard value={value} onChange={onChange} />
+          )}
           {tile.id === "note" && <NoteCard value={value} onChange={onChange} />}
-          {tile.id === "pomodoro" && <PomodoroCard value={value} onChange={onChange} />}
-          {tile.id === "photos" && <PhotoWall photo={photo} onPhoto={onPhoto} />}
+          {tile.id === "pomodoro" && (
+            <PomodoroCard value={value} onChange={onChange} />
+          )}
+          {tile.id === "photos" && (
+            <PhotoWall photo={photo} onPhoto={onPhoto} />
+          )}
           {tile.id === "calendar" && (
             <CalendarCard
               events={value.events}
@@ -316,7 +292,11 @@ export function Cards({
           {tile.id === "weather" && <WeatherCard {...weather} />}
           {tile.id === "media" && <MediaCard />}
           {tile.id === "clock" && (
-            <ClockCard now={now} settings={settings} onOpen={() => onExpand("clock")} />
+            <ClockCard
+              now={now}
+              settings={settings}
+              onOpen={() => onExpand("clock")}
+            />
           )}
           {kindOf(tile.id) === "links" &&
             (() => {
@@ -332,10 +312,18 @@ export function Cards({
                     links={mine}
                     // 這一張只換自己那一段，前後原封不動接回去
                     onChange={(next) =>
-                      onLinks([...links.slice(0, from), ...next, ...links.slice(from + mine.length)])
+                      onLinks([
+                        ...links.slice(0, from),
+                        ...next,
+                        ...links.slice(from + mine.length),
+                      ])
                     }
                     // 這一張裝滿十六個、或全部的卡都裝滿了，加號就不出現
-                    max={links.length >= cardCount * LINKS_PER_CARD ? mine.length : LINKS_PER_CARD}
+                    max={
+                      links.length >= cardCount * LINKS_PER_CARD
+                        ? mine.length
+                        : LINKS_PER_CARD
+                    }
                   />
                 </>
               );
@@ -368,6 +356,7 @@ export function Cards({
 function TodoCard({ value, onChange }: Body) {
   const draft = useSignal("");
   const left = value.todos.filter((td) => !td.done).length;
+  const list = useRef<HTMLUListElement>(null);
 
   return (
     <>
@@ -381,7 +370,7 @@ function TodoCard({ value, onChange }: Body) {
       {value.todos.length === 0 ? (
         <p class="empty">{t("c_todos_empty")}</p>
       ) : (
-        <ul class="todos">
+        <ul class="todos" ref={list}>
           {value.todos.map((td) => (
             <li key={td.id}>
               <button
@@ -389,7 +378,9 @@ function TodoCard({ value, onChange }: Body) {
                 class={td.done ? "done" : undefined}
                 onClick={() =>
                   onChange({
-                    todos: value.todos.map((x) => (x.id === td.id ? { ...x, done: !x.done } : x)),
+                    todos: value.todos.map((x) =>
+                      x.id === td.id ? { ...x, done: !x.done } : x,
+                    ),
                   })
                 }
               >
@@ -400,7 +391,21 @@ function TodoCard({ value, onChange }: Body) {
                 type="button"
                 class="rm"
                 aria-label={t("c_todo_remove")}
-                onClick={() => onChange({ todos: value.todos.filter((x) => x.id !== td.id) })}
+                /*
+                 * 劃掉中間一項，底下那幾項會整批往上跳一格。用的是卡片換位置
+                 * 那一套 FLIP —— 先量舊位置，刪完再從舊位置滑到新位置。
+                 * 消失的那一項不補，它已經不在了；補的是還在的那些。
+                 */
+                onClick={() =>
+                  slide(
+                    list.current,
+                    () =>
+                      onChange({
+                        todos: value.todos.filter((x) => x.id !== td.id),
+                      }),
+                    "li",
+                  )
+                }
               >
                 ✕
               </button>
@@ -492,7 +497,15 @@ function PomodoroCard({ value, onChange }: Body) {
           {/* 剩餘時間畫在 svg 裡，跟著 viewBox 縮放 —— 卡片拉大時數字自己會變大，
               不必拿容器查詢單位去猜。也因為它是真的文字，讀螢幕讀得到。 */}
           <svg viewBox="0 0 100 100" role="img" aria-label={formatLeft(left)}>
-            <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" stroke-opacity=".15" stroke-width="5" />
+            <circle
+              cx="50"
+              cy="50"
+              r="42"
+              fill="none"
+              stroke="currentColor"
+              stroke-opacity=".15"
+              stroke-width="5"
+            />
             <circle
               cx="50"
               cy="50"
@@ -504,7 +517,13 @@ function PomodoroCard({ value, onChange }: Body) {
               transform="rotate(-90 50 50)"
               stroke-dasharray={`${(1 - left / total) * 2 * Math.PI * 42} ${2 * Math.PI * 42}`}
             />
-            <text class="left" x="50" y="51" text-anchor="middle" dominant-baseline="central">
+            <text
+              class="left"
+              x="50"
+              y="51"
+              text-anchor="middle"
+              dominant-baseline="central"
+            >
               {formatLeft(left)}
             </text>
           </svg>
@@ -515,16 +534,19 @@ function PomodoroCard({ value, onChange }: Body) {
             <button
               type="button"
               onClick={() =>
-            onChange({
-              pomodoro: isRunning(p)
-                ? pause(p, Date.now(), total)
-                : start(p, Date.now(), total),
-            })
-          }
+                onChange({
+                  pomodoro: isRunning(p)
+                    ? pause(p, Date.now(), total)
+                    : start(p, Date.now(), total),
+                })
+              }
             >
               {t(isRunning(p) ? "c_pomo_pause" : "c_pomo_start")}
             </button>
-            <button type="button" onClick={() => onChange({ pomodoro: reset(p) })}>
+            <button
+              type="button"
+              onClick={() => onChange({ pomodoro: reset(p) })}
+            >
               {t("c_pomo_reset")}
             </button>
           </div>
