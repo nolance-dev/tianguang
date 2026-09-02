@@ -425,12 +425,6 @@
   "c_pomodoro": {
     "message": "ポモドーロ"
   },
-  "c_pomo_work": {
-    "message": "集中"
-  },
-  "c_pomo_rest": {
-    "message": "休憩"
-  },
   "c_pomo_start": {
     "message": "開始"
   },

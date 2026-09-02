@@ -425,12 +425,6 @@
   "c_pomodoro": {
     "message": "番茄钟"
   },
-  "c_pomo_work": {
-    "message": "专注"
-  },
-  "c_pomo_rest": {
-    "message": "休息"
-  },
   "c_pomo_start": {
     "message": "开始"
   },

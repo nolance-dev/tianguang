@@ -83,7 +83,8 @@ export const DEFAULT_DESK: Tile[] = [
 ];
 
 function clamp(n: unknown, lo: number, hi: number, fallback: number): number {
-  const v = typeof n === "number" && Number.isFinite(n) ? Math.round(n) : fallback;
+  const v =
+    typeof n === "number" && Number.isFinite(n) ? Math.round(n) : fallback;
   return Math.min(hi, Math.max(lo, v));
 }
 
@@ -113,8 +114,25 @@ export function normalize(raw: unknown, extra: TileId[] = []): Tile[] {
   const out: Tile[] = [];
   for (const item of list) {
     const id = (item as Partial<Tile> | null)?.id;
-    if (!id || !IDS.includes(kindOf(id)) || out.some((x) => x.id === id)) continue;
-    out.push({ id, w: clampW((item as Tile).w), h: heightOf(id, (item as Tile).h) });
+    /*
+     * id 必須是字串才往下走。
+     *
+     * 手改過的備份檔（desk: [{ id: 5 }]）會讓 kindOf 去呼叫 id.startsWith，
+     * 丟 TypeError。而 normalize 是在 render 裡跑的，於是每次重繪都炸，
+     * 工作區永久打不開，介面上也沒有任何辦法救回來 —— 只能去清 storage。
+     * 匯入的資料不該有能力把應用程式鎖死。
+     */
+    if (
+      typeof id !== "string" ||
+      !IDS.includes(kindOf(id)) ||
+      out.some((x) => x.id === id)
+    )
+      continue;
+    out.push({
+      id,
+      w: clampW((item as Tile).w),
+      h: heightOf(id, (item as Tile).h),
+    });
   }
   for (const d of DEFAULT_DESK) {
     if (!out.some((x) => x.id === d.id)) out.push({ ...d });
@@ -123,7 +141,8 @@ export function normalize(raw: unknown, extra: TileId[] = []): Tile[] {
   // 使用者排好的順序不因為多了一張而被推開
   const linkSize = DEFAULT_DESK.find((d) => d.id === "links")!;
   for (const id of extra) {
-    if (!out.some((x) => x.id === id)) out.push({ id, w: linkSize.w, h: heightOf(id, linkSize.h) });
+    if (!out.some((x) => x.id === id))
+      out.push({ id, w: linkSize.w, h: heightOf(id, linkSize.h) });
   }
   return out;
 }
@@ -153,5 +172,7 @@ export function nudge(list: Tile[], id: TileId, delta: number): Tile[] {
 }
 
 export function resize(list: Tile[], id: TileId, w: number, h: number): Tile[] {
-  return list.map((x) => (x.id === id ? { ...x, w: clampW(w), h: heightOf(id, h) } : x));
+  return list.map((x) =>
+    x.id === id ? { ...x, w: clampW(w), h: heightOf(id, h) } : x,
+  );
 }

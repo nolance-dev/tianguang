@@ -26,12 +26,23 @@ interface Props {
 type Row = [label: string, value: string];
 
 const pad = (n: number) => String(n).padStart(2, "0");
-const hhmm = (h: number) => `${pad(Math.floor(h))}:${pad(Math.round((h % 1) * 60))}`;
+/*
+ * 分鐘進位要往上帶，不能留在原位。
+ *
+ * 直接 round((h % 1) * 60) 在 h = 5.9995 時算出 60，印成「05:60」——
+ * 2026 年就有四天會這樣：10/30 日出、3/09 與 9/14 日落、9/28 晝長。
+ * 先四捨五入到整分，再從總分鐘數拆出時與分，進位自然就帶過去了。
+ */
+const hhmm = (h: number) => {
+  const mins = Math.round(h * 60);
+  return `${pad(Math.floor(mins / 60) % 24)}:${pad(mins % 60)}`;
+};
 
 /** 時長寫成「12h38」而不是 12:38 —— 12:38 看起來是時刻，不是長度 */
 function span(h: number): string {
-  const H = Math.floor(h);
-  return `${H}h${pad(Math.round((h - H) * 60))}`;
+  // 跟 hhmm 同一個道理：先化成整分再拆，才不會出現「11h60」
+  const mins = Math.round(h * 60);
+  return `${Math.floor(mins / 60)}h${pad(mins % 60)}`;
 }
 
 function dayOfYear(d: Date): number {
@@ -73,7 +84,13 @@ export function Margins({ now, lat, lon }: Props) {
     if (lunar) right.push([t("m_lunar"), lunar]);
     right.push(
       [outerRingName(jq), t(`m_hou_${houIndex(now)}`)],
-      [t("m_next"), t("m_next_v", [outerRingName((jq + 1) % 24), String(daysToNextJieqi(now))])],
+      [
+        t("m_next"),
+        t("m_next_v", [
+          outerRingName((jq + 1) % 24),
+          String(daysToNextJieqi(now)),
+        ]),
+      ],
       [t("m_lon"), `${lon0.toFixed(1)}°`],
     );
   }

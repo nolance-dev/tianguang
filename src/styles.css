@@ -2586,8 +2586,18 @@ body::-webkit-scrollbar {
  * 專注那一屏的用途正好相反：它存在的理由就是把其他東西擋掉，
  * 底下的漸層還在動的話，那層「看得見但碰不到」反而更吵。
  */
+/*
+ * 純色那一屏自帶前景色。
+ *
+ * :root 的 --fg 是照漸層平均亮度挑的，這一屏塗的卻是單一個 --solid，
+ * 兩個亮度不一樣 —— 直接沿用就會在某些時刻掉到 AA 以下。
+ * 時辰盤（.dial）早就自己帶一套了，這裡是同一個道理的第二處。
+ */
 .full.solid {
   background: var(--solid, #12161f);
+  color: var(--solid-fg, #f4f2ee);
+  --fg: var(--solid-fg, #f4f2ee);
+  --fg-2: var(--solid-fg-2, rgba(244, 242, 238, 0.66));
 }
 
 @keyframes full-in {

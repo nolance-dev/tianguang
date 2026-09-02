@@ -81,19 +81,43 @@ export interface SunTimes {
  */
 export function sunTimes(date: Date, lat: number, lon: number): SunTimes {
   // 用當地中午去算，才不會在日界附近取到前後一天的赤緯
-  const noonLocal = new Date(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0);
+  const noonLocal = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    12,
+    0,
+    0,
+  );
   const { l0, lambda, epsilon } = sunPosition(noonLocal);
 
   const decl = Math.asin(Math.sin(epsilon * RAD) * Math.sin(lambda * RAD));
-  const ra = Math.atan2(
-    Math.cos(epsilon * RAD) * Math.sin(lambda * RAD),
-    Math.cos(lambda * RAD),
-  ) / RAD;
+  const ra =
+    Math.atan2(
+      Math.cos(epsilon * RAD) * Math.sin(lambda * RAD),
+      Math.cos(lambda * RAD),
+    ) / RAD;
 
   // 均時差，分鐘
   let eot = 4 * (norm360(l0 - 0.0057183) - norm360(ra));
   if (eot > 720) eot -= 1440;
   if (eot < -720) eot += 1440;
+
+  /*
+   * 座標先驗過。
+   *
+   * 底下那個 cosH > 1 || cosH < -1 是用來認極晝極夜的，但 NaN 跟任何數字比
+   * 都是 false，所以壞座標會整路穿過去，回一組 NaN。呼叫端
+   * （Margins.tsx、Dial.tsx）檢查的是 !== null，NaN 過得了那一關，
+   * 於是畫面上出現 NaN:NaN。
+   *
+   * 順帶擋掉範圍外的：緯度 200 算得出數字，但那個數字沒有意義，
+   * 悄悄給一個錯的答案比說不知道更糟。
+   */
+  if (!Number.isFinite(lat) || !Number.isFinite(lon))
+    return { sunrise: null, sunset: null };
+  if (lat < -90 || lat > 90 || lon < -180 || lon > 180)
+    return { sunrise: null, sunset: null };
 
   const latRad = lat * RAD;
   const cosH =
@@ -104,9 +128,13 @@ export function sunTimes(date: Date, lat: number, lon: number): SunTimes {
   const h = Math.acos(cosH) / RAD;
   const noonUtcMin = 720 - 4 * lon - eot;
   // getTimezoneOffset 是「UTC 減本地」的分鐘數，所以要減掉
-  const toLocal = (utcMin: number) => (((utcMin - date.getTimezoneOffset()) / 60) % 24 + 24) % 24;
+  const toLocal = (utcMin: number) =>
+    ((((utcMin - date.getTimezoneOffset()) / 60) % 24) + 24) % 24;
 
-  return { sunrise: toLocal(noonUtcMin - 4 * h), sunset: toLocal(noonUtcMin + 4 * h) };
+  return {
+    sunrise: toLocal(noonUtcMin - 4 * h),
+    sunset: toLocal(noonUtcMin + 4 * h),
+  };
 }
 
 /**

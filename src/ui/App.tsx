@@ -1,10 +1,22 @@
 import { useComputed, useSignal, useSignalEffect } from "@preact/signals";
 import { useEffect, useMemo, useRef } from "preact/hooks";
-import { meshCss, colorsAt, paletteAt, paletteForColor, paletteForImage } from "../lib/mesh";
+import {
+  meshCss,
+  colorsAt,
+  paletteAt,
+  paletteForColor,
+  paletteForImage,
+} from "../lib/mesh";
 import { getImage, toUrl } from "../lib/images";
 import { decimalHour, dayFraction, greetSlot, indexAt } from "../lib/shichen";
 import { jieqiIndex, moonIndex } from "../lib/solar";
-import { isEnglish, outerRingName, shichenAlt, shichenName, t } from "../lib/i18n";
+import {
+  isEnglish,
+  outerRingName,
+  shichenAlt,
+  shichenName,
+  t,
+} from "../lib/i18n";
 import { resolve } from "../lib/search";
 import { DEFAULTS, load, save, type Settings } from "../lib/settings";
 import { Ring } from "./Ring";
@@ -15,7 +27,13 @@ import { Weather } from "./Weather";
 import { Cards } from "./Cards";
 import type { CardId, Tile } from "../lib/desk";
 import { CalendarDetail } from "./Calendar";
-import { around, byDate, hasHolidayAccess, loadHolidays, supported } from "../lib/holidays";
+import {
+  around,
+  byDate,
+  hasHolidayAccess,
+  loadHolidays,
+  supported,
+} from "../lib/holidays";
 import { Focus } from "./Focus";
 import { Palette } from "./Palette";
 import { randomQuote } from "../lib/quotes";
@@ -56,8 +74,12 @@ function canScroll(el: HTMLElement | null, dy: number): boolean {
  * 滾輪就被換頁吃掉了 —— 卡片裡面那些會捲的東西（照片牆的縮圖、待辦清單、
  * 日曆的行程）全部捲不動，第三張之後的照片根本拿不到。
  */
-function scrollableUnder(from: EventTarget | null, dy: number): HTMLElement | null {
-  let el: HTMLElement | null = from instanceof Element ? (from as HTMLElement) : null;
+function scrollableUnder(
+  from: EventTarget | null,
+  dy: number,
+): HTMLElement | null {
+  let el: HTMLElement | null =
+    from instanceof Element ? (from as HTMLElement) : null;
   while (el) {
     if (canScroll(el, dy)) return el;
     el = el.parentElement;
@@ -139,7 +161,8 @@ export function App() {
     const onWheel = (e: WheelEvent) => {
       // sheet 是月曆／番茄鐘那些整屏畫面。少了它，蓋著一層的時候滾輪還在翻
       // 底下那一屏 —— 蓋子後面的東西自己在動，比沒有蓋子還怪
-      if (dialOpen.peek() || palOpen.peek() || panelOpen.peek() || sheet.peek()) return;
+      if (dialOpen.peek() || palOpen.peek() || panelOpen.peek() || sheet.peek())
+        return;
       const dy = wheelPixels(e);
       if (!dy) return;
 
@@ -192,7 +215,8 @@ export function App() {
     const next = { ...settings.value, ...p };
     settings.value = next;
     save(next, (result) => {
-      notice.value = result === "local-fallback" ? t("save_local_fallback") : null;
+      notice.value =
+        result === "local-fallback" ? t("save_local_fallback") : null;
     });
   }
 
@@ -227,7 +251,8 @@ export function App() {
     const s = settings.value;
     if (s.background === "solid") return paletteForColor(s.solidColor);
     const img = bgImage.value;
-    if (s.background === "image" && img) return paletteForImage(img.url, img.luminance, s.dim);
+    if (s.background === "image" && img)
+      return paletteForImage(img.url, img.luminance, s.dim);
     // 還沒選圖、或圖讀不到，就退回時辰漸層，不要留一片空白
     return paletteAt(decimalHour(now.value));
   });
@@ -244,29 +269,50 @@ export function App() {
     r.style.setProperty("--glass", p.glass);
     r.style.setProperty("--glass-line", p.glassLine);
     // 搜尋列不吃 backdrop-filter，需要一個自己站得住的半透明底
-    r.style.setProperty("--glass-solid", p.light ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.11)");
+    r.style.setProperty(
+      "--glass-solid",
+      p.light ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.11)",
+    );
     // 卡片與黏住的搜尋列都得自己站得住：底下有東西在動，不能只是一層半透明。
     // 暗底用比背景更暗的底做深度，亮底用白 —— 反過來會把字吃掉。
-    r.style.setProperty("--card", p.light ? "rgba(255,255,255,.70)" : "rgba(13,17,27,.50)");
-    r.style.setProperty("--veil", p.light ? "rgba(250,249,246,.90)" : "rgba(8,11,18,.86)");
+    r.style.setProperty(
+      "--card",
+      p.light ? "rgba(255,255,255,.70)" : "rgba(13,17,27,.50)",
+    );
+    r.style.setProperty(
+      "--veil",
+      p.light ? "rgba(250,249,246,.90)" : "rgba(8,11,18,.86)",
+    );
     /*
      * 這個主題的純色。番茄鐘那一屏用它當底 —— 不透明，所以後面什麼都不透出來。
      * 純色背景就用使用者選的那一色，其餘（時辰漸層、自訂圖）用這個時刻的
      * 代表色，也就是首屏那個 inline script 先塗的同一色。
      */
-    r.style.setProperty("--solid", s.background === "solid" ? s.solidColor : p.boot);
+    const solid = s.background === "solid" ? s.solidColor : p.boot;
+    r.style.setProperty("--solid", solid);
+    /*
+     * 純色那一屏自己算一套字色，不吃 :root 的 --fg。
+     *
+     * --fg 是照漸層三層的平均亮度挑的，而這一屏塗的是單一個 --solid ——
+     * 兩者不是同一個亮度。實測差距最大時對比只剩 4.28（AA 要 4.5），
+     * 而下午那幾點更糟。時辰盤早就自己帶一套了（styles.css 的 .dial），
+     * 這一屏是它漏掉的兄弟。
+     */
+    const sp = paletteForColor(solid);
+    r.style.setProperty("--solid-fg", sp.fg);
+    r.style.setProperty("--solid-fg-2", sp.fg2);
     // 壓在 --fg 那個色塊上的字。它是 --fg 的反面，不是背景色 ——
     // 用半透明的 --card 當字色會糊成灰的。
     r.style.setProperty("--fg-ink", p.light ? "#F7F5F1" : "#12161F");
     // 節日與星期天的紅。亮底要深一點才咬得住，暗底要淺一點才不會糊成褐色
     r.style.setProperty("--holi", p.light ? "#B3382F" : "#E8776C");
     /*
-      * 顆粒與變暗只對自訂圖有意義。
-      *
-      * 時辰漸層和純色是設計好的顏色 —— 蓋一層黑會把整片壓成灰、蓋一層噪點會把
-      * 彩度洗掉，那不是「調整」，是把原本的東西弄壞。照片才需要壓一層底讓字站得住。
-      * 值照樣留著，換回圖片時原封不動。
-      */
+     * 顆粒與變暗只對自訂圖有意義。
+     *
+     * 時辰漸層和純色是設計好的顏色 —— 蓋一層黑會把整片壓成灰、蓋一層噪點會把
+     * 彩度洗掉，那不是「調整」，是把原本的東西弄壞。照片才需要壓一層底讓字站得住。
+     * 值照樣留著，換回圖片時原封不動。
+     */
     const onImage = s.background === "image";
     r.style.setProperty("--grain", String(onImage ? s.grain : 0));
     r.style.setProperty("--dim", String(onImage ? s.dim : 0));
@@ -277,7 +323,10 @@ export function App() {
 
     // 自訂圖上仍依時辰疊一層明暗與色溫 —— 換了桌布，時間感不必跟著消失
     const tinted = s.background === "image" && s.shichenTint && bgImage.value;
-    r.style.setProperty("--tint", tinted ? meshCss(colorsAt(decimalHour(now.value))) : "none");
+    r.style.setProperty(
+      "--tint",
+      tinted ? meshCss(colorsAt(decimalHour(now.value))) : "none",
+    );
     r.style.setProperty("--tint-opacity", tinted ? "0.34" : "0");
     r.dataset.sc = String(scIndex.value);
   });
@@ -292,7 +341,11 @@ export function App() {
         aria-label={t("dial_open")}
         onClick={() => (dialOpen.value = true)}
       >
-        <Ring index={scIndex.value} fraction={dayFraction(now.value)} size={48} />
+        <Ring
+          index={scIndex.value}
+          fraction={dayFraction(now.value)}
+          size={48}
+        />
         <span class="t">
           <b>
             {shichenName(scIndex.value)}
@@ -316,12 +369,18 @@ export function App() {
   const hero = (
     <>
       <Greeting now={now.value} name={cfg.name} />
-      <Clock now={now.value} settings={cfg} onOpen={() => (dialOpen.value = true)} />
+      <Clock
+        now={now.value}
+        settings={cfg}
+        onOpen={() => (dialOpen.value = true)}
+      />
       <DateLine now={now.value} />
     </>
   );
   const search = <SearchBar engineId={cfg.searchEngine} />;
-  const quote = cfg.cards.quote ? <QuoteLine text={cfg.quoteText} by={cfg.quoteBy} /> : null;
+  const quote = cfg.cards.quote ? (
+    <QuoteLine text={cfg.quoteText} by={cfg.quoteBy} />
+  ) : null;
   /*
    * 兩屏共用同一個 Cards。差別只有三件事：顯示哪幾張、吃哪一份版面、寫回哪裡。
    * 抽成函式而不是複製一份，是為了讓「主頁面那一排的大小和編輯跟工作區一樣」
@@ -391,7 +450,9 @@ export function App() {
       )
     : null;
   const notices = (
-    <footer class="bottom">{notice.value && <p class="notice">{notice.value}</p>}</footer>
+    <footer class="bottom">
+      {notice.value && <p class="notice">{notice.value}</p>}
+    </footer>
   );
 
   return (
@@ -403,7 +464,10 @@ export function App() {
 
       <div class="app" data-page={page.value}>
         {/* 收起來的那一屏設 inert：看不到的東西不該還能 Tab 進去 */}
-        <section class={`screen${page.value === 0 ? " on" : ""}`} inert={page.value !== 0}>
+        <section
+          class={`screen${page.value === 0 ? " on" : ""}`}
+          inert={page.value !== 0}
+        >
           {topBar}
 
           <main class="core">
@@ -457,7 +521,11 @@ export function App() {
       )}
 
       {sheet.value === "pomodoro" && (
-        <Focus work={work.value} onChange={patchWork} onClose={() => (sheet.value = null)} />
+        <Focus
+          work={work.value}
+          onChange={patchWork}
+          onClose={() => (sheet.value = null)}
+        />
       )}
 
       {dialOpen.value && (
@@ -585,7 +653,11 @@ function SearchBar({ engineId }: { engineId: string }) {
         enterkeyhint="search"
         onInput={(e) => (value.value = e.currentTarget.value)}
       />
-      {hit.value ? <span class="hint">{hit.value.name}</span> : <span class="kbd">Ctrl K</span>}
+      {hit.value ? (
+        <span class="hint">{hit.value.name}</span>
+      ) : (
+        <span class="kbd">Ctrl K</span>
+      )}
     </form>
   );
 }

@@ -29,14 +29,46 @@ export interface Anchor {
  * 不是算出來的。
  */
 export const ANCHORS: Anchor[] = [
-  { hour: 0, label: "夜半", c: ["#2C3D6B", "#16224A", "#1D3454", "#070B14", "#0F1727", "#151F3A"] },
-  { hour: 3, label: "平旦", c: ["#4A5B86", "#2B3560", "#16204A", "#080C1A", "#131B36", "#26305A"] },
-  { hour: 6, label: "日出", c: ["#EDB86E", "#B26C3C", "#33437A", "#121933", "#27325C", "#4E4059"] },
-  { hour: 9, label: "隅中", c: ["#F7DCAE", "#D9AE79", "#6E9BCB", "#86AECF", "#B7CFE2", "#EDE3D0"] },
-  { hour: 12, label: "日中", c: ["#FFFFFF", "#C6DCEC", "#FFFFFF", "#D8E7F3", "#EDF1EF", "#F7F1E6"] },
-  { hour: 15, label: "日昳", c: ["#F8CC8A", "#CE8F5C", "#5F80AE", "#6E8CB4", "#B0B4BC", "#EFD3AE"] },
-  { hour: 18, label: "日入", c: ["#E68A3C", "#A2494A", "#4C2C54", "#271A31", "#5A3149", "#8E4A3E"] },
-  { hour: 21, label: "人定", c: ["#6B4A6E", "#3A2A50", "#1B2246", "#0A0E1E", "#141A34", "#2A2450"] },
+  {
+    hour: 0,
+    label: "夜半",
+    c: ["#2C3D6B", "#16224A", "#1D3454", "#070B14", "#0F1727", "#151F3A"],
+  },
+  {
+    hour: 3,
+    label: "平旦",
+    c: ["#4A5B86", "#2B3560", "#16204A", "#080C1A", "#131B36", "#26305A"],
+  },
+  {
+    hour: 6,
+    label: "日出",
+    c: ["#EDB86E", "#B26C3C", "#33437A", "#121933", "#27325C", "#4E4059"],
+  },
+  {
+    hour: 9,
+    label: "隅中",
+    c: ["#F7DCAE", "#D9AE79", "#6E9BCB", "#86AECF", "#B7CFE2", "#EDE3D0"],
+  },
+  {
+    hour: 12,
+    label: "日中",
+    c: ["#FFFFFF", "#C6DCEC", "#FFFFFF", "#D8E7F3", "#EDF1EF", "#F7F1E6"],
+  },
+  {
+    hour: 15,
+    label: "日昳",
+    c: ["#F8CC8A", "#CE8F5C", "#5F80AE", "#6E8CB4", "#B0B4BC", "#EFD3AE"],
+  },
+  {
+    hour: 18,
+    label: "日入",
+    c: ["#E68A3C", "#A2494A", "#4C2C54", "#271A31", "#5A3149", "#8E4A3E"],
+  },
+  {
+    hour: 21,
+    label: "人定",
+    c: ["#6B4A6E", "#3A2A50", "#1B2246", "#0A0E1E", "#141A34", "#2A2450"],
+  },
 ];
 
 type Rgb = [number, number, number];
@@ -47,7 +79,10 @@ function toRgb(hex: string): Rgb {
 }
 
 function toHex([r, g, b]: Rgb): string {
-  const h = (v: number) => Math.round(Math.min(255, Math.max(0, v))).toString(16).padStart(2, "0");
+  const h = (v: number) =>
+    Math.round(Math.min(255, Math.max(0, v)))
+      .toString(16)
+      .padStart(2, "0");
   return `#${h(r)}${h(g)}${h(b)}`;
 }
 
@@ -98,7 +133,11 @@ function mix(a: string, b: string, t: number): string {
   if (t >= 1) return b;
   const x = toLab(a);
   const y = toLab(b);
-  return fromLab([x[0] + (y[0] - x[0]) * t, x[1] + (y[1] - x[1]) * t, x[2] + (y[2] - x[2]) * t]);
+  return fromLab([
+    x[0] + (y[0] - x[0]) * t,
+    x[1] + (y[1] - x[1]) * t,
+    x[2] + (y[2] - x[2]) * t,
+  ]);
 }
 
 /** WCAG 相對亮度。用來決定前景該用亮字還是暗字，不必為每組錨點另外標一個旗標。 */
@@ -147,13 +186,81 @@ export function meshCss(c: Six): string {
  * 前景色一律由背後的亮度決定，背景是漸層、純色還是照片都走這裡。
  * 之前純色背景沒接上這條，結果深藍底配白天的暗字，整頁讀不到。
  */
-export function foreground(bgLuminance: number, css: string, boot: string): Palette {
-  const light = bgLuminance > 0.4;
+/** 兩個亮度之間的 WCAG 對比。1 是一模一樣，21 是純黑配純白 */
+function contrast(a: number, b: number): number {
+  return a > b ? (a + 0.05) / (b + 0.05) : (b + 0.05) / (a + 0.05);
+}
+
+/**
+ * 把字色往極端色混，直到對比夠 4.5 或者已經混到底。
+ *
+ * 二分十次就夠了：色彩空間上這條線是單調的，十次的誤差遠小於一個色階。
+ */
+function harden(base: string, extreme: string, bg: number): string {
+  if (contrast(luminance(base), bg) >= AA) return base;
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 10; i++) {
+    const mid = (lo + hi) / 2;
+    if (contrast(luminance(mix(base, extreme, mid)), bg) >= AA) hi = mid;
+    else lo = mid;
+  }
+  return mix(base, extreme, hi);
+}
+
+/** 一般文字的 WCAG AA 門檻 */
+const AA = 4.5;
+
+export function foreground(
+  bgLuminance: number,
+  css: string,
+  boot: string,
+): Palette {
+  /*
+   * 用哪一種字，問「哪一種比較讀得到」，不要用一個寫死的門檻。
+   *
+   * 原本是 bgLuminance > 0.4。那個 0.4 訂得太高：深色字與淺色字真正打平的
+   * 位置在亮度 0.20（解 (L+0.05)² = (PAPER+0.05)(INK+0.05) 得到），
+   * 所以 0.20 到 0.40 這一段會挑到比較差的那一個 —— 而下午的漸層正好
+   * 從那一段滑過去。實測 15:30 時番茄鐘整屏的對比掉到 2.37:1
+   * （一般文字的門檻是 4.5，大字是 3），16:00 是 3.08:1。
+   *
+   * 改成直接比對比之後，這條線自己會落在該落的地方，
+   * 而且以後有人調色盤也不會再把它推歪。
+   */
+  /*
+   * 選邊要看「推到底能到多少」，不是看設計色現在是多少。
+   *
+   * 這兩件事會給出不同的答案。底色亮度 0.198 時，設計的白字是 4.23、
+   * 深字是 3.76，看起來白字贏；但白字已經沒有餘裕了（推到純白也才 4.23），
+   * 深字推到純黑卻有 4.96。照設計色選就會選到那條走不遠的路。
+   *
+   * 所以拿純黑（亮度 0）和純白（亮度 1）來比 —— 那是各自的上限。
+   */
+  const light = contrast(bgLuminance, 0) >= contrast(bgLuminance, 1);
+
+  /*
+   * 對比不夠時，把字往極端推，推到剛好夠為止。
+   *
+   * 選對了邊還不保證讀得到：底色落在中間那一段時，設計用的 #1B2230 和
+   * #F4F2EE 兩邊都構不到 4.5（一般文字的 AA 門檻）。實測最差是早上七點半
+   * 的 3.73:1。要跨過去，字得比設計色更黑或更白。
+   *
+   * 所以只在不夠的時候往純黑／純白混，混到 4.5 就停 —— 一天裡絕大多數
+   * 時間對比綽綽有餘，那些時候用的還是原本那兩個帶色溫的字色。
+   * 這樣「任何時刻都讀得到」是算出來的保證，不是調出來的巧合。
+   */
+  const ink = harden(
+    light ? "#1B2230" : "#F4F2EE",
+    light ? "#000000" : "#ffffff",
+    bgLuminance,
+  );
   return {
     css,
     boot,
-    fg: light ? "#1B2230" : "#F4F2EE",
-    fg2: light ? "rgba(27,34,48,.62)" : "rgba(244,242,238,.66)",
+    fg: ink,
+    // 次要文字沿用同一個字色，只是淡一點。淡的那一層本來就不扛 4.5
+    fg2: `rgba(${toRgb(ink).join(",")},${light ? ".62" : ".66"})`,
     glass: light ? "rgba(255,255,255,.42)" : "rgba(255,255,255,.10)",
     glassLine: light ? "rgba(27,34,48,.13)" : "rgba(255,255,255,.20)",
     light,
@@ -173,9 +280,17 @@ export function paletteForColor(hex: string): Palette {
 }
 
 /** 自訂圖片背景。亮度是匯入時量好存起來的，不用每次重讀像素。 */
-export function paletteForImage(url: string, imageLuminance: number, dim: number): Palette {
+export function paletteForImage(
+  url: string,
+  imageLuminance: number,
+  dim: number,
+): Palette {
   // 變暗層壓在圖上面，所以判斷前景時要把它算進去
-  return foreground(imageLuminance * (1 - dim), `center / cover no-repeat url("${url}")`, "#000");
+  return foreground(
+    imageLuminance * (1 - dim),
+    `center / cover no-repeat url("${url}")`,
+    "#000",
+  );
 }
 
 /** 二十四筆整點底色，給 vite 注入首屏 inline script 用。 */

@@ -14,7 +14,8 @@ import enUS from "../../public/_locales/en/messages.json";
 
 type Bundle = Record<string, { message: string }>;
 
-const hasChromeI18n = typeof chrome !== "undefined" && !!chrome.i18n?.getMessage;
+const hasChromeI18n =
+  typeof chrome !== "undefined" && !!chrome.i18n?.getMessage;
 
 /**
  * 兩套都載，因為中英文不只是翻譯 —— 英文版的外環是月名（moon_*），
@@ -27,15 +28,30 @@ function devBundle(): Bundle {
 export function t(key: string, subs?: string | string[]): string {
   if (hasChromeI18n) {
     const msg = chrome.i18n.getMessage(key, subs);
-    // 找不到鍵時 chrome 回空字串。回傳鍵名比回傳空白好除錯。
-    return msg || key;
+    /*
+     * 空字串有兩種意思，而 chrome 不讓你分辨：鍵不存在是空字串，
+     * 翻譯本來就留白也是空字串。
+     *
+     * 原本一律退回鍵名，於是英文版的 sc_suffix（時辰的「時」字，英文不需要，
+     * 所以刻意留白）在畫面上變成一行 sc_suffix。實測過，那三個地方
+     * （App.tsx、ClockCard.tsx、Dial.tsx）都會露出來。
+     *
+     * 所以正式版本相信「留白就是留白」，直接回空字串；開發時才退回鍵名，
+     * 少了鍵仍然一眼看得到。「鍵一定存在」不是用祈禱保證的 —— 有一條測試
+     * 掃過 src 裡所有 t("...") 的字面鍵，確認它們都在預設語系裡。
+     */
+    if (msg) return msg;
+    return import.meta.env.DEV ? key : "";
   }
   if (import.meta.env.DEV) {
     const entry = devBundle()[key];
     if (!entry) return key;
     if (!subs) return entry.message;
     const list = Array.isArray(subs) ? subs : [subs];
-    return entry.message.replace(/\$(\d)\$?/g, (_, n) => list[Number(n) - 1] ?? "");
+    return entry.message.replace(
+      /\$(\d)\$?/g,
+      (_, n) => list[Number(n) - 1] ?? "",
+    );
   }
   return key;
 }

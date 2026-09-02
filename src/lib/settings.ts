@@ -146,17 +146,67 @@ const KEY = "tg.settings";
 const BOOT_KEY = "tg.boot";
 
 /** 之後每加一版就在下面接一段 if，不要回頭改前面的。 */
+/**
+ * 巢狀的開關表要逐鍵合併，不能整包換掉。
+ *
+ * cards 和 home 都是「一張卡一個布林」的表。展開運算子是淺的，所以
+ * { ...DEFAULTS, ...raw } 遇到 raw.cards 就是整包取代 —— 一份只寫了
+ * { cards: { newcard: true } } 的設定（從新版同步回來的，或是手改的備份）
+ * 會讓十張卡的開關全部消失，而那正是上面註解說要防的情境。
+ *
+ * 只認得的鍵才收，而且只收布林：不認得的鍵丟掉（那是新版才有的卡，
+ * 這一版畫不出來），型別不對的丟掉（手改壞的）。
+ */
+function mergeFlags<T extends Record<string, boolean>>(
+  base: T,
+  raw: unknown,
+): T {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return { ...base };
+  const src = raw as Record<string, unknown>;
+  const out = { ...base };
+  for (const k of Object.keys(base)) {
+    if (typeof src[k] === "boolean")
+      (out as Record<string, boolean>)[k] = src[k];
+  }
+  return out;
+}
+
+/**
+ * 純色背景只收顏色，不收任意 CSS。
+ *
+ * 這個值最後會走到 --solid 和 --mesh，而 styles.css 是 background: var(--mesh)。
+ * background 收得下 url()，所以一份手改的備份寫上
+ * url(https://example.invalid/beacon.png) 就是一個每次開新分頁都會發出去的
+ * 遠端請求 —— 不需要任何注入技巧，那本來就是合法的 CSS 值。
+ * 擴充功能不該有這種東西，何況它是靜悄悄的。
+ */
+function safeColor(raw: unknown, fallback: string): string {
+  return typeof raw === "string" && /^#[0-9a-f]{3,8}$/i.test(raw.trim())
+    ? raw.trim()
+    : fallback;
+}
+
 export function migrate(raw: Record<string, unknown>): Settings {
   const v = typeof raw.schemaVersion === "number" ? raw.schemaVersion : 0;
 
   // 比這一版還新的設定，是從裝了新版的另一台電腦同步回來的。
   // 硬套會把我們還不認識的欄位吃掉，所以原樣留著，只補上缺的鍵，
   // 版本號也不往下改 —— 那台電腦下次同步時才不會被降級。
-  if (v > SCHEMA_VERSION) return { ...DEFAULTS, ...raw } as Settings;
+  const merged =
+    v > SCHEMA_VERSION
+      ? ({ ...DEFAULTS, ...raw } as Settings)
+      : // v <= SCHEMA_VERSION：目前只有第一版，補預設值即可。
+        // 之後每加一版在這裡接一段 if (v < N) { ... }
+        ({ ...DEFAULTS, ...raw, schemaVersion: SCHEMA_VERSION } as Settings);
 
-  // v <= SCHEMA_VERSION：目前只有第一版，補預設值即可。
-  // 之後每加一版在這裡接一段 if (v < N) { ... }
-  return { ...DEFAULTS, ...raw, schemaVersion: SCHEMA_VERSION } as Settings;
+  // 淺展開救不了的那幾個，逐一收拾。兩條路徑都要走這一段 ——
+  // 「比較新的設定」正是最可能帶著我們不認得的 cards 內容回來的那一種
+  return {
+    ...merged,
+    cards: mergeFlags(DEFAULTS.cards, (raw as { cards?: unknown }).cards),
+    home: mergeFlags(DEFAULTS.home, (raw as { home?: unknown }).home),
+    solidColor: safeColor(merged.solidColor, DEFAULTS.solidColor),
+  };
 }
 
 const hasChrome = typeof chrome !== "undefined" && !!chrome.storage;
@@ -173,9 +223,15 @@ export async function load(): Promise<Settings> {
     }
   }
   // sync 先，沒有才看 local —— local 可能是上次 sync 失敗降級留下的
-  const fromSync = (await chrome.storage.sync.get(KEY)) as Record<string, unknown>;
+  const fromSync = (await chrome.storage.sync.get(KEY)) as Record<
+    string,
+    unknown
+  >;
   if (fromSync[KEY]) return migrate(fromSync[KEY] as Record<string, unknown>);
-  const fromLocal = (await chrome.storage.local.get(KEY)) as Record<string, unknown>;
+  const fromLocal = (await chrome.storage.local.get(KEY)) as Record<
+    string,
+    unknown
+  >;
   if (fromLocal[KEY]) return migrate(fromLocal[KEY] as Record<string, unknown>);
   return { ...DEFAULTS };
 }
@@ -187,7 +243,9 @@ export async function load(): Promise<Settings> {
 export function mirrorBoot(s: Settings, now = new Date()): void {
   try {
     const color =
-      s.background === "solid" ? s.solidColor : paletteAt(now.getHours() + now.getMinutes() / 60).boot;
+      s.background === "solid"
+        ? s.solidColor
+        : paletteAt(now.getHours() + now.getMinutes() / 60).boot;
     // 變暗只跟著圖片走，首屏也要一樣 —— 不然漸層背景會先暗一下再彈回來
     localStorage.setItem(
       BOOT_KEY,
@@ -212,7 +270,10 @@ export function save(s: Settings, onResult?: (r: SaveOutcome) => void): void {
   }, 300);
 }
 
-async function flush(s: Settings, onResult?: (r: SaveOutcome) => void): Promise<void> {
+async function flush(
+  s: Settings,
+  onResult?: (r: SaveOutcome) => void,
+): Promise<void> {
   if (!hasChrome) {
     try {
       localStorage.setItem(KEY, JSON.stringify(s));
