@@ -915,5 +915,17 @@
   },
   "s_backup_bad": {
     "message": "That file could not be read - it may not be an Aubade backup."
+  },
+  "s_tab_general": {
+    "message": "General"
+  },
+  "s_tab_look": {
+    "message": "Look"
+  },
+  "s_tab_cards": {
+    "message": "Widgets"
+  },
+  "s_tab_data": {
+    "message": "Data"
   }
 }

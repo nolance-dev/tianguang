@@ -1094,6 +1094,54 @@ body::-webkit-scrollbar {
   -webkit-backdrop-filter: blur(20px);
 }
 
+/*
+ * 分頁列。
+ *
+ * 跟標題一樣黏在頂端 —— 捲到設定的最下面時還看得到自己在哪一頁，
+ * 也不必捲回去才能換頁。它自己有底色，不然捲動時底下的字會透上來。
+ */
+.panel-tabs {
+  position: sticky;
+  top: 3.35rem;
+  z-index: 2;
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.55rem 1.2rem 0.6rem;
+  background: var(--glass-solid, rgba(255, 255, 255, 0.14));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-line);
+}
+
+.panel-tabs button {
+  flex: 1;
+  padding: 0.34rem 0.2rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--fg-2);
+  font-family: var(--f-cjk);
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+:root[lang^="en"] .panel-tabs button {
+  font-family: var(--f-latin);
+  letter-spacing: 0.03em;
+}
+
+.panel-tabs button:hover {
+  color: var(--fg);
+}
+
+.panel-tabs button[aria-selected="true"] {
+  color: var(--fg);
+  background: var(--glass-line);
+  border-color: var(--glass-line);
+}
+
 .panel-h b {
   font-family: var(--f-cjk);
   letter-spacing: 0.18em;

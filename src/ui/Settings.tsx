@@ -29,9 +29,24 @@ interface Props {
   onRestore: (settings: S, work: Workspace) => void;
 }
 
+/**
+ * 設定分成幾頁。
+ *
+ * 十二個區塊排成一長條時，找一個開關要從頭捲到尾，而且捲過去的路上全是
+ * 跟現在無關的東西。分頁不是為了好看 —— 是讓「我在調外觀」這件事，
+ * 在畫面上只剩外觀。
+ *
+ * 分法照「調的是什麼」：一般是關於你和這台機器的（名字、時鐘、曆法、所在地），
+ * 外觀是看得見的樣子，元件是桌面上擺什麼、怎麼排，備份是資料進出。
+ */
+const TABS = ["general", "look", "cards", "data"] as const;
+type Tab = (typeof TABS)[number];
+
 export function SettingsPanel({ value, onChange, onClose, work, onRestore }: Props) {
   const first = useRef<HTMLInputElement>(null);
   useLayoutEffect(() => first.current?.focus(), []);
+  const [tab, setTab] = useState<Tab>("general");
+  const body = useRef<HTMLDivElement>(null);
 
   const close = useRef(onClose);
   close.current = onClose;
@@ -51,7 +66,38 @@ export function SettingsPanel({ value, onChange, onClose, work, onRestore }: Pro
           </button>
         </header>
 
-        <div class="panel-body">
+        <nav class="panel-tabs" role="tablist" aria-label={t("settings_title")}>
+          {TABS.map((id) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              id={`tab-${id}`}
+              aria-selected={tab === id}
+              aria-controls="panel-body"
+              tabIndex={tab === id ? 0 : -1}
+              onClick={() => {
+                setTab(id);
+                // 換頁就回到最上面 —— 停在上一頁捲到的位置會像是內容少了一截
+                if (body.current) body.current.scrollTop = 0;
+              }}
+              onKeyDown={(e) => {
+                const step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+                if (!step) return;
+                e.preventDefault();
+                const next = TABS[(TABS.indexOf(id) + step + TABS.length) % TABS.length]!;
+                setTab(next);
+                document.getElementById(`tab-${next}`)?.focus();
+              }}
+            >
+              {t(`s_tab_${id}`)}
+            </button>
+          ))}
+        </nav>
+
+        <div class="panel-body" id="panel-body" role="tabpanel" aria-labelledby={`tab-${tab}`} ref={body}>
+          {tab === "general" && (
+            <>
           <section>
             <h3>{t("s_general")}</h3>
             <label class="row">
@@ -121,6 +167,16 @@ export function SettingsPanel({ value, onChange, onClose, work, onRestore }: Pro
             <Holidays value={value} onChange={onChange} />
           </section>
 
+          <section>
+            <h3>{t("s_weather")}</h3>
+            <WeatherSettings value={value} onChange={onChange} />
+          </section>
+
+            </>
+          )}
+
+          {tab === "look" && (
+            <>
           <section>
             <h3>{t("s_quote")}</h3>
             <label class="row">
@@ -230,6 +286,11 @@ export function SettingsPanel({ value, onChange, onClose, work, onRestore }: Pro
             )}
           </section>
 
+            </>
+          )}
+
+          {tab === "cards" && (
+            <>
           <section>
             <h3>{t("s_cards")}</h3>
             {(
@@ -310,11 +371,11 @@ export function SettingsPanel({ value, onChange, onClose, work, onRestore }: Pro
             <LinkImport value={value} onChange={onChange} />
           </section>
 
-          <section>
-            <h3>{t("s_weather")}</h3>
-            <WeatherSettings value={value} onChange={onChange} />
-          </section>
+            </>
+          )}
 
+          {tab === "data" && (
+            <>
           <section>
             <h3>{t("s_backup")}</h3>
             <p class="note">{t("s_backup_hint")}</p>
@@ -337,6 +398,8 @@ export function SettingsPanel({ value, onChange, onClose, work, onRestore }: Pro
               <dd>{__APP_VERSION__}</dd>
             </dl>
           </section>
+            </>
+          )}
         </div>
       </aside>
     </div>

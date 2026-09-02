@@ -951,5 +951,17 @@
   },
   "s_backup_bad": {
     "message": "這個檔案讀不出來，可能不是天光的備份。"
+  },
+  "s_tab_general": {
+    "message": "一般"
+  },
+  "s_tab_look": {
+    "message": "外觀"
+  },
+  "s_tab_cards": {
+    "message": "元件"
+  },
+  "s_tab_data": {
+    "message": "資料"
   }
 }

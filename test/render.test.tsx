@@ -19,6 +19,13 @@ import { DEFAULT_DESK } from "../src/lib/desk";
  * 因為 Preact 的 effect 靠它們排程 —— 一起假掉就永遠等不到重繪。
  */
 
+
+/** 設定分頁了：開了面板還要先切到那一頁，控制項才在畫面上 */
+async function openTab(id: "general" | "look" | "cards" | "data") {
+  await vi.waitFor(() => expect(document.getElementById(`tab-${id}`)).not.toBeNull());
+  (document.getElementById(`tab-${id}`) as HTMLButtonElement).click();
+}
+
 let host: HTMLElement | null = null;
 
 afterEach(() => {
@@ -173,6 +180,7 @@ describe("時辰盤與設定", () => {
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     (el.querySelector(".gear") as HTMLButtonElement).click();
     await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+    await openTab("data");
 
     const about = document.querySelector(".panel .about")!;
     expect(about.textContent).toContain("edge://extensions");
@@ -193,6 +201,7 @@ describe("背景來源", () => {
     await vi.waitFor(() => expect(cssVar("--fg")).toBe("#1B2230")); // 漸層模式，白天暗字
     (el.querySelector(".gear") as HTMLButtonElement).click();
     await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+    await openTab("look");
 
     const solid = Array.from(
       document.querySelectorAll<HTMLButtonElement>('[data-seg="background"] button'),
@@ -206,6 +215,7 @@ describe("背景來源", () => {
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     (el.querySelector(".gear") as HTMLButtonElement).click();
     await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+    await openTab("look");
     // 用 aria-label 鎖定背景那一組 —— 溫度單位也是 .seg，選擇器不能只看 class
     expect(document.querySelectorAll('[data-seg="background"] button').length).toBe(3);
   });
@@ -240,6 +250,7 @@ describe("背景濾鏡", () => {
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     (el.querySelector(".gear") as HTMLButtonElement).click();
     await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+    await openTab("look");
     const buttons = Array.from(
       document.querySelectorAll<HTMLButtonElement>('[data-seg="background"] button'),
     );
@@ -259,6 +270,7 @@ describe("拖滑桿不該重讀背景圖", () => {
     await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
     (el.querySelector(".gear") as HTMLButtonElement).click();
     await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+    await openTab("look");
 
     // 顆粒只在圖片背景下才有滑桿 —— 先切過去（沒選圖，所以不會真的讀任何 blob）
     const bg = Array.from(
@@ -1010,5 +1022,48 @@ describe("整屏畫面蓋著的時候，底下不該還能操作", () => {
     // 那個純色是主題給的，不是寫死在樣式表裡
     expect(cssVar("--solid")).toMatch(/^#|rgb/);
     localStorage.removeItem("tg.settings");
+  });
+});
+
+describe("設定分頁", () => {
+  const openPanel = async (el: HTMLElement) => {
+    await vi.waitFor(() => expect(cssVar("--mesh")).toBeTruthy());
+    (el.querySelector(".gear") as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(document.querySelector(".panel")).not.toBeNull());
+  };
+
+  it("一次只顯示一頁的內容", async () => {
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await openPanel(el);
+
+    // 預設在「一般」：天氣的單位在這一頁，背景那一段不在
+    expect(document.querySelector('[data-seg="unit"]')).not.toBeNull();
+    expect(document.querySelector('[data-seg="background"]')).toBeNull();
+    expect(document.querySelector('[data-seg="linkcards"]')).toBeNull();
+
+    await openTab("look");
+    expect(document.querySelector('[data-seg="background"]')).not.toBeNull();
+    expect(document.querySelector('[data-seg="unit"]')).toBeNull();
+    expect(document.querySelector('[data-seg="linkcards"]')).toBeNull();
+
+    await openTab("cards");
+    expect(document.querySelector('[data-seg="linkcards"]')).not.toBeNull();
+    expect(document.querySelector('[data-seg="background"]')).toBeNull();
+  });
+
+  it("方向鍵可以換頁，選中的那一頁自己標出來", async () => {
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await openPanel(el);
+
+    const first = document.getElementById("tab-general") as HTMLButtonElement;
+    expect(first.getAttribute("aria-selected")).toBe("true");
+    first.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+
+    await vi.waitFor(() =>
+      expect(document.getElementById("tab-look")!.getAttribute("aria-selected")).toBe("true"),
+    );
+    expect(first.getAttribute("aria-selected")).toBe("false");
+    // 沒選中的分頁不吃 Tab 鍵 —— 一列分頁應該是一站，不是四站
+    expect(first.tabIndex).toBe(-1);
   });
 });

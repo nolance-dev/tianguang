@@ -640,5 +640,17 @@
   },
   "s_backup_bad": {
     "message": "このファイルは読めません。天光のバックアップではないようです。"
+  },
+  "s_tab_general": {
+    "message": "一般"
+  },
+  "s_tab_look": {
+    "message": "外観"
+  },
+  "s_tab_cards": {
+    "message": "ウィジェット"
+  },
+  "s_tab_data": {
+    "message": "データ"
   }
 }

@@ -640,5 +640,17 @@
   },
   "s_backup_bad": {
     "message": "这个文件读不出来，可能不是天光的备份。"
+  },
+  "s_tab_general": {
+    "message": "常规"
+  },
+  "s_tab_look": {
+    "message": "外观"
+  },
+  "s_tab_cards": {
+    "message": "组件"
+  },
+  "s_tab_data": {
+    "message": "数据"
   }
 }
