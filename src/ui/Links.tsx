@@ -37,6 +37,10 @@ export function Links({ links, onChange, max }: Props) {
   const dragging = useSignal<number | null>(null);
   const over = useSignal<number | null>(null);
   const cols = useSignal(0);
+  /** 正在編輯的那一個的 id。右鍵按著不動放開就進這個狀態 */
+  const editing = useSignal<string | null>(null);
+  /** 右鍵拖曳的過程。from 是起點，moved 記有沒有真的移動過 */
+  const drag = useRef<{ from: number; x: number; y: number; moved: boolean } | null>(null);
   const rows = useSignal(0);
   const box = useRef<HTMLDivElement>(null);
 
@@ -81,11 +85,77 @@ export function Links({ links, onChange, max }: Props) {
     );
   }
 
+  /*
+   * 表單一開就整個蓋掉格線，不是插在磚塊之間。
+   *
+   * 它比一塊磚高一倍，插在格線裡會把那一列撐開；而這張卡的高度是鎖死的一格，
+   * 撐開的結果就是下面的磚塊被裁掉一半。整片換成表單，卡片的高度就不必動。
+   */
+  const open = editing.value ? links.find((l) => l.id === editing.value) : null;
+  if (open || adding.value) {
+    return (
+      <div ref={box} class="links editing">
+        <LinkForm
+          link={open ?? undefined}
+          onSave={(next) => {
+            if (open) onChange(links.map((l) => (l.id === open.id ? next : l)));
+            else onChange([...links, next]);
+            editing.value = null;
+            adding.value = false;
+          }}
+          onCancel={() => {
+            editing.value = null;
+            adding.value = false;
+          }}
+        />
+      </div>
+    );
+  }
+
   const slots = links.map((link, i) => (
         <div
           key={link.id}
+          data-i={i}
+          title={t("links_hint")}
           class={`slot${dragging.value === i ? " dragging" : ""}${over.value === i ? " over" : ""}`}
           draggable
+          /*
+           * 右鍵按著拖 = 換位置，右鍵按一下不動 = 編輯。
+           *
+           * 左鍵留給「打開這個網站」—— 那是這張卡九成九的用途，不該為了換位置
+           * 而讓每一次點擊都先猜使用者要不要拖。右鍵在這裡本來只會叫出瀏覽器的
+           * 選單，那個選單對這些磚塊沒有一項有用的功能。
+           */
+          onContextMenu={(e) => e.preventDefault()}
+          onPointerDown={(e) => {
+            if (e.button !== 2) return;
+            e.preventDefault();
+            (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+            drag.current = { from: i, x: e.clientX, y: e.clientY, moved: false };
+            dragging.value = i;
+          }}
+          onPointerMove={(e) => {
+            const d = drag.current;
+            if (!d) return;
+            // 幾個像素的手抖不算拖曳，否則右鍵一按就變成換位置，永遠進不了編輯
+            if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6) d.moved = true;
+            if (!d.moved) return;
+            const under = document.elementFromPoint?.(e.clientX, e.clientY);
+            const slot = under instanceof Element ? under.closest("[data-i]") : null;
+            const idx = slot ? Number((slot as HTMLElement).dataset.i) : NaN;
+            over.value = Number.isFinite(idx) ? idx : null;
+          }}
+          onPointerUp={(e) => {
+            const d = drag.current;
+            drag.current = null;
+            if (!d) return;
+            (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+            const to = over.value;
+            dragging.value = null;
+            over.value = null;
+            if (!d.moved) editing.value = link.id;
+            else if (to !== null && to !== d.from) onChange(reorder(links, d.from, to));
+          }}
           onDragStart={() => (dragging.value = i)}
           onDragEnd={() => {
             dragging.value = null;
@@ -120,26 +190,15 @@ export function Links({ links, onChange, max }: Props) {
 
   const adder =
     links.length < max ? (
-      adding.value ? (
-        <AddForm
-          key="add"
-          onCancel={() => (adding.value = false)}
-          onAdd={(link) => {
-            onChange([...links, link]);
-            adding.value = false;
-          }}
-        />
-      ) : (
-        <button
-          key="add"
-          type="button"
-          class="tile add"
-          aria-label={t("links_add")}
-          onClick={() => (adding.value = true)}
-        >
-          ＋
-        </button>
-      )
+      <button
+        key="add"
+        type="button"
+        class="tile add"
+        aria-label={t("links_add")}
+        onClick={() => (adding.value = true)}
+      >
+        ＋
+      </button>
     ) : null;
 
   const cells = adder ? [...slots, adder] : slots;
@@ -163,9 +222,23 @@ function Icon({ link }: { link: Link }) {
   return <img class="fav" src={src} alt="" loading="lazy" onError={() => (failed.value = true)} />;
 }
 
-function AddForm({ onAdd, onCancel }: { onAdd: (l: Link) => void; onCancel: () => void }) {
-  const url = useSignal("");
-  const title = useSignal("");
+/**
+ * 新增與編輯共用同一個表單。
+ *
+ * 編輯就是「同一個 id、換掉網址和名稱」，跟新增只差在起始值和保不保留 id ——
+ * 分成兩份表單的話，驗證和快捷鍵遲早會各長各的。
+ */
+function LinkForm({
+  link,
+  onSave,
+  onCancel,
+}: {
+  link?: Link;
+  onSave: (l: Link) => void;
+  onCancel: () => void;
+}) {
+  const url = useSignal(link?.url ?? "");
+  const title = useSignal(link?.title ?? "");
   const bad = useSignal(false);
   const first = useRef<HTMLInputElement>(null);
 
@@ -180,13 +253,14 @@ function AddForm({ onAdd, onCancel }: { onAdd: (l: Link) => void; onCancel: () =
       class="tile addform"
       onSubmit={(e) => {
         e.preventDefault();
-        const link = makeLink(url.value, title.value);
-        if (!link) {
+        const made = makeLink(url.value, title.value);
+        if (!made) {
           bad.value = true;
           first.current?.focus();
           return;
         }
-        onAdd(link);
+        // 編輯時 id 不能換 —— 換了等於刪掉再新增，那一格會跳到最後面
+        onSave(link ? { ...made, id: link.id } : made);
       }}
     >
       <input

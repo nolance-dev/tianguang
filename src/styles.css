@@ -3561,6 +3561,24 @@ body::-webkit-scrollbar {
   scrollbar-width: none;
 }
 
+/*
+ * 表單打開時整片蓋掉格線。
+ *
+ * 表單比一塊磚高一倍，而這張卡的高度是鎖死的一格 —— 插在磚塊之間會把那一列撐開，
+ * 撐開就會裁掉下面的磚。整片換掉之後卡片高度不必動，也清楚知道現在在編哪一個。
+ */
+.card.linkcard .links.editing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* 卡片再寬，表單也不必跟著拉長 —— 一行網址不需要 60rem */
+.card.linkcard .links.editing form.addform {
+  width: min(22rem, 100%);
+}
+
 /* 磚塊填滿自己那一欄。留著原本的固定寬度就會撐破格線 */
 .card.linkcard .slot,
 .card.linkcard .slot .tile,

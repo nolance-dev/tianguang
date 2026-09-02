@@ -850,3 +850,92 @@ describe("快速存取的張數由設定決定", () => {
     localStorage.removeItem("tg.settings");
   });
 });
+
+
+describe("快速存取：右鍵編輯與右鍵拖動", () => {
+  const seed = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({
+      id: `l${i}`,
+      title: `站台${i}`,
+      url: `https://e${i}.com/`,
+    }));
+
+  const put = (n: number) =>
+    localStorage.setItem("tg.settings", JSON.stringify({ schemaVersion: 1, links: seed(n) }));
+
+  /** jsdom 沒有 PointerEvent，用 MouseEvent 補上 pointerId 就夠這幾個處理函式用 */
+  const ptr = (type: string, init: MouseEventInit & { pointerId?: number }) => {
+    const e = new MouseEvent(type, { bubbles: true, ...init });
+    Object.defineProperty(e, "pointerId", { value: init.pointerId ?? 1 });
+    return e;
+  };
+
+  it("右鍵按一下不動 = 編輯，網址和名稱都帶進表單", async () => {
+    put(3);
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3));
+
+    const slot = el.querySelector('.card.linkcard [data-i="1"]') as HTMLElement;
+    slot.dispatchEvent(ptr("pointerdown", { button: 2, clientX: 10, clientY: 10 }));
+    slot.dispatchEvent(ptr("pointerup", { button: 2, clientX: 10, clientY: 10 }));
+
+    await vi.waitFor(() =>
+      expect(el.querySelector(".card.linkcard form.addform")).not.toBeNull(),
+    );
+    const inputs = el.querySelectorAll<HTMLInputElement>(".card.linkcard form.addform input");
+    expect(inputs[0]!.value, "網址要帶進來，不然編輯等於重打一次").toBe("https://e1.com/");
+    expect(inputs[1]!.value).toBe("站台1");
+    localStorage.removeItem("tg.settings");
+  });
+
+  it("改網址之後，位置不動、id 不變", async () => {
+    put(3);
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3));
+
+    const slot = el.querySelector('.card.linkcard [data-i="0"]') as HTMLElement;
+    slot.dispatchEvent(ptr("pointerdown", { button: 2, clientX: 5, clientY: 5 }));
+    slot.dispatchEvent(ptr("pointerup", { button: 2, clientX: 5, clientY: 5 }));
+    await vi.waitFor(() => expect(el.querySelector("form.addform")).not.toBeNull());
+
+    const form = el.querySelector("form.addform") as HTMLFormElement;
+    const url = form.querySelector("input") as HTMLInputElement;
+    url.value = "https://changed.example/";
+    url.dispatchEvent(new Event("input", { bubbles: true }));
+    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+
+    await vi.waitFor(() => expect(el.querySelector("form.addform")).toBeNull());
+    // 設定是延遲寫入的，等它真的落盤再看
+    await vi.waitFor(() => {
+      const saved = JSON.parse(localStorage.getItem("tg.settings")!);
+      expect(saved.links[0].url).toBe("https://changed.example/");
+    });
+    const saved = JSON.parse(localStorage.getItem("tg.settings")!);
+    expect(saved.links[0].id, "id 換掉的話那一格會跳到最後面").toBe("l0");
+    expect(saved.links.map((l: { title: string }) => l.title)).toEqual(["站台0", "站台1", "站台2"]);
+    localStorage.removeItem("tg.settings");
+  });
+
+  it("右鍵拖到另一格 = 換位置", async () => {
+    put(3);
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard .slot")).toHaveLength(3));
+
+    const from = el.querySelector('.card.linkcard [data-i="0"]') as HTMLElement;
+    const to = el.querySelector('.card.linkcard [data-i="2"]') as HTMLElement;
+    // jsdom 的 elementFromPoint 永遠回 null，這裡直接指定滑到誰身上
+    const real = document.elementFromPoint;
+    document.elementFromPoint = () => to;
+
+    from.dispatchEvent(ptr("pointerdown", { button: 2, clientX: 0, clientY: 0 }));
+    from.dispatchEvent(ptr("pointermove", { clientX: 80, clientY: 0 }));
+    from.dispatchEvent(ptr("pointerup", { clientX: 80, clientY: 0 }));
+    document.elementFromPoint = real;
+
+    await vi.waitFor(() => {
+      const saved = JSON.parse(localStorage.getItem("tg.settings")!);
+      expect(saved.links.map((l: { id: string }) => l.id)).toEqual(["l1", "l2", "l0"]);
+    });
+    localStorage.removeItem("tg.settings");
+  });
+});

@@ -888,5 +888,8 @@
   },
   "s_link_cards_hint": {
     "message": "$1 per card. Add a card to hold more - they never appear on their own."
+  },
+  "links_hint": {
+    "message": "Left click opens, right click edits, right drag reorders"
   }
 }
