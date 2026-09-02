@@ -9,15 +9,18 @@ import { WeatherCard } from "./WeatherCard";
 import { MediaCard } from "./MediaCard";
 import { ClockCard } from "./ClockCard";
 import type { Settings } from "../lib/settings";
-import type { Link } from "../lib/links";
+import { MAX_LINKS, type Link } from "../lib/links";
 import {
   COLS,
   move,
+  kindOf,
+  LINKS_PER_CARD,
   normalize,
   nudge,
   resize,
   type CardId,
   type Tile,
+  type TileId,
 } from "../lib/desk";
 import {
   advance,
@@ -153,11 +156,31 @@ export function Cards({
   settings,
 }: Props) {
   const live = useSignal<Tile[] | null>(null);
-  const held = useSignal<CardId | null>(null);
+  const held = useSignal<TileId | null>(null);
   const grid = useRef<HTMLDivElement>(null);
 
-  const order = live.value ?? normalize(desk);
-  const tiles = order.filter((tl) => show[tl.id]);
+  /*
+   * 快速存取有幾張，是連結的數量決定的，不是設定裡存的。
+   *
+   * 一張裝十六個，加號也要有地方站 —— 所以是 (數量 + 1) 除以十六無條件進位：
+   * 十六個滿了，第十七個要加的時候，第二張已經在那裡等著了。
+   * 減到剩一張的量，多出來的那張就自己消失（下面那個 linkIds.includes）。
+   */
+  const linkCards = Math.min(
+    Math.max(1, Math.ceil((links.length + 1) / LINKS_PER_CARD)),
+    Math.ceil(MAX_LINKS / LINKS_PER_CARD),
+  );
+  const linkIds: TileId[] = Array.from({ length: linkCards }, (_, i) =>
+    i === 0 ? "links" : (`links${i + 1}` as TileId),
+  );
+
+  const order = live.value ?? normalize(desk, linkIds);
+  const tiles = order.filter((tl) => {
+    const kind = kindOf(tl.id);
+    if (!show[kind]) return false;
+    // 連結變少之後，多出來的那幾張不畫（版面裡的位置留著，加回來還在原位）
+    return kind !== "links" || linkIds.includes(tl.id);
+  });
 
   /** 拖曳結束的共同收尾：放手才落盤 */
   function commit() {
@@ -167,7 +190,7 @@ export function Cards({
     if (final) onDesk(final);
   }
 
-  function startMove(e: PointerEvent, id: CardId) {
+  function startMove(e: PointerEvent, id: TileId) {
     if (e.button !== 0) return;
     // 標題列上的控制項不該變成拖曳把手。select 漏掉的話，
     // 按下去是開始拖卡片，下拉選單永遠打不開。
@@ -271,7 +294,7 @@ export function Cards({
       {tiles.map((tile) => (
         <section
           key={tile.id}
-          class={`card${VARIANT[tile.id]}${held.value === tile.id ? " held" : ""}`}
+          class={`card${VARIANT[kindOf(tile.id)]}${held.value === tile.id ? " held" : ""}`}
           data-id={tile.id}
           style={{ "--w": String(tile.w), "--h": String(tile.h) }}
           onPointerDown={(e) => {
@@ -296,22 +319,36 @@ export function Cards({
           {tile.id === "clock" && (
             <ClockCard now={now} settings={settings} onOpen={() => onExpand("clock")} />
           )}
-          {tile.id === "links" && (
-            <>
-              <header>
-                <b>{t("c_links")}</b>
-                <span>{links.length}</span>
-              </header>
-              <Links links={links} onChange={onLinks} grid={linkGrid} />
-            </>
-          )}
+          {kindOf(tile.id) === "links" &&
+            (() => {
+              const from = linkIds.indexOf(tile.id) * LINKS_PER_CARD;
+              const mine = links.slice(from, from + LINKS_PER_CARD);
+              return (
+                <>
+                  <header>
+                    <b>{t("c_links")}</b>
+                    <span>{mine.length}</span>
+                  </header>
+                  <Links
+                    links={mine}
+                    // 這一張只換自己那一段，前後原封不動接回去
+                    onChange={(next) =>
+                      onLinks([...links.slice(0, from), ...next, ...links.slice(from + mine.length)])
+                    }
+                    grid={linkGrid}
+                    // 全部滿了就把上限壓到現有數量，加號自然不出現
+                    max={links.length >= MAX_LINKS ? mine.length : LINKS_PER_CARD}
+                  />
+                </>
+              );
+            })()}
 
-          {EXPANDS.includes(tile.id) && (
+          {EXPANDS.includes(kindOf(tile.id)) && (
             <button
               type="button"
               class="expand"
               aria-label={t("card_expand")}
-              onClick={() => onExpand(tile.id)}
+              onClick={() => onExpand(kindOf(tile.id))}
             >
               ⤢
             </button>

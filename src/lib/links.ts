@@ -13,7 +13,12 @@ export interface Link {
   url: string;
 }
 
-export const MAX_LINKS = 24;
+/**
+ * 全部加起來最多幾個。一張卡裝十六個（desk.LINKS_PER_CARD），
+ * 所以這個數是四張卡 —— 再多的話光是找一個連結就得掃過四張卡，
+ * 那已經不是「快速」存取了。
+ */
+export const MAX_LINKS = 64;
 
 /** 把使用者輸入補成可用的網址。沒寫協定就補 https。 */
 export function normalizeUrl(input: string): string | null {

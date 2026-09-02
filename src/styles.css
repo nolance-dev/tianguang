@@ -3534,6 +3534,15 @@ body::-webkit-scrollbar {
   max-width: none;
   /* 卡片裡靠左排。置中的話第二列只有幾個時會浮在中間，看起來像排錯了 */
   justify-content: flex-start;
+  /*
+   * 卡片裡的間隙比第一屏那排窄。
+   *
+   * 這個數字是算過的：工作區四欄制、一張兩欄寬的卡，內寬約 637px，
+   * 圖示 4.2rem 配 0.7rem 的間隙剛好一列八個 —— 兩列就是十六個，
+   * 正好是一張卡的上限。間隙留 0.9rem 的話一列只排得下七個，
+   * 第十五、十六個就會掉到看不見的第三列去。
+   */
+  gap: clamp(0.4rem, 0.8vw, 0.7rem);
   overflow-y: auto;
   scrollbar-width: none;
 }
@@ -3546,7 +3555,7 @@ body::-webkit-scrollbar {
  */
 .card.linkcard .links:not(.nine) {
   --lrow: clamp(3.2rem, 5.2vw, 4.2rem);
-  --lgap: clamp(0.5rem, 1vw, 0.9rem);
+  --lgap: clamp(0.4rem, 0.8vw, 0.7rem);
   max-height: calc(var(--lrow) * 2 + var(--lgap));
 }
 

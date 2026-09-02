@@ -790,3 +790,70 @@ describe("顆粒與變暗只作用在圖片上", () => {
     localStorage.removeItem("tg.settings");
   });
 });
+
+describe("快速存取滿了就多開一張", () => {
+  const seed = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({
+      id: `l${i}`,
+      title: `站台${i}`,
+      url: `https://example${i}.com/`,
+    }));
+
+  const setLinks = (n: number) =>
+    localStorage.setItem(
+      "tg.settings",
+      JSON.stringify({ schemaVersion: 1, links: seed(n), linkGrid: false }),
+    );
+
+  it("十五個還是一張，十六個就有第二張等著", async () => {
+    setLinks(15);
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelector(".card.linkcard")).not.toBeNull());
+    // 十五個 + 加號 = 十六格，剛好一張
+    expect(el.querySelectorAll(".card.linkcard")).toHaveLength(1);
+    localStorage.removeItem("tg.settings");
+  });
+
+  it("十六個滿了，加號在第二張上", async () => {
+    setLinks(16);
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard").length).toBe(2));
+
+    const cards = el.querySelectorAll(".card.linkcard");
+    // 第一張裝滿十六個，而且沒有加號 —— 加號在下一張
+    expect(cards[0]!.querySelectorAll(".slot")).toHaveLength(16);
+    expect(cards[0]!.querySelector(".tile.add")).toBeNull();
+    expect(cards[1]!.querySelector(".tile.add")).not.toBeNull();
+    localStorage.removeItem("tg.settings");
+  });
+
+  it("第十七個之後，兩張各裝各的", async () => {
+    setLinks(20);
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard").length).toBe(2));
+    const cards = el.querySelectorAll(".card.linkcard");
+    expect(cards[0]!.querySelectorAll(".slot")).toHaveLength(16);
+    expect(cards[1]!.querySelectorAll(".slot")).toHaveLength(4);
+    localStorage.removeItem("tg.settings");
+  });
+
+  it("在第二張刪掉一個，刪的是第二張那一段裡的那一個", async () => {
+    setLinks(18);
+    const el = mount(new Date(2026, 7, 30, 11, 0, 0));
+    await vi.waitFor(() => expect(el.querySelectorAll(".card.linkcard").length).toBe(2));
+
+    const second = el.querySelectorAll(".card.linkcard")[1]!;
+    const first = second.querySelector(".slot") as HTMLElement;
+    expect(first.querySelector(".cap")!.textContent).toBe("站台16");
+    (first.querySelector(".rm") as HTMLButtonElement).click();
+
+    await vi.waitFor(() =>
+      expect(
+        el.querySelectorAll(".card.linkcard")[1]!.querySelector(".cap")!.textContent,
+      ).toBe("站台17"),
+    );
+    // 第一張沒被動到
+    expect(el.querySelectorAll(".card.linkcard")[0]!.querySelectorAll(".slot")).toHaveLength(16);
+    localStorage.removeItem("tg.settings");
+  });
+});

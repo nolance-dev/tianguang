@@ -19,8 +19,24 @@ export type CardId =
   | "media"
   | "clock";
 
+/**
+ * 版面上一格的識別碼。
+ *
+ * 不等於卡的種類：快速存取一張最多裝十六個，滿了就多開一張，
+ * 所以會有 links、links2、links3……。其餘的卡一種只有一張，id 就是種類。
+ * 要種類請用 kindOf()，不要自己比字串。
+ */
+export type TileId = CardId | `links${number}`;
+
+/** 一張快速存取最多裝幾個。滿了自動開下一張，不是把同一張越拉越長。 */
+export const LINKS_PER_CARD = 16;
+
+export function kindOf(id: TileId): CardId {
+  return (id.startsWith("links") ? "links" : id) as CardId;
+}
+
 export interface Tile {
-  id: CardId;
+  id: TileId;
   /** 佔幾欄，1 到 4 */
   w: number;
   /** 佔幾列，1 到 3 */
@@ -81,22 +97,28 @@ export const clampH = (n: unknown): number => clamp(n, 1, MAX_H, 1);
  * 前者補在最後面（新卡排在使用者排好的東西後面，不插隊），
  * 後者直接丟掉。順序一律以存的為準。
  */
-export function normalize(raw: unknown): Tile[] {
+export function normalize(raw: unknown, extra: TileId[] = []): Tile[] {
   const list = Array.isArray(raw) ? raw : [];
   const out: Tile[] = [];
   for (const item of list) {
     const id = (item as Partial<Tile> | null)?.id;
-    if (!id || !IDS.includes(id) || out.some((x) => x.id === id)) continue;
+    if (!id || !IDS.includes(kindOf(id)) || out.some((x) => x.id === id)) continue;
     out.push({ id, w: clampW((item as Tile).w), h: clampH((item as Tile).h) });
   }
   for (const d of DEFAULT_DESK) {
     if (!out.some((x) => x.id === d.id)) out.push({ ...d });
   }
+  // 第二張之後的快速存取。由連結的數量長出來，所以補在最後面 ——
+  // 使用者排好的順序不因為多了一張而被推開
+  const linkSize = DEFAULT_DESK.find((d) => d.id === "links")!;
+  for (const id of extra) {
+    if (!out.some((x) => x.id === id)) out.push({ id, w: linkSize.w, h: linkSize.h });
+  }
   return out;
 }
 
 /** 把 from 那張搬到 to 現在的位置，其餘往後推。 */
-export function move(list: Tile[], from: CardId, to: CardId): Tile[] {
+export function move(list: Tile[], from: TileId, to: TileId): Tile[] {
   if (from === to) return list;
   const a = list.findIndex((x) => x.id === from);
   const b = list.findIndex((x) => x.id === to);
@@ -108,7 +130,7 @@ export function move(list: Tile[], from: CardId, to: CardId): Tile[] {
 }
 
 /** 往前或往後挪一格。鍵盤換位用這個，不必先知道鄰居是誰。 */
-export function nudge(list: Tile[], id: CardId, delta: number): Tile[] {
+export function nudge(list: Tile[], id: TileId, delta: number): Tile[] {
   const a = list.findIndex((x) => x.id === id);
   if (a < 0) return list;
   const b = a + delta;
@@ -119,6 +141,6 @@ export function nudge(list: Tile[], id: CardId, delta: number): Tile[] {
   return out;
 }
 
-export function resize(list: Tile[], id: CardId, w: number, h: number): Tile[] {
+export function resize(list: Tile[], id: TileId, w: number, h: number): Tile[] {
   return list.map((x) => (x.id === id ? { ...x, w: clampW(w), h: clampH(h) } : x));
 }

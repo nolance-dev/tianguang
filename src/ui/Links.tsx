@@ -1,7 +1,7 @@
 import { useSignal } from "@preact/signals";
 import { useLayoutEffect, useRef } from "preact/hooks";
 import { t } from "../lib/i18n";
-import { faviconUrl, initial, makeLink, MAX_LINKS, reorder, type Link } from "../lib/links";
+import { faviconUrl, initial, makeLink, reorder, type Link } from "../lib/links";
 
 /**
  * 快速連結。
@@ -27,9 +27,16 @@ interface Props {
   onChange: (links: Link[]) => void;
   /** 九宮格排法。false 是一個一個排開 */
   grid?: boolean;
+  /**
+   * 這一張還能再放幾個之前就不給加號了。
+   *
+   * 上限是「這一張」的，不是全部的 —— 一張裝滿十六個之後，加號要出現在
+   * 下一張，不是在這一張變灰。全域上限由呼叫端把這個值調成目前的數量來擋。
+   */
+  max: number;
 }
 
-export function Links({ links, onChange, grid }: Props) {
+export function Links({ links, onChange, grid, max }: Props) {
   const adding = useSignal(false);
   const dragging = useSignal<number | null>(null);
   const over = useSignal<number | null>(null);
@@ -86,7 +93,7 @@ export function Links({ links, onChange, grid }: Props) {
   ));
 
   const adder =
-    links.length < MAX_LINKS ? (
+    links.length < max ? (
       adding.value ? (
         <AddForm
           key="add"

@@ -891,5 +891,8 @@
   },
   "s_desk_reset_home": {
     "message": "Reset home layout"
+  },
+  "s_links_cap": {
+    "message": "Up to $1 per card. A new card appears when one fills up."
   }
 }

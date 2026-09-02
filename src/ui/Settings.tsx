@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { t } from "../lib/i18n";
 import { ENGINES } from "../lib/search";
-import { DEFAULT_DESK, DEFAULT_HOME_DESK } from "../lib/desk";
+import { DEFAULT_DESK, DEFAULT_HOME_DESK, LINKS_PER_CARD } from "../lib/desk";
 import { SECOND_CALS } from "../lib/secondcal";
 import { hasHolidayAccess, requestHolidayAccess, supported } from "../lib/holidays";
 import { MAX_LINKS, suggestFromTopSites } from "../lib/links";
@@ -403,6 +403,7 @@ function LinkImport({ value, onChange }: { value: S; onChange: (p: Partial<S>) =
 
   return (
     <>
+      <p class="note">{t("s_links_cap", String(LINKS_PER_CARD))}</p>
       <div class="row">
         <span>
           {value.links.length} / {MAX_LINKS}

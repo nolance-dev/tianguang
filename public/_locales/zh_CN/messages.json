@@ -607,5 +607,8 @@
   },
   "s_desk_reset_home": {
     "message": "重设主页面版面"
+  },
+  "s_links_cap": {
+    "message": "一张卡最多 $1 个，满了会自动多开一张。"
   }
 }

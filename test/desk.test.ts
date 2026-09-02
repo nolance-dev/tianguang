@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   COLS,
   DEFAULT_DESK,
+  kindOf,
+  LINKS_PER_CARD,
   MAX_H,
   move,
   normalize,
@@ -92,5 +94,41 @@ describe("改大小", () => {
     const two: Tile[] = [...base, { id: "note", w: 2, h: 1 }];
     const out = resize(two, "todos", 4, 2);
     expect(out[1]).toEqual(two[1]);
+  });
+});
+
+describe("好幾張快速存取", () => {
+  it("id 認得出種類", () => {
+    expect(kindOf("links")).toBe("links");
+    expect(kindOf("links2")).toBe("links");
+    expect(kindOf("links9")).toBe("links");
+    // 其餘的卡一種一張，id 就是種類
+    expect(kindOf("calendar")).toBe("calendar");
+    expect(kindOf("clock")).toBe("clock");
+  });
+
+  it("多出來的那幾張補在最後面，尺寸沿用第一張的預設", () => {
+    const out = normalize(DEFAULT_DESK, ["links", "links2", "links3"]);
+    expect(ids(out).slice(-2)).toEqual(["links2", "links3"]);
+    const first = out.find((t) => t.id === "links")!;
+    for (const id of ["links2", "links3"]) {
+      const t = out.find((x) => x.id === id)!;
+      expect([t.w, t.h]).toEqual([first.w, first.h]);
+    }
+  });
+
+  it("存下來的位置留著 —— 排到前面的第二張不會被推回最後", () => {
+    const saved: Tile[] = [
+      { id: "links2", w: 1, h: 1 },
+      { id: "clock", w: 2, h: 1 },
+    ];
+    const out = normalize(saved, ["links", "links2"]);
+    expect(ids(out)[0]).toBe("links2");
+    // 而且它自己的尺寸也留著，不會被預設蓋掉
+    expect(out[0]).toEqual({ id: "links2", w: 1, h: 1 });
+  });
+
+  it("一張裝十六個", () => {
+    expect(LINKS_PER_CARD).toBe(16);
   });
 });
