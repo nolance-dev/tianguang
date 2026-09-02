@@ -3530,20 +3530,20 @@ body::-webkit-scrollbar {
 }
 
 /*
- * 排法由卡片的寬度決定：**一欄放四個**。
+ * 排法：格線，欄數由 Links 量出來之後寫在 --cols 上。
  *
- * 一欄寬（--w: 1）四個、兩欄八個、三欄十二個、四欄十六個。一張卡裝十六個，
- * 所以十六個要排幾列也就跟著定了：一欄寬四列、兩欄兩列、三欄兩列、四欄一列。
- * 高度（--h）決定看得到幾列，剩下的在卡片裡捲 —— 所以「寬一點矮一點」和
- * 「窄一點高一點」都放得下同樣的十六個，只是形狀不同。
+ * 為什麼不在這裡用 data-w 決定欄數：同樣是「三欄寬」，工作區的格線是 84rem、
+ * 主頁面是 58rem，實際寬度差三分之一 —— 用格數推欄數，在其中一邊一定會讓
+ * 磚塊滿出卡片外面。真正的寬度只有版面算完才知道，所以由元件量。
  *
- * 用格線不用 flex-wrap：flex 是「排得下就塞」，欄數是算出來的副作用；
- * 格線的欄數是講明的，同一個寬度在任何字級與間隙下都是同一個排法。
+ * 欄數是「總數平均分到每一列」，不是「一列塞到滿」：十六個排兩列就是八八，
+ * 十五個是八七。塞到滿的排法會留下一列孤零零的四個，看起來像沒排完。
  */
 .card.linkcard .links {
   display: grid;
   grid-template-columns: repeat(var(--cols, 8), minmax(0, 1fr));
   align-content: start;
+  justify-items: stretch;
   margin-top: 0;
   max-width: none;
   gap: clamp(0.4rem, 0.8vw, 0.7rem);
@@ -3551,26 +3551,12 @@ body::-webkit-scrollbar {
   scrollbar-width: none;
 }
 
-.card.linkcard[data-w="1"] .links {
-  --cols: 4;
-}
-
-.card.linkcard[data-w="2"] .links {
-  --cols: 8;
-}
-
-.card.linkcard[data-w="3"] .links {
-  --cols: 12;
-}
-
-.card.linkcard[data-w="4"] .links {
-  --cols: 16;
-}
-
-/* 格子裡的磚塊填滿自己那一欄，不再自己決定寬度 */
+/* 磚塊填滿自己那一欄。留著原本的固定寬度就會撐破格線 */
 .card.linkcard .slot,
+.card.linkcard .slot .tile,
 .card.linkcard .links > .tile {
   width: 100%;
+  min-width: 0;
 }
 
 /* 空狀態是一段話加一顆加號，不是格線 */
@@ -3591,11 +3577,6 @@ body::-webkit-scrollbar {
 
   .card {
     grid-column: span 2;
-  }
-
-  /* 每張卡都被拉成整排寬了，存下來的 --w 不再代表實際寬度 */
-  .card.linkcard .links {
-    --cols: 8;
   }
 }
 
