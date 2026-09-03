@@ -1104,6 +1104,14 @@ body::-webkit-scrollbar {
   margin-top: 1.2vh;
 }
 
+/*
+ * 0.24em 的字距是為中文那七八個字挑的。同樣的字距套在拉丁字母的日期上，
+ * 一行拉長超過一倍，橫向就撞上日出日落那兩個金色標籤。
+ */
+:root[lang^="en"] .dc-date {
+  letter-spacing: 0.12em;
+}
+
 .dc-name {
   font-family: var(--f-cjk);
   font-weight: 600;
@@ -2858,7 +2866,18 @@ body::-webkit-scrollbar {
   flex-direction: column;
   gap: clamp(0.8rem, 2vh, 1.4rem);
   padding: clamp(1rem, 3vw, 2rem);
-  background: var(--veil, rgba(8, 11, 18, 0.86));
+  /*
+   * 面紗要有地板墊著。
+   *
+   * --veil 是 0.86（暗）／0.90（亮），單獨用的話後面那一屏會透上來 ——
+   * 白天看不太出來，晚上就是整個工作區的卡片和時鐘鬼影在日曆底下。
+   * 疊在 --solid（這個主題的不透明底色）上面，合成之後就是不透明的，
+   * 而且顏色仍然是這個時辰自己的，不是憑空多一個色。
+   */
+  /* 顏色要放在簡寫的最後面當 background-color。放在圖層的位置上
+     它不是合法的 <image>，整層會變成 none —— 量過：computed 的
+     background-image 是 "linear-gradient(...), none"，等於沒墊到 */
+  background: linear-gradient(var(--veil), var(--veil)) var(--solid, #0a0e1e);
   animation: full-in 0.3s cubic-bezier(0.22, 1, 0.28, 1) both;
 }
 

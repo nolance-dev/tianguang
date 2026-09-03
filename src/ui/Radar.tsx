@@ -160,7 +160,9 @@ export function Radar({ lat, lon, place, dark }: Props) {
         </div>
       )}
 
-      {allowed.value === true && !frame.value && <p class="radar-note">{t("wx_radar_none")}</p>}
+      {allowed.value === true && !frame.value && (
+        <p class="radar-note">{t("wx_radar_none")}</p>
+      )}
 
       {/* 兩個來源都要求標註，這不是禮貌 */}
       <span class="radar-credit">

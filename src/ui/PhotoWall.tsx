@@ -63,11 +63,16 @@ export function PhotoWall({ photo, onPhoto }: Props) {
   const rotating = photo.rotate > 0 && list.length > 1;
   // 輪播時從 photoId 那張接著往下走，不是每次都跳回第一張
   const from = Math.max(0, photo.id ? list.indexOf(photo.id) : 0);
-  const shown = rotating ? (list[(from + step.value) % list.length] ?? null) : photo.id;
+  const shown = rotating
+    ? (list[(from + step.value) % list.length] ?? null)
+    : photo.id;
 
   useEffect(() => {
     if (!rotating) return;
-    const id = setInterval(() => (step.value = step.value + 1), photo.rotate * 1000);
+    const id = setInterval(
+      () => (step.value = step.value + 1),
+      photo.rotate * 1000,
+    );
     return () => clearInterval(id);
   }, [rotating, photo.rotate]);
 
@@ -145,7 +150,11 @@ export function PhotoWall({ photo, onPhoto }: Props) {
         瀏覽器不會為背景圖做過場。不做交叉淡入是因為那要同時握著兩張的 blob
         網址，而這裡刻意一次只留一個；淡入的起點是卡片自己的底色。
       */}
-      <div key={shown} class="photofade" style={{ backgroundImage: `url("${url.value}")` }} />
+      <div
+        key={shown}
+        class="photofade"
+        style={{ backgroundImage: `url("${url.value}")` }}
+      />
       <button
         type="button"
         class="photoedit"

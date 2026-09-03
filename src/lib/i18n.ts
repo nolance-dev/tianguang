@@ -100,6 +100,20 @@ export function locale(): string {
   return typeof navigator !== "undefined" ? navigator.language : "zh-TW";
 }
 
+/**
+ * 給 Intl 用的語系標籤。
+ *
+ * 之前一律傳 undefined 讓 Intl 自己看瀏覽器 —— 那在「跟著瀏覽器」之下是對的，
+ * 但設定裡可以選語言之後就不對了：選了繁體中文，日期還是照瀏覽器的語系排，
+ * 實測在英文版 Edge 上會出現「Thursday, 9/3/2026」這種中英各半的東西。
+ * auto 仍然回 undefined，那是刻意的。
+ */
+export function intlLocale(): string | undefined {
+  const pick = forced.value;
+  if (pick === "auto") return undefined;
+  return pick === "en" ? "en-GB" : "zh-TW";
+}
+
 export function isEnglish(): boolean {
   return locale().toLowerCase().startsWith("en");
 }

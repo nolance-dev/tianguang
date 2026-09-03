@@ -33,7 +33,9 @@ export function MediaCard() {
   useEffect(() => {
     void hasMediaAccess().then((ok) => (allowed.value = ok));
     if (typeof chrome !== "undefined" && chrome.windows?.getCurrent) {
-      void chrome.windows.getCurrent().then((w) => (windowId.value = w.id ?? null));
+      void chrome.windows
+        .getCurrent()
+        .then((w) => (windowId.value = w.id ?? null));
     }
   }, []);
 
@@ -90,7 +92,10 @@ export function MediaCard() {
       {/* 底圖是網站圖示放大糊掉。它不是專輯封面 —— 瀏覽器不給 ——
           但它是真的，而且一眼就知道聲音從哪個站來 */}
       {lead?.favicon && (
-        <span class="media-bg" style={{ backgroundImage: `url("${lead.favicon}")` }} />
+        <span
+          class="media-bg"
+          style={{ backgroundImage: `url("${lead.favicon}")` }}
+        />
       )}
 
       <header>

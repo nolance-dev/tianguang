@@ -11,6 +11,7 @@ import { getImage, toUrl } from "../lib/images";
 import { decimalHour, dayFraction, greetSlot, indexAt } from "../lib/shichen";
 import { jieqiIndex, moonIndex } from "../lib/solar";
 import {
+  intlLocale,
   isEnglish,
   locale,
   outerRingName,
@@ -635,7 +636,7 @@ function Clock({
 function DateLine({ now }: { now: Date }) {
   const en = isEnglish();
   // 中文日期用 Intl 產生，才不用自己維護「週日／星期日」這種在地差異
-  const date = new Intl.DateTimeFormat(en ? "en-GB" : undefined, {
+  const date = new Intl.DateTimeFormat(intlLocale(), {
     month: "long",
     day: "numeric",
     weekday: "long",

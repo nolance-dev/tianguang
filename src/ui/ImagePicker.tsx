@@ -1,6 +1,12 @@
 import { useEffect, useState } from "preact/hooks";
 import { t } from "../lib/i18n";
-import { addImage, deleteImage, listImages, toUrl, type StoredImage } from "../lib/images";
+import {
+  addImage,
+  deleteImage,
+  listImages,
+  toUrl,
+  type StoredImage,
+} from "../lib/images";
 
 /**
  * 圖庫。
@@ -77,7 +83,10 @@ export function ImagePicker({ selected, onSelect, wall }: Props) {
       {images.length > 0 && (
         <div class="thumbs">
           {images.map((img) => (
-            <div key={img.id} class={`thumb${img.id === selected ? " on" : ""}`}>
+            <div
+              key={img.id}
+              class={`thumb${img.id === selected ? " on" : ""}`}
+            >
               <button
                 type="button"
                 style={{ backgroundImage: `url("${urls[img.id]}")` }}

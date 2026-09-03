@@ -1,4 +1,4 @@
-import { isEnglish, shichenAlt, shichenName, t } from "../lib/i18n";
+import { intlLocale, shichenAlt, shichenName, t } from "../lib/i18n";
 import { indexAt } from "../lib/shichen";
 import type { Settings } from "../lib/settings";
 
@@ -25,9 +25,8 @@ export function ClockCard({ now, settings, onOpen }: Props) {
   const h = now.getHours();
   const shown = settings.clock24 ? pad(h) : String(h % 12 === 0 ? 12 : h % 12);
   const sc = indexAt(now);
-  const en = isEnglish();
 
-  const date = new Intl.DateTimeFormat(en ? "en-GB" : undefined, {
+  const date = new Intl.DateTimeFormat(intlLocale(), {
     month: "long",
     day: "numeric",
     weekday: "long",
@@ -41,7 +40,9 @@ export function ClockCard({ now, settings, onOpen }: Props) {
         {pad(now.getMinutes())}
         {/* 秒用小一號並且推到基線上，讀時間的人是看時分，秒是背景 */}
         <span class="cc-sec">{pad(now.getSeconds())}</span>
-        {!settings.clock24 && <span class="cc-ampm">{h < 12 ? "AM" : "PM"}</span>}
+        {!settings.clock24 && (
+          <span class="cc-ampm">{h < 12 ? "AM" : "PM"}</span>
+        )}
       </b>
 
       <span class="cc-meta">
@@ -52,7 +53,12 @@ export function ClockCard({ now, settings, onOpen }: Props) {
         </span>
       </span>
 
-      <button type="button" class="expand" aria-label={t("dial_open")} onClick={onOpen}>
+      <button
+        type="button"
+        class="expand"
+        aria-label={t("dial_open")}
+        onClick={onOpen}
+      >
         ⤢
       </button>
     </div>

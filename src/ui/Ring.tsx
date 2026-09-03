@@ -57,7 +57,12 @@ export function Ring({ index, fraction, size = 100 }: Props) {
         stroke-width="1.4"
       />
       {ticks}
-      <circle cx={dx.toFixed(2)} cy={dy.toFixed(2)} r="2.6" fill="currentColor" />
+      <circle
+        cx={dx.toFixed(2)}
+        cy={dy.toFixed(2)}
+        r="2.6"
+        fill="currentColor"
+      />
     </svg>
   );
 }

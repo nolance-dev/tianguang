@@ -1,7 +1,7 @@
 import { useSignal } from "@preact/signals";
 import { useDialog } from "./useDialog";
 import { useRef } from "preact/hooks";
-import { isEnglish, t } from "../lib/i18n";
+import { intlLocale, t } from "../lib/i18n";
 import {
   byDay,
   isoWeek,
@@ -36,11 +36,10 @@ interface CardProps {
 }
 
 export function CalendarCard({ events, now, secondCal, holiday }: CardProps) {
-  const en = isEnglish();
   const busy = onDay(events, ymd(now)).length;
   const sub = subDate(now, secondCal);
   const fmt = (opts: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(en ? "en-GB" : undefined, opts).format(now);
+    new Intl.DateTimeFormat(intlLocale(), opts).format(now);
 
   return (
     <div class={`calface${now.getDay() === 0 ? " sun" : ""}`} data-grab>
@@ -76,7 +75,6 @@ export function CalendarDetail({
   holidays,
   onClose,
 }: DetailProps) {
-  const en = isEnglish();
   const year = useSignal(now.getFullYear());
   const month = useSignal(now.getMonth());
   const picked = useSignal(ymd(now));
@@ -91,7 +89,7 @@ export function CalendarDetail({
   const todayKey = ymd(now);
 
   const label = (d: Date, opts: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(en ? "en-GB" : undefined, opts).format(d);
+    new Intl.DateTimeFormat(intlLocale(), opts).format(d);
 
   function jump(delta: number) {
     const [y, m] = shiftMonth(year.value, month.value, delta);

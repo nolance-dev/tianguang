@@ -1,7 +1,12 @@
 import { useSignal } from "@preact/signals";
 import { useEffect } from "preact/hooks";
 import { isEnglish, t } from "../lib/i18n";
-import { condition, fetchWeather, formatTemp, type Weather as W } from "../lib/weather";
+import {
+  condition,
+  fetchWeather,
+  formatTemp,
+  type Weather as W,
+} from "../lib/weather";
 
 /**
  * 天氣。右上角。
@@ -43,9 +48,9 @@ export function Weather({ lat, lon, place, unit }: Props) {
   if (!w) return null;
 
   const day = (iso: string) =>
-    new Intl.DateTimeFormat(isEnglish() ? "en-GB" : undefined, { weekday: "short" }).format(
-      new Date(`${iso}T12:00:00`),
-    );
+    new Intl.DateTimeFormat(isEnglish() ? "en-GB" : undefined, {
+      weekday: "short",
+    }).format(new Date(`${iso}T12:00:00`));
 
   return (
     <button

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import {
+  intlLocale,
   isEnglish,
   outerRingName,
   shichenAlt,
@@ -414,12 +415,20 @@ export function Dial({ now, lat, lon, onClose }: Props) {
           <div class="dc-time">
             {String(hour).padStart(2, "0")}:{String(minute).padStart(2, "0")}
           </div>
+          {/*
+            英文用縮寫，中文用全稱。
+            
+            「Thursday, 3 September 2026」在這個等寬字加 0.24em 字距之下是
+            二十六個字，橫向會一路撞到日出日落那兩個金色標籤 —— 它們釘在
+            半徑 99 的地方，位置是幾何算出來的，不會讓路。中文的「9月3日
+            星期四」本來就短，不必動。
+          */}
           <div class="dc-date">
-            {new Intl.DateTimeFormat(en ? "en-GB" : undefined, {
+            {new Intl.DateTimeFormat(intlLocale(), {
               year: "numeric",
-              month: en ? "long" : "numeric",
+              month: en ? "short" : "numeric",
               day: "numeric",
-              weekday: "long",
+              weekday: en ? "short" : "long",
             }).format(now)}
           </div>
           <div class="dc-name">
