@@ -3,7 +3,17 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>&#26032;&#20998;&#38913;</title>
+    <!--
+      分頁上顯示的是這裡的 title 和 icon，不是 manifest 裡的那組 ——
+      manifest 的 icons 給的是擴充功能清單和商店，分頁列不看它。
+      沒掛的話 Edge 就顯示「新分頁」加一顆地球，這個擴充功能等於沒有名字。
+
+      這裡寫死中文名當底，載入之後 App 會照使用者選的語言換成
+      extensionName（天光／Aubade）—— 靜態 HTML 讀不到 chrome.i18n。
+    -->
+    <title>&#22825;&#20809;</title>
+    <link rel="icon" sizes="16x16" href="/icons/icon16.png" />
+    <link rel="icon" sizes="32x32" href="/icons/icon32.png" />
   </head>
   <body>
     <div id="app"></div>

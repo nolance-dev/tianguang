@@ -269,6 +269,15 @@ export function App() {
     setLang(s.lang);
     // CSS 靠 :root[lang^="en"] 分中英文的字體與字距，跟著換
     r.lang = locale();
+    /*
+     * 分頁上的名字跟著語言走。
+     *
+     * 名字只有一個來源：manifest 用 __MSG_extensionName__，這裡也用同一個鍵，
+     * 兩邊不會各改各的。開發預覽沒有 chrome.i18n，t() 會把鍵名原樣吐回來 ——
+     * 那時候留著 index.html 寫死的那個，不要讓分頁標題變成 extensionName。
+     */
+    const name = t("extensionName");
+    if (name && name !== "extensionName") document.title = name;
     r.style.setProperty("--mesh", p.css);
     r.style.setProperty("--fg", p.fg);
     r.style.setProperty("--fg-2", p.fg2);
