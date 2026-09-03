@@ -129,8 +129,14 @@ export function FourSymbols({ now }: Props) {
           >
             <title>{label}</title>
 
-            {/* 呼吸掛在這一層，外面那一層的 opacity 留給進場的淡入 */}
-            <g class="sx-in">
+            {/*
+              呼吸掛在這一層，外面那一層的 opacity 留給進場的淡入。
+
+              aria-hidden 是給讀螢幕的：名字已經在外層那個 role="img" 上
+              （「青龍七宿：角 亢 氐…」），裡面這二十八個字再各自曝一次，
+              游標會一個字一個字走過去，中間還夾著「·」。
+            */}
+            <g class="sx-in" aria-hidden="true">
               {/* pathLength 把折線長度正規化成 1，四隻獸的線長差很多，
                   dash 的值才能四張共用一組 */}
               <polyline

@@ -999,5 +999,14 @@
   },
   "s_lang_auto": {
     "message": "Match the browser"
+  },
+  "c_sized": {
+    "message": "$1$ is now $2$ by $3$"
+  },
+  "c_moved": {
+    "message": "$1$ moved to $2$ of $3$"
+  },
+  "fo_filter": {
+    "message": "Filter by project"
   }
 }

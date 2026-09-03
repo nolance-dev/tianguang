@@ -1035,5 +1035,14 @@
   },
   "s_lang_auto": {
     "message": "跟著瀏覽器"
+  },
+  "c_sized": {
+    "message": "$1$ 寬 $2$ 高 $3$"
+  },
+  "c_moved": {
+    "message": "$1$ 移到第 $2$ 張，共 $3$ 張"
+  },
+  "fo_filter": {
+    "message": "篩選專案"
   }
 }

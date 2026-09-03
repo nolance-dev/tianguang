@@ -115,6 +115,15 @@ export function Cards({
 }: Props) {
   const live = useSignal<Tile[] | null>(null);
   const held = useSignal<TileId | null>(null);
+  /*
+   * 鍵盤改完版面之後要有人講一聲。
+   *
+   * 用滑鼠拖的人看得到卡片跟著手走；用鍵盤的人按了方向鍵，畫面上有變化
+   * 但沒有任何東西被朗讀 —— 對讀螢幕的使用者來說跟沒反應是一樣的。
+   * 這一格是 aria-live，只在鍵盤操作時寫，拖曳不寫（拖曳每動一格寫一次
+   * 會變成一連串朗讀，蓋掉使用者自己在做的事）。
+   */
+  const say = useSignal("");
   const grid = useRef<HTMLDivElement>(null);
 
   /*
@@ -138,6 +147,20 @@ export function Cards({
     // 連結變少之後，多出來的那幾張不畫（版面裡的位置留著，加回來還在原位）
     return kind !== "links" || linkIds.includes(tl.id);
   });
+
+  /**
+   * 卡片的名字。
+   *
+   * 沒有名字的 <section> 在讀螢幕裡是一團 generic，九張卡的「調整大小」
+   * 按鈕也會念出九句一模一樣的話 —— 分不出自己站在哪一張上面。
+   * 快速存取可以有好幾張，所以多於一張時補上編號。
+   */
+  function nameOf(id: TileId): string {
+    const kind = kindOf(id);
+    const base = t(`s_card_${kind}`);
+    if (kind !== "links" || linkIds.length < 2) return base;
+    return `${base} ${linkIds.indexOf(id) + 1}`;
+  }
 
   /** 拖曳結束的共同收尾：放手才落盤 */
   function commit() {
@@ -261,10 +284,23 @@ export function Cards({
     const dy = e.key === "ArrowDown" ? 1 : e.key === "ArrowUp" ? -1 : 0;
     if (!dx && !dy) return;
     e.preventDefault();
+    const shown = new Set(tiles.map((t) => t.id));
     const next = e.shiftKey
-      ? nudgeVisible(order, tile.id, dx || dy, new Set(tiles.map((t) => t.id)))
+      ? nudgeVisible(order, tile.id, dx || dy, shown)
       : resize(order, tile.id, tile.w + dx, tile.h + dy);
+    // 推不動就不要報 —— 「還在原位」也是一種回答，但不是用同一句話重念一次
+    if (next === order) return;
     slide(grid.current, () => onDesk(next));
+
+    const name = nameOf(tile.id);
+    if (e.shiftKey) {
+      const row = next.filter((t) => shown.has(t.id));
+      const at = row.findIndex((t) => t.id === tile.id) + 1;
+      say.value = t("c_moved", [name, String(at), String(row.length)]);
+    } else {
+      const me = next.find((t) => t.id === tile.id)!;
+      say.value = t("c_sized", [name, String(me.w), String(me.h)]);
+    }
   }
 
   /*
@@ -300,9 +336,13 @@ export function Cards({
 
   return (
     <div class="cards" ref={grid}>
+      <p class="sr-only" aria-live="polite">
+        {say.value}
+      </p>
       {tiles.map((tile) => (
         <section
           key={tile.id}
+          aria-label={nameOf(tile.id)}
           class={`card${VARIANT[kindOf(tile.id)]}${held.value === tile.id ? " held" : ""}`}
           data-id={tile.id}
           data-w={tile.w}
@@ -386,7 +426,9 @@ export function Cards({
           <button
             type="button"
             class="grow"
-            aria-label={t("c_resize")}
+            // 九張卡的把手念起來要不一樣，不然只知道「有個調整大小的鈕」
+            aria-label={`${nameOf(tile.id)} ${t("c_resize")}`}
+            aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Shift+ArrowUp Shift+ArrowDown Shift+ArrowLeft Shift+ArrowRight"
             onPointerDown={(e) => startResize(e, tile)}
             onKeyDown={(e) => onHandleKey(e, tile)}
           />

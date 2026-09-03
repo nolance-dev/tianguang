@@ -242,7 +242,10 @@ export function Focus({ work, onChange, onClose }: Props) {
                   </button>
                 ))}
               </div>
+              {/* 這一個不在 <label> 裡面（旁邊是那兩顆週／月的鈕），
+                  所以名字要自己帶，不然讀螢幕只念得出「下拉方塊」 */}
               <select
+                aria-label={t("fo_filter")}
                 value={filter.value}
                 onChange={(e) => (filter.value = e.currentTarget.value)}
               >
