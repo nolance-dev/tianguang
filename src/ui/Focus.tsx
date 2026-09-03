@@ -264,13 +264,19 @@ export function Focus({ work, onChange, onClose }: Props) {
               role="img"
               aria-label={t("fo_chart", String(span.value))}
             >
-              {bars.map((b) => (
+              {bars.map((b, i) => (
                 <span
                   key={b.day}
                   class="bar"
                   title={`${b.day} · ${minutes(b.ms)}`}
                 >
-                  <i style={{ height: `${(b.ms / peak) * 100}%` }} />
+                  {/* --i 是進場的順序，CSS 拿它算延遲，一根差 20 毫秒 */}
+                  <i
+                    style={{
+                      height: `${(b.ms / peak) * 100}%`,
+                      "--i": String(i),
+                    }}
+                  />
                 </span>
               ))}
             </div>

@@ -357,7 +357,27 @@ body::-webkit-scrollbar {
 .icon-btn:active,
 .panel-tabs button:active,
 .slot .rm:active,
-.slot .edit:active {
+.slot .edit:active,
+/*
+ * 底下這一批是掃出來的漏網。做法是把畫面上所有 button 拿去比對樣式表裡
+ * 每一條帶 :active 的選擇器 —— 比對不到的就是按下去沒有回音的。
+ * 七個畫面掃完剩這些：時辰徽章、時鐘、往下的箭頭、卡片的展開鈕、
+ * 新增連結的兩顆鈕、設定裡的分段控制、番茄鐘與日曆整屏的控制項。
+ */
+.badge:active,
+.clock:active,
+.cue:active,
+.expand:active,
+.acts button:active,
+.seg button:active,
+.cal-nav button:active,
+.cal-cell:active,
+.cal-add button:active,
+.key:active,
+.fo-acts button:active,
+.fo-newproj button:active,
+.media-list .go:active,
+.media-list .mute:active {
   transform: scale(0.97);
   transition-duration: 0.09s;
 }
@@ -380,6 +400,14 @@ body::-webkit-scrollbar {
      * 實測第一屏那個下捲提示的箭頭，逐幀之間跳動 4.6 像素，而且永遠不停。
      */
     animation-iteration-count: 1 !important;
+    /*
+     * 延遲也要歸零。
+     *
+     * 時長壓掉了，延遲還在的話東西仍然是一個一個冒出來的 —— 統計圖那排
+     * 長條最多排到第十四根，等於還要看 0.28 秒的接力。要求減少動態的人
+     * 要的是「直接到位」，不是「快轉的接力」。
+     */
+    animation-delay: 0s !important;
   }
 }
 
@@ -2895,6 +2923,28 @@ body::-webkit-scrollbar {
   gap: clamp(0.8rem, 2vw, 1.4rem);
 }
 
+/*
+ * 兩欄各自進場，差 60 毫秒。
+ *
+ * 外框（.full）本來就有 full-in，但那是整片一起淡入 —— 主欄和側欄同時
+ * 到齊，看起來像一張圖貼上去。錯開一點點，眼睛就知道要先看哪一邊。
+ * 只有兩個孩子，所以不需要 nth-child 迴圈，寫死兩條就好。
+ */
+.full-body > * {
+  animation: col-in 0.34s cubic-bezier(0.22, 1, 0.28, 1) both;
+}
+
+.full-body > *:nth-child(2) {
+  animation-delay: 0.06s;
+}
+
+@keyframes col-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
 @media (max-width: 56rem) {
   .full-body {
     grid-template-columns: 1fr;
@@ -3647,12 +3697,34 @@ body::-webkit-scrollbar {
   align-items: flex-end;
 }
 
+/*
+ * 長條從基線長出來，一根差 20 毫秒。
+ *
+ * transition 那條管的是「數字變了」，這條管的是第一次出現 —— 兩件事不一樣，
+ * 原本只有前者，所以整排長條是憑空貼上去的。scaleY 從底邊長，
+ * 不動 height（height 會逐格重排，scaleY 只走合成層）。
+ * 延遲用 --i 帶進來，最多排到第十四根，再多就一起到。
+ */
 .fo-chart .bar i {
   width: 100%;
   min-height: 1px;
   border-radius: 3px 3px 0 0;
   background: var(--fg-2);
   transition: height 0.3s cubic-bezier(0.22, 1, 0.28, 1);
+  transform-origin: 50% 100%;
+  animation: bar-rise 0.3s cubic-bezier(0.22, 1, 0.28, 1) both;
+  /*
+   * 延遲封頂 0.18 秒。月檢視有三十根，一根差 20 毫秒的話最後一根要等 0.6 秒
+   * 才開始長 —— 那已經不是進場，是在等圖表演完。整排收在半秒內。
+   */
+  animation-delay: min(calc(var(--i, 0) * 0.02s), 0.18s);
+}
+
+@keyframes bar-rise {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
 }
 
 /* 最後一根是今天，給它實色 —— 圖上總要有一個「現在在這裡」 */
@@ -3731,6 +3803,22 @@ body::-webkit-scrollbar {
 .wxcard:has(.radar) .wx-now .meta {
   color: var(--fg);
   opacity: 0.78;
+}
+
+/*
+ * 天氣是非同步讀回來的，讀回來之前那一格是「載入中」。
+ * 換過去的時候淡一下，字才不是硬跳出來的。
+ * 只掛在 <b> 上：它是資料到了才掛上去的節點，動畫因此正好在那一刻播。
+ */
+.wx-now b {
+  animation: wx-in 0.22s cubic-bezier(0.22, 1, 0.28, 1) both;
+}
+
+@keyframes wx-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
 }
 
 .wx-now b {
@@ -4134,12 +4222,29 @@ body::-webkit-scrollbar {
   display: none;
 }
 
+/*
+ * 兩秒問一次瀏覽器有哪些分頁在發聲，所以這個清單會自己長短。
+ * 沒有進場的話，切一首歌就是憑空多一行、少一行。
+ *
+ * 只做進場：退場要留住節點才畫得出來，而這裡的節點是 Preact 直接移除的，
+ * 為了一個兩秒才可能發生一次的動作去接管清單的生命週期不划算。
+ */
 .media-list li {
   display: flex;
   align-items: center;
   gap: 0.3rem;
   border-radius: 9px;
-  transition: background 0.15s;
+  transition:
+    background 0.15s,
+    opacity 0.2s;
+  animation: row-in 0.24s cubic-bezier(0.22, 1, 0.28, 1) both;
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
 }
 
 .media-list li:hover {
