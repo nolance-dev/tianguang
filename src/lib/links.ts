@@ -20,6 +20,22 @@ export interface Link {
  */
 export const MAX_LINKS = 64;
 
+/**
+ * 主機名要像個主機名。
+ *
+ * 補上 https:// 之後，「抖音」這種一個詞也會 parse 成功 ——
+ * new URL("https://抖音") 是合法的，主機名變成 punycode，連得到才有鬼。
+ * 這件事最常發生在把名稱打進網址欄的時候：存下去不會有任何抱怨，
+ * 磚上出現的是另一欄那串 https://... 的網址，名稱像是憑空消失了。
+ * 要有一個點（example.com）、是 localhost、或是方括號包起來的 IPv6，才算數。
+ */
+function plausibleHost(host: string): boolean {
+  if (host === "localhost" || host.endsWith(".localhost")) return true;
+  if (host.startsWith("[") && host.endsWith("]")) return true;
+  const dot = host.indexOf(".");
+  return dot > 0 && dot < host.length - 1;
+}
+
 /** 把使用者輸入補成可用的網址。沒寫協定就補 https。 */
 export function normalizeUrl(input: string): string | null {
   const s = input.trim();
@@ -29,6 +45,7 @@ export function normalizeUrl(input: string): string | null {
     const u = new URL(withProtocol);
     // 只收 http(s)。javascript: 這種東西不該進到一個會被點擊的磚上。
     if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+    if (!plausibleHost(u.hostname)) return null;
     return u.toString();
   } catch {
     return null;
@@ -99,7 +116,14 @@ function hostOf(url: string): string {
 
 /** 拖曳排序：把 from 抽出來插到 to 的位置。 */
 export function reorder(links: Link[], from: number, to: number): Link[] {
-  if (from === to || from < 0 || to < 0 || from >= links.length || to >= links.length) return links;
+  if (
+    from === to ||
+    from < 0 ||
+    to < 0 ||
+    from >= links.length ||
+    to >= links.length
+  )
+    return links;
   const next = links.slice();
   const [moved] = next.splice(from, 1);
   next.splice(to, 0, moved!);

@@ -990,5 +990,8 @@
   },
   "s_guide_go": {
     "message": "Show it again"
+  },
+  "links_bad_url": {
+    "message": "The top field takes an address, like www.douyin.com"
   }
 }

@@ -335,6 +335,13 @@ function LinkForm({
         onInput={(e) => (title.value = e.currentTarget.value)}
         onKeyDown={(e) => e.key === "Escape" && onCancel()}
       />
+      {/*
+       * 說出哪裡錯了，不要只把框變紅。
+       *
+       * 兩個一模一樣的輸入框疊在一起，把名稱打進上面那格是很自然的事。
+       * 一句話講清楚哪一欄要放什麼，比一圈紅框省事。
+       */}
+      {bad.value && <p class="err">{t("links_bad_url")}</p>}
       <div class="acts">
         <button type="submit">{t("links_save")}</button>
         <button type="button" onClick={onCancel}>

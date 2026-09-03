@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
-import { initial, makeLink, normalizeUrl, reorder, titleFromUrl } from "../src/lib/links";
+import {
+  initial,
+  makeLink,
+  normalizeUrl,
+  reorder,
+  titleFromUrl,
+} from "../src/lib/links";
 import {
   condition,
   fetchWeather,
@@ -25,6 +31,18 @@ describe("快速連結", () => {
     expect(normalizeUrl("   ")).toBeNull();
   });
 
+  it("一個詞不是網址 —— 名稱打進網址欄要擋下來", () => {
+    // new URL("https://抖音") 是合法的，主機名會變成 punycode。放行的話
+    // 磚上出現的是另一欄那串網址，使用者打的名稱像是憑空消失了
+    expect(normalizeUrl("抖音")).toBeNull();
+    expect(normalizeUrl("douyin")).toBeNull();
+    expect(makeLink("抖音", "https://www.douyin.com")).toBeNull();
+    // 但開發用的 localhost 和 IP 還是要進得來
+    expect(normalizeUrl("localhost:5173")).toBe("https://localhost:5173/");
+    expect(normalizeUrl("192.168.1.5")).toBe("https://192.168.1.5/");
+    expect(normalizeUrl("www.douyin.com")).toBe("https://www.douyin.com/");
+  });
+
   it("沒填標題就用網域，去掉 www", () => {
     expect(titleFromUrl("https://www.example.com/a/b")).toBe("example.com");
     expect(makeLink("github.com")!.title).toBe("github.com");
@@ -39,7 +57,11 @@ describe("快速連結", () => {
   });
 
   it("拖曳排序把元素抽出來插到新位置", () => {
-    const ids = ["a", "b", "c", "d"].map((id) => ({ id, title: id, url: `https://${id}.com` }));
+    const ids = ["a", "b", "c", "d"].map((id) => ({
+      id,
+      title: id,
+      url: `https://${id}.com`,
+    }));
     expect(reorder(ids, 0, 2).map((l) => l.id)).toEqual(["b", "c", "a", "d"]);
     expect(reorder(ids, 3, 0).map((l) => l.id)).toEqual(["d", "a", "b", "c"]);
     // 越界或原地不動就原樣回傳
@@ -77,7 +99,11 @@ describe("天氣", () => {
   it("解析時跳過今天，只留接下來三天", () => {
     const w = parseForecast(
       {
-        current: { temperature_2m: 33.2, apparent_temperature: 38.1, weather_code: 3 },
+        current: {
+          temperature_2m: 33.2,
+          apparent_temperature: 38.1,
+          weather_code: 3,
+        },
         daily: {
           time: ["2026-08-31", "2026-09-01", "2026-09-02", "2026-09-03"],
           weather_code: [3, 61, 0, 80],
@@ -91,7 +117,12 @@ describe("天氣", () => {
     );
     expect(w.temp).toBe(33.2);
     expect(w.days).toHaveLength(3);
-    expect(w.days[0]).toEqual({ date: "2026-09-01", code: 61, max: 31, min: 25 });
+    expect(w.days[0]).toEqual({
+      date: "2026-09-01",
+      code: 61,
+      max: 31,
+      min: 25,
+    });
     expect([w.lat, w.lon]).toEqual([25, 121]);
     expect(w.stale).toBe(false);
   });
@@ -140,7 +171,9 @@ describe("天氣降級", () => {
 
   it("從來沒成功過又沒網路，就回 null 讓 UI 顯示空狀態", async () => {
     localStorage.clear();
-    const fetchSpy = vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("offline"));
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockRejectedValue(new TypeError("offline"));
     expect(await fetchWeather(25, 121, 0)).toBeNull();
     fetchSpy.mockRestore();
   });
@@ -178,7 +211,9 @@ describe("中文城市名", () => {
       .spyOn(globalThis, "fetch")
       .mockResolvedValue(new Response(JSON.stringify({ results: [] })));
     await geocode("台北", "zh-TW");
-    expect(decodeURIComponent(String(spy.mock.calls[0]![0]))).toContain("name=Taipei");
+    expect(decodeURIComponent(String(spy.mock.calls[0]![0]))).toContain(
+      "name=Taipei",
+    );
     // language 只取前綴，zh-TW 要變成 zh
     expect(String(spy.mock.calls[0]![0])).toContain("language=zh");
     spy.mockRestore();
@@ -188,7 +223,11 @@ describe("中文城市名", () => {
 describe("換城市要重新取得", () => {
   const body = (temp: number) =>
     JSON.stringify({
-      current: { temperature_2m: temp, apparent_temperature: temp + 3, weather_code: 0 },
+      current: {
+        temperature_2m: temp,
+        apparent_temperature: temp + 3,
+        weather_code: 0,
+      },
       daily: {
         time: ["2026-08-31", "2026-09-01", "2026-09-02", "2026-09-03"],
         weather_code: [0, 0, 0, 0],
@@ -216,7 +255,9 @@ describe("換城市要重新取得", () => {
 
   it("同一個城市在保鮮期內仍然用快取", async () => {
     localStorage.clear();
-    const spy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(body(32)));
+    const spy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(body(32)));
     await fetchWeather(25.033, 121.565, 0);
     await fetchWeather(25.0331, 121.5651, 60_000);
     expect(spy, "座標只差幾公尺不該讓快取失效").toHaveBeenCalledTimes(1);
@@ -225,7 +266,9 @@ describe("換城市要重新取得", () => {
 
   it("斷線時不拿別的城市的舊資料頂 —— 那不是舊，是錯", async () => {
     localStorage.clear();
-    const spy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(body(32)));
+    const spy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(new Response(body(32)));
     await fetchWeather(25.033, 121.565, 0);
 
     spy.mockRejectedValue(new TypeError("offline"));

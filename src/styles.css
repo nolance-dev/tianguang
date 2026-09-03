@@ -1606,9 +1606,18 @@ body::-webkit-scrollbar {
 .panel {
   width: min(24rem, 100%);
   height: 100%;
-  overflow-y: auto;
-  /* 設定長到會捲了。捲軸藏起來，跟頁面其他地方一致 */
-  scrollbar-width: none;
+  /*
+   * 捲的是 .panel-body，不是整片抽屜。
+   *
+   * 原本整片一起捲，標題列與分頁列靠 sticky 黏在頂端 —— 於是內容從它們
+   * 底下經過，而兩者都是半透明的玻璃，字就這樣透上來疊在「設定」上面。
+   * （標題列更慘：連 z-index 都沒有，sticky 但沒有堆疊順序的元素會被
+   * 後面的兄弟節點直接畫在上面，糊都沒糊到。）
+   * 把捲軸下放到內容區，兩條列就在捲動範圍外面，不必再跟透明度角力。
+   */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--glass);
   border-left: 1px solid var(--glass-line);
   backdrop-filter: blur(28px) saturate(1.3);
@@ -1617,7 +1626,7 @@ body::-webkit-scrollbar {
   animation: slide-in 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.panel::-webkit-scrollbar {
+.panel-body::-webkit-scrollbar {
   display: none;
 }
 
@@ -1628,8 +1637,7 @@ body::-webkit-scrollbar {
 }
 
 .panel-h {
-  position: sticky;
-  top: 0;
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1642,13 +1650,11 @@ body::-webkit-scrollbar {
 /*
  * 分頁列。
  *
- * 跟標題一樣黏在頂端 —— 捲到設定的最下面時還看得到自己在哪一頁，
- * 也不必捲回去才能換頁。它自己有底色，不然捲動時底下的字會透上來。
+ * 跟標題一樣不跟著捲 —— 捲到設定的最下面時還看得到自己在哪一頁，
+ * 也不必捲回去才能換頁。
  */
 .panel-tabs {
-  position: sticky;
-  top: 3.35rem;
-  z-index: 2;
+  flex: none;
   display: flex;
   gap: 0.25rem;
   padding: 0.55rem 1.2rem 0.6rem;
@@ -1697,6 +1703,10 @@ body::-webkit-scrollbar {
 }
 
 .panel-body {
+  flex: 1;
+  overflow-y: auto;
+  /* 設定長到會捲了。捲軸藏起來，跟頁面其他地方一致 */
+  scrollbar-width: none;
   padding: 0.6rem 1.2rem 3rem;
 }
 
@@ -2143,6 +2153,13 @@ body::-webkit-scrollbar {
 
 .tile.addform input.bad {
   border-bottom-color: var(--fg);
+}
+
+.tile.addform .err {
+  width: 100%;
+  font-size: 0.62rem;
+  line-height: 1.4;
+  color: var(--fg-2);
 }
 
 .tile.addform .acts {

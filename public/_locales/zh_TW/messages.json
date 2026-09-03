@@ -1026,5 +1026,8 @@
   },
   "s_guide_go": {
     "message": "再看一次"
+  },
+  "links_bad_url": {
+    "message": "上面那格要放網址，例如 www.douyin.com"
   }
 }
