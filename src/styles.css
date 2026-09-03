@@ -1378,6 +1378,180 @@ body::-webkit-scrollbar {
   letter-spacing: 0.12em;
 }
 
+/* ---------- 首次引導 ---------- */
+
+/*
+ * 裝好第一次開新分頁時出現一次。
+ *
+ * 蓋一層薄紗但不塗滿：底下那一屏要看得見，因為第二步講的就是它 ——
+ * 把畫面遮住再描述畫面，那是說明書不是引導。
+ */
+.guide {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: end center;
+  padding: clamp(1.5rem, 5vh, 4rem);
+  /*
+   * 薄紗蓋滿，但只壓 0.3。
+   *
+   * 第一版只在下緣打了一道漸層，想讓底下那一屏完全看得見 —— 結果是卡片
+   * 幾乎讀不到：白天的底色本來就很亮，一張半透明的卡疊上去等於沒有邊界。
+   * 裝好第一次就讀不到的引導比沒有引導更糟。壓 0.3 之後，時鐘、搜尋列、
+   * 第二步要看的卡片都還在，只是退到後面去。
+   */
+  background: rgba(0, 0, 0, 0.3);
+  animation: guide-in 0.5s cubic-bezier(0.22, 1, 0.28, 1) both;
+}
+
+@keyframes guide-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* 卡片落在下緣：中間是時鐘，蓋住它等於把主角遮起來介紹主角 */
+.guide-box {
+  width: min(30rem, 100%);
+  border-radius: 16px;
+  padding: 1.5rem 1.6rem 1.1rem;
+  /*
+   * 底色不用 --card。那是給第二屏的卡片用的，那裡本來就有一層比較暗的底
+   * 撐著；這裡疊的是第一屏，白天很亮，半透明會整個化掉。
+   */
+  background: var(--glass-solid, rgba(255, 255, 255, 0.14));
+  backdrop-filter: blur(26px) saturate(1.3);
+  -webkit-backdrop-filter: blur(26px) saturate(1.3);
+  border: 1px solid var(--glass-line);
+  box-shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.72);
+  animation: guide-rise 0.55s cubic-bezier(0.22, 1, 0.28, 1) both;
+}
+
+@keyframes guide-rise {
+  from {
+    opacity: 0;
+    translate: 0 1.6rem;
+  }
+}
+
+.guide-box:focus {
+  outline: none;
+}
+
+.gd-kicker {
+  font-family: var(--f-cjk);
+  font-weight: 600;
+  font-size: 0.68rem;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;
+  color: var(--gold, #c99a4e);
+}
+
+:root[lang^="en"] .gd-kicker {
+  font-family: var(--f-latin);
+  letter-spacing: 0.18em;
+  text-indent: 0.18em;
+}
+
+.guide-box h2 {
+  margin: 0.5rem 0 0.4rem;
+  font-family: var(--f-cjk);
+  font-weight: 600;
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+}
+
+:root[lang^="en"] .guide-box h2 {
+  font-family: var(--f-latin);
+  letter-spacing: 0;
+}
+
+.guide-box p {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.85;
+  color: var(--fg-2);
+}
+
+.gd-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.3rem;
+}
+
+/* 走到哪一步用點表示 —— 三步而已，數字太吵 */
+.gd-dots {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.gd-dots i {
+  width: 0.36rem;
+  height: 0.36rem;
+  border-radius: 50%;
+  background: var(--fg);
+  opacity: 0.22;
+  transition:
+    opacity 0.25s,
+    width 0.25s;
+}
+
+.gd-dots i.on {
+  opacity: 0.8;
+  /* 當下那一步拉成一小段，不只是變亮 —— 縮圖大小時亮度差看不出來 */
+  width: 0.9rem;
+  border-radius: 0.18rem;
+}
+
+.gd-acts {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gd-skip,
+.gd-next {
+  font-family: inherit;
+  font-size: 0.8rem;
+  border-radius: 8px;
+  padding: 0.35rem 0.95rem;
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    border-color 0.18s,
+    color 0.18s;
+}
+
+.gd-skip {
+  border: 0;
+  background: none;
+  color: var(--fg-2);
+}
+
+.gd-skip:hover {
+  color: var(--fg);
+}
+
+.gd-next {
+  border: 1px solid var(--glass-line);
+  background: var(--glass);
+  color: var(--fg);
+}
+
+.gd-next:hover {
+  border-color: var(--fg-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guide,
+  .guide-box {
+    animation-duration: 0.01ms;
+  }
+}
+
 /* ---------- 設定抽屜 ---------- */
 
 .sheet {

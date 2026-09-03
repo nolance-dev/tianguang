@@ -927,5 +927,35 @@
   },
   "s_tab_data": {
     "message": "Data"
+  },
+  "gd_title": {
+    "message": "Aubade"
+  },
+  "gd_h0": {
+    "message": "Your new tab"
+  },
+  "gd_b0": {
+    "message": "The time, the season, and a box to search from. The row below is where you go often — hover a tile to change it."
+  },
+  "gd_h1": {
+    "message": "There's a second screen"
+  },
+  "gd_b1": {
+    "message": "To-dos, notes, a pomodoro timer, the calendar, the weather. Drag a card by its header, pull its corner to resize. Arrange it how you like."
+  },
+  "gd_h2": {
+    "message": "Click the clock"
+  },
+  "gd_b2": {
+    "message": "A full dial that turns: the double-hours, the solar terms, the arc of daylight, the twenty-eight mansions. The gear at the bottom right adjusts everything."
+  },
+  "gd_next": {
+    "message": "Next"
+  },
+  "gd_skip": {
+    "message": "Skip"
+  },
+  "gd_done": {
+    "message": "Start"
   }
 }

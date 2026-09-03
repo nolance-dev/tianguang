@@ -1,4 +1,7 @@
-import { defineConfig, type Plugin } from "vite";
+// vitest 的 defineConfig 是 vite 那個的超集，多認得 test 這一區。
+// 從 "vite" 匯入的話，下面那段 test 設定會編不過（型別裡沒有這個鍵）。
+import { defineConfig } from "vitest/config";
+import type { Plugin } from "vite";
 import { readFileSync } from "node:fs";
 import pkg from "./package.json" with { type: "json" };
 
@@ -65,6 +68,13 @@ function bootPaint(): Plugin {
 }
 
 export default defineConfig({
+  /*
+   * e2e/ 不歸 vitest 管。
+   *
+   * 那些是 Playwright 的規格檔，import 的是 @playwright/test —— vitest 撿去跑
+   * 會整個檔案掛掉。它們由 npm run e2e 跑，見 playwright.config.ts。
+   */
+  test: { include: ["test/**/*.test.{ts,tsx}"] },
   plugins: [bootPaint()],
   // 版本號只有 package.json 一個來源，設定頁的「關於」直接讀這個
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },

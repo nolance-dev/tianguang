@@ -23,6 +23,8 @@ async function seed(page: Page, count: number, w: number) {
         "tg.settings",
         JSON.stringify({
           schemaVersion: 1,
+          // 這幾條測的不是引導，先當它看過了 —— 不然它會蓋住整頁擋掉所有點擊
+          guided: true,
           links,
           desk: [{ id: "links", w, h: 1 }],
           cards: {

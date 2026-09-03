@@ -87,6 +87,13 @@ export interface Settings {
   secondCal: SecondCal;
   /** 月曆上要不要標當地節日 */
   holidaysOn: boolean;
+  /**
+   * 首次引導看過了沒有。
+   *
+   * 存在設定裡而不是 localStorage：它跟著帳號同步，換一台機器不會再被引導一次。
+   * 預設 false —— 剛裝好的人本來就沒看過。
+   */
+  guided: boolean;
   /** 日照弧與天氣共用的座標，由城市搜尋填入 */
   lat: number;
   lon: number;
@@ -138,6 +145,7 @@ export const DEFAULTS: Settings = {
   countryCode: "TW",
   secondCal: "chinese",
   holidaysOn: true,
+  guided: false,
   lat: 25.033,
   lon: 121.565,
 };

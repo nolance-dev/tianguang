@@ -36,6 +36,7 @@ import {
 } from "../lib/holidays";
 import { Focus } from "./Focus";
 import { Palette } from "./Palette";
+import { Guide } from "./Guide";
 import { randomQuote } from "../lib/quotes";
 import * as ws from "../lib/workspace";
 
@@ -534,6 +535,27 @@ export function App() {
           lat={settings.value.lat}
           lon={settings.value.lon}
           onClose={() => (dialOpen.value = false)}
+        />
+      )}
+
+      {/*
+       * 首次引導。
+       *
+       * 兩個條件。第一個是「設定真的載回來了」—— settings 在載完之前握的是
+       * DEFAULTS 本尊（見上面那個 peek() === DEFAULTS 的哨兵），而 DEFAULTS
+       * 的 guided 是 false，少了這個判斷，老使用者每次開分頁都會先被引導閃一下。
+       * 真的第一次跑的時候 load() 回的是 DEFAULTS 的複本，不是本尊，所以照樣進得來。
+       *
+       * 第二個是那個旗標本身。它存在設定裡而不是 localStorage，
+       * 所以「看過了」跟著帳號走，不是跟著這一台機器。
+       */}
+      {settings.value !== DEFAULTS && !settings.value.guided && (
+        <Guide
+          onPage={(n) => (page.value = n)}
+          onDone={() => {
+            patch({ guided: true });
+            page.value = 0;
+          }}
         />
       )}
 
