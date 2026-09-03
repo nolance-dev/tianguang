@@ -11,7 +11,7 @@ import { expect, test } from "@playwright/test";
 test("分頁顯示的是名字，不是「新分頁」", async ({ page }) => {
   await page.goto("/");
   // 靜態那一份是中文名，載入之前就在了 —— 不會先閃一下「新分頁」
-  await expect(page).toHaveTitle("天光");
+  await expect(page).toHaveTitle("天光 Home Page");
 
   const icons = await page
     .locator("link[rel=icon]")
@@ -27,8 +27,8 @@ test("分頁顯示的是名字，不是「新分頁」", async ({ page }) => {
 test("名字跟著語言換", async ({ page }) => {
   await page.goto("/");
   for (const [lang, name] of [
-    ["zh_TW", "天光"],
-    ["en", "Aubade"],
+    ["zh_TW", "天光 Home Page"],
+    ["en", "Aubade Home Page"],
   ] as const) {
     await page.evaluate(
       (l) =>

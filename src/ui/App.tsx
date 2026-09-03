@@ -277,7 +277,10 @@ export function App() {
      * 那時候留著 index.html 寫死的那個，不要讓分頁標題變成 extensionName。
      */
     const name = t("extensionName");
-    if (name && name !== "extensionName") document.title = name;
+    // 名字還是只有一個來源，Home Page 是接在後面的固定字尾 ——
+    // 兩種語言都用英文，它是名字的一部分，不是要翻譯的介面文字。
+    // manifest 那邊維持乾淨的「天光／Aubade」，商店和擴充功能清單不帶字尾。
+    if (name && name !== "extensionName") document.title = `${name} Home Page`;
     r.style.setProperty("--mesh", p.css);
     r.style.setProperty("--fg", p.fg);
     r.style.setProperty("--fg-2", p.fg2);
