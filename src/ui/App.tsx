@@ -1,5 +1,5 @@
 import { useComputed, useSignal, useSignalEffect } from "@preact/signals";
-import { useEffect, useMemo, useRef } from "preact/hooks";
+import { useEffect, useRef } from "preact/hooks";
 import {
   meshCss,
   colorsAt,
@@ -39,7 +39,7 @@ import {
 import { Focus } from "./Focus";
 import { Palette } from "./Palette";
 import { Guide } from "./Guide";
-import { randomQuote } from "../lib/quotes";
+import { nextQuote } from "../lib/quotes";
 import * as ws from "../lib/workspace";
 
 /** 秒針之外的東西一秒更新一次就夠。時辰環一分鐘才動 0.25 度，看不出來。 */
@@ -691,9 +691,13 @@ function SearchBar({ engineId }: { engineId: string }) {
 
 function QuoteLine({ text, by }: { text: string; by: string }) {
   // 抽籤只抽一次。時鐘每秒重繪整棵樹，寫在 render 裡的話這句話會一秒換一句。
-  const drawn = useMemo(() => randomQuote(isEnglish()), []);
   const own = text.trim();
-  const q = own ? { text: own, by: by.trim() } : drawn;
+  /*
+   * 不用 useMemo：nextQuote 一個分頁只走一格，重複叫它會拿到同一句。
+   * 短路也是有意的 —— 有自訂語錄的時候一格都不該走，
+   * 使用者根本沒看到那一句，回頭卻少了一句。
+   */
+  const q = own ? { text: own, by: by.trim() } : nextQuote(isEnglish());
   return (
     <p class="quote">
       {q.text}

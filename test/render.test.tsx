@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { resetQuoteSlot } from "../src/lib/quotes";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { render } from "preact";
 import { readFileSync } from "node:fs";
@@ -896,26 +897,30 @@ describe("工作區卡片", () => {
     );
   });
 
-  it("語錄每開一次抽一次，不是整天同一句", async () => {
-    // 亂數固定成第一句與最後一句，才驗得出「換了沒」而不是碰運氣
-    const seq = [0, 0.999];
-    let i = 0;
-    const rand = vi
-      .spyOn(Math, "random")
-      .mockImplementation(() => seq[i++ % seq.length]!);
+  it("語錄一個分頁一句，下一個分頁換下一句", async () => {
+    localStorage.setItem("tg.quote", "0");
+    resetQuoteSlot();
 
     const a = mount(new Date(2026, 7, 31, 9, 0, 0));
     await vi.waitFor(() => expect(a.querySelector(".quote")).not.toBeNull());
     const first = a.querySelector(".quote")?.textContent;
 
+    // 同一個分頁裡重畫幾次都是同一句 —— 時鐘每秒重繪，語錄不該跟著跳
     render(null, host!);
     host!.remove();
+    const again = mount(new Date(2026, 7, 31, 9, 0, 0));
+    await vi.waitFor(() => expect(again.querySelector(".quote")).not.toBeNull());
+    expect(again.querySelector(".quote")?.textContent, "同一頁不換").toBe(first);
+
+    // 新的分頁才往下走一句
+    render(null, host!);
+    host!.remove();
+    resetQuoteSlot();
     const b = mount(new Date(2026, 7, 31, 9, 0, 0));
     await vi.waitFor(() => expect(b.querySelector(".quote")).not.toBeNull());
-    expect(b.querySelector(".quote")?.textContent, "重開就換一句").not.toBe(
+    expect(b.querySelector(".quote")?.textContent, "下一頁換下一句").not.toBe(
       first,
     );
-    rand.mockRestore();
   });
 
   it("抽到的那句不會被每秒重繪換掉", async () => {
