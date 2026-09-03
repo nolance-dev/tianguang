@@ -1029,5 +1029,11 @@
   },
   "links_bad_url": {
     "message": "上面那格要放網址，例如 www.douyin.com"
+  },
+  "s_lang": {
+    "message": "語言"
+  },
+  "s_lang_auto": {
+    "message": "跟著瀏覽器"
   }
 }

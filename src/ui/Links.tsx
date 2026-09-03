@@ -5,6 +5,7 @@ import {
   faviconUrl,
   initial,
   makeLink,
+  orderFields,
   reorder,
   type Link,
 } from "../lib/links";
@@ -304,7 +305,8 @@ function LinkForm({
       class="tile addform"
       onSubmit={(e) => {
         e.preventDefault();
-        const made = makeLink(url.value, title.value);
+        const [addr, name] = orderFields(url.value, title.value);
+        const made = makeLink(addr, name);
         if (!made) {
           bad.value = true;
           first.current?.focus();

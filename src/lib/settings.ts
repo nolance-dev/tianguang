@@ -13,6 +13,7 @@
  *    index.html 裡的同步 inline script 直接讀它。
  */
 
+import type { Lang } from "./i18n";
 import { paletteAt } from "./mesh";
 import type { Link } from "./links";
 import { DEFAULT_DESK, DEFAULT_HOME_DESK, type Tile } from "./desk";
@@ -27,6 +28,8 @@ export interface Settings {
   name: string;
   clock24: boolean;
   showSeconds: boolean;
+  /** 介面語言。auto 跟著瀏覽器，其餘覆寫掉 chrome.i18n */
+  lang: Lang;
   searchEngine: string;
   background: BackgroundSource;
   solidColor: string;
@@ -104,6 +107,7 @@ export const DEFAULTS: Settings = {
   name: "",
   clock24: true,
   showSeconds: false,
+  lang: "auto",
   searchEngine: "bing",
   background: "mesh",
   solidColor: "#131C30",
@@ -214,6 +218,9 @@ export function migrate(raw: Record<string, unknown>): Settings {
     cards: mergeFlags(DEFAULTS.cards, (raw as { cards?: unknown }).cards),
     home: mergeFlags(DEFAULTS.home, (raw as { home?: unknown }).home),
     solidColor: safeColor(merged.solidColor, DEFAULTS.solidColor),
+    lang: (["auto", "zh_TW", "en"] as const).includes(merged.lang)
+      ? merged.lang
+      : DEFAULTS.lang,
   };
 }
 

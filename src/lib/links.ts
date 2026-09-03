@@ -66,6 +66,17 @@ export function initial(title: string): string {
   return [...title.trim()][0]?.toUpperCase() ?? "?";
 }
 
+/**
+ * 兩格填反了就調過來。
+ *
+ * 網址在上、名稱在下，而兩個框長得一模一樣 —— 表單一開游標就在上面那格，
+ * 想著「先打名字」的人有一半會把名稱打進網址欄。這件事沒有模稜兩可的空間：
+ * 上面那格不是網址、下面那格是，那就是反了。與其罵人，不如收下。
+ */
+export function orderFields(a: string, b: string): [string, string] {
+  return !normalizeUrl(a) && normalizeUrl(b) ? [b, a] : [a, b];
+}
+
 export function makeLink(url: string, title?: string): Link | null {
   const normalized = normalizeUrl(url);
   if (!normalized) return null;

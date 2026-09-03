@@ -993,5 +993,11 @@
   },
   "links_bad_url": {
     "message": "The top field takes an address, like www.douyin.com"
+  },
+  "s_lang": {
+    "message": "Language"
+  },
+  "s_lang_auto": {
+    "message": "Match the browser"
   }
 }

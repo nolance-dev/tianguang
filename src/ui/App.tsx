@@ -12,7 +12,9 @@ import { decimalHour, dayFraction, greetSlot, indexAt } from "../lib/shichen";
 import { jieqiIndex, moonIndex } from "../lib/solar";
 import {
   isEnglish,
+  locale,
   outerRingName,
+  setLang,
   shichenAlt,
   shichenName,
   t,
@@ -264,6 +266,9 @@ export function App() {
     const s = settings.value;
     const p = palette.value;
     const r = document.documentElement;
+    setLang(s.lang);
+    // CSS 靠 :root[lang^="en"] 分中英文的字體與字距，跟著換
+    r.lang = locale();
     r.style.setProperty("--mesh", p.css);
     r.style.setProperty("--fg", p.fg);
     r.style.setProperty("--fg-2", p.fg2);

@@ -117,26 +117,40 @@ test("寬到一排放得下時，卡片收成一排的高度", async ({ page }) 
 /**
  * 把名稱打進網址欄。
  *
- * 兩個一模一樣的輸入框疊在一起，這是很自然的手誤。以前 new URL("https://抖音")
- * 會過，磚就存下去了 —— 顯示的是另一欄那串網址，打的名稱像是不見了。
+ * 兩個一模一樣的輸入框疊在一起，游標又停在上面那格，這是很自然的手誤。
+ * 以前 new URL("https://抖音") 會過，磚就這樣存下去了 —— 顯示的是另一欄
+ * 那串網址，打的名稱像是不見了。現在兩格反過來填也收得下。
  */
-test("名稱打進網址欄會被擋下來，而且說得出哪裡錯", async ({ page }) => {
+test("兩格填反了也存得進去，磚上是打的名稱", async ({ page }) => {
   await seed(page, 0, 3);
   // 卡片在工作區那一屏，非 .on 的屏收不到指標事件 —— 得先真的捲下去
   await page.locator(".cue").click();
   await page.locator(".card.linkcard .tile.add").click();
   const form = page.locator(".card.linkcard .addform");
   await form.locator("input").nth(0).fill("抖音");
-  await form.locator("input").nth(1).fill("https://www.douyin.com");
+  await form
+    .locator("input")
+    .nth(1)
+    .fill("https://www.douyin.com/?recommend=1");
+  await form.locator("button[type=submit]").click();
+
+  await expect(page.locator(".card.linkcard .slot .cap")).toHaveText("抖音");
+  await expect(page.locator(".card.linkcard .slot a")).toHaveAttribute(
+    "href",
+    "https://www.douyin.com/?recommend=1",
+  );
+});
+
+test("兩格都不是網址才擋下來，而且說得出哪裡錯", async ({ page }) => {
+  await seed(page, 0, 3);
+  await page.locator(".cue").click();
+  await page.locator(".card.linkcard .tile.add").click();
+  const form = page.locator(".card.linkcard .addform");
+  await form.locator("input").nth(0).fill("抖音");
+  await form.locator("input").nth(1).fill("短影片");
   await form.locator("button[type=submit]").click();
 
   await expect(form).toBeVisible();
   await expect(form.locator(".err")).toBeVisible();
   await expect(page.locator(".card.linkcard .slot")).toHaveCount(0);
-
-  // 換到正確的欄位就存得進去，而且磚上是使用者打的名稱
-  await form.locator("input").nth(0).fill("https://www.douyin.com");
-  await form.locator("input").nth(1).fill("抖音");
-  await form.locator("button[type=submit]").click();
-  await expect(page.locator(".card.linkcard .slot .cap")).toHaveText("抖音");
 });

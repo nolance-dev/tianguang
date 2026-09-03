@@ -241,7 +241,7 @@ describe("時辰盤與設定", () => {
       expect(document.querySelector(".panel")).not.toBeNull(),
     );
 
-    const select = document.querySelector(".panel select") as HTMLSelectElement;
+    const select = document.querySelector(".panel select.engine") as HTMLSelectElement;
     expect(select.options.length).toBe(ENGINES.length);
     expect(select.value).toBe("bing");
 
@@ -249,7 +249,7 @@ describe("時辰盤與設定", () => {
     select.dispatchEvent(new Event("change", { bubbles: true }));
     await vi.waitFor(() =>
       expect(
-        (document.querySelector(".panel select") as HTMLSelectElement).value,
+        (document.querySelector(".panel select.engine") as HTMLSelectElement).value,
       ).toBe("google"),
     );
   });

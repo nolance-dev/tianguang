@@ -4,6 +4,7 @@ import {
   initial,
   makeLink,
   normalizeUrl,
+  orderFields,
   reorder,
   titleFromUrl,
 } from "../src/lib/links";
@@ -41,6 +42,17 @@ describe("快速連結", () => {
     expect(normalizeUrl("localhost:5173")).toBe("https://localhost:5173/");
     expect(normalizeUrl("192.168.1.5")).toBe("https://192.168.1.5/");
     expect(normalizeUrl("www.douyin.com")).toBe("https://www.douyin.com/");
+  });
+
+  it("兩格填反了自己調過來", () => {
+    expect(orderFields("抖音", "https://www.douyin.com")).toEqual([
+      "https://www.douyin.com",
+      "抖音",
+    ]);
+    // 上面那格本來就是網址就不要動它，即使下面那格也像網址
+    expect(orderFields("a.com", "b.com")).toEqual(["a.com", "b.com"]);
+    // 兩格都不是網址就維持原樣，讓 makeLink 去擋
+    expect(orderFields("抖音", "短影片")).toEqual(["抖音", "短影片"]);
   });
 
   it("沒填標題就用網域，去掉 www", () => {

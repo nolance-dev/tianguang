@@ -137,6 +137,25 @@ export function SettingsPanel({
                 <section>
                   <h3>{t("s_general")}</h3>
                   <label class="row">
+                    <span>{t("s_lang")}</span>
+                    <select
+                      class="lang"
+                      value={value.lang}
+                      onChange={(e) =>
+                        onChange({ lang: e.currentTarget.value as S["lang"] })
+                      }
+                    >
+                      {/*
+                       * 語言的名字用它自己 —— 找中文的人看得懂「繁體中文」，
+                       * 不需要先看得懂現在這一種語言才找得到自己那一個。
+                       */}
+                      <option value="auto">{t("s_lang_auto")}</option>
+                      <option value="zh_TW">繁體中文</option>
+                      <option value="en">English</option>
+                    </select>
+                  </label>
+
+                  <label class="row">
                     <span>{t("s_name")}</span>
                     <input
                       ref={first}
@@ -150,6 +169,7 @@ export function SettingsPanel({
                   <label class="row">
                     <span>{t("s_engine")}</span>
                     <select
+                      class="engine"
                       value={value.searchEngine}
                       onChange={(e) =>
                         onChange({ searchEngine: e.currentTarget.value })
