@@ -19,9 +19,18 @@ interface Props {
   onDone: () => void;
 }
 
-/** 每一步停在哪一屏。第二步在工作區，其餘在第一屏 */
-const PAGE = [0, 1, 0];
-const STEPS = 3;
+/*
+ * 每一步停在哪一屏。
+ *
+ * 前三步講第一屏的東西（時鐘、搜尋、快速存取），第四五步講工作區，
+ * 最後一步回到第一屏收在時辰盤和齒輪 —— 因為那是接下來要按的兩個地方。
+ *
+ * 挑的六件事有一個共同點：**看不出來**。第二屏收在畫面底下、時鐘可以點、
+ * Ctrl K 是隱形的、天氣卡拉大會變雷達圖 —— 沒人講就不會發現。
+ * 齒輪和卡片本身看得見，所以只帶過。
+ */
+const PAGE = [0, 0, 0, 1, 1, 0];
+const STEPS = PAGE.length;
 
 export function Guide({ onPage, onDone }: Props) {
   const [step, setStep] = useState(0);

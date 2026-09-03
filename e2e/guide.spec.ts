@@ -26,23 +26,39 @@ const fresh = async (page: Page) => {
   await page.reload();
 };
 
-test("剛裝好會出現，走完三步之後不再出現", async ({ page }) => {
+test("剛裝好會出現，走完六步之後不再出現", async ({ page }) => {
   await fresh(page);
   const box = page.locator(".guide-box");
   await expect(box, "第一次開分頁要看到引導").toBeVisible();
+  await expect(page.locator(".gd-dots i"), "六步就該有六個點").toHaveCount(6);
 
-  // 第一步在第一屏
+  // 前三步講第一屏的東西，都還在第一屏
   await expect(page.locator(".screen.desk.on")).toHaveCount(0);
-
   await page.locator(".gd-next").click();
-  // 第二步要真的把人帶到工作區，不是用文字描述它
+  await page.locator(".gd-next").click();
+  await expect(page.locator(".screen.desk.on"), "前三步不該換屏").toHaveCount(
+    0,
+  );
+
+  // 第四步要真的把人帶到工作區，不是用文字描述它
+  await page.locator(".gd-next").click();
   await expect(
     page.locator(".screen.desk.on"),
-    "第二步要切到第二屏",
+    "第四步要切到第二屏",
   ).toHaveCount(1);
 
+  // 第五步還在講卡片，不該把人拉走
   await page.locator(".gd-next").click();
+  await expect(page.locator(".screen.desk.on"), "第五步還在工作區").toHaveCount(
+    1,
+  );
   await expect(page.locator(".gd-dots i.on")).toHaveCount(1);
+
+  // 最後一步回第一屏收在時辰盤
+  await page.locator(".gd-next").click();
+  await expect(page.locator(".screen.desk.on"), "最後一步回第一屏").toHaveCount(
+    0,
+  );
 
   await page.locator(".gd-next").click();
   await expect(box, "看完就收起來").toHaveCount(0);

@@ -935,19 +935,19 @@
     "message": "Your new tab"
   },
   "gd_b0": {
-    "message": "The time, the season, and a box to search from. The row below is where you go often — hover a tile to change it."
+    "message": "The time, the date, today's solar term. Every tab you open from now on is this page, so it had better be worth looking at."
   },
   "gd_h1": {
-    "message": "There's a second screen"
+    "message": "The search box does more than search"
   },
   "gd_b1": {
-    "message": "To-dos, notes, a pomodoro timer, the calendar, the weather. Drag a card by its header, pull its corner to resize. Arrange it how you like."
+    "message": "Type an address and you go there; type anything else and you search. Start with a single letter and a space to switch engine — g for Google, y for YouTube. Ctrl K opens the command palette from anywhere."
   },
   "gd_h2": {
-    "message": "Click the clock"
+    "message": "The row below is where you go often"
   },
   "gd_b2": {
-    "message": "A full dial that turns: the double-hours, the solar terms, the arc of daylight, the twenty-eight mansions. The gear at the bottom right adjusts everything."
+    "message": "Hover a tile for two small buttons: one edits its address and name, one removes it. Drag a tile to reorder. Sixteen fit on a card."
   },
   "gd_next": {
     "message": "Next"
@@ -957,5 +957,23 @@
   },
   "gd_done": {
     "message": "Start"
+  },
+  "gd_h3": {
+    "message": "There's a second screen"
+  },
+  "gd_b3": {
+    "message": "To-dos, notes, a pomodoro timer, the calendar, the weather, what's playing. Drag a card by its header, pull its corner to resize — this screen is yours to arrange."
+  },
+  "gd_h4": {
+    "message": "Cards grow"
+  },
+  "gd_b4": {
+    "message": "The calendar and the timer have an expand button that opens them full screen. Make the weather card big enough and it becomes live radar over your city."
+  },
+  "gd_h5": {
+    "message": "Click the clock"
+  },
+  "gd_b5": {
+    "message": "A full dial that turns: the twelve double-hours, the twenty-four solar terms, today's arc of daylight, the twenty-eight mansions in the corners. The gear at the bottom right adjusts all of it."
   }
 }
