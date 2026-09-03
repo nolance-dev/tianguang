@@ -466,6 +466,25 @@ export function SettingsPanel({
                   <Backup value={value} work={work} onRestore={onRestore} />
                 </section>
 
+                <section>
+                  <h3>{t("s_guide")}</h3>
+                  <p class="note">{t("s_guide_hint")}</p>
+                  {/*
+                   * 引導看過一次就不再出現，而略過的人等於再也拿不回來。
+                   * 這裡是唯一的入口 —— 把旗標放掉再關掉面板，引導就會自己上來。
+                   */}
+                  <button
+                    type="button"
+                    class="wide guide-replay"
+                    onClick={() => {
+                      onChange({ guided: false });
+                      onClose();
+                    }}
+                  >
+                    {t("s_guide_go")}
+                  </button>
+                </section>
+
                 <section class="about">
                   <h3>{t("s_about")}</h3>
                   <dl>

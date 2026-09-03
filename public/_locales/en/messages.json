@@ -981,5 +981,14 @@
   },
   "gd_b6": {
     "message": "Whether the background is the hour's gradient, a flat colour, or your own photo; which cards appear; a twelve or twenty-four hour clock; which city the weather follows. Settings has four pages — general, look, cards, data — and the last one exports the lot to a file you can carry to another machine."
+  },
+  "s_guide": {
+    "message": "Replay the tour"
+  },
+  "s_guide_hint": {
+    "message": "Walk through the seven first-run steps again."
+  },
+  "s_guide_go": {
+    "message": "Show it again"
   }
 }

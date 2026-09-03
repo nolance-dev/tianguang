@@ -145,3 +145,34 @@ test("已經設定過的人不會被引導閃一下", async ({ page }) => {
   await expect(page.locator(".clock")).toBeVisible();
   await expect(page.locator(".guide-box")).toHaveCount(0);
 });
+
+test("設定裡可以把引導叫回來", async ({ page }) => {
+  /*
+   * 看過一次就不再出現，而略過的人等於再也拿不回來 —— 沒有這個入口，
+   * 引導就是一次性的，連要檢查自己寫得對不對都做不到。
+   */
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      "tg.settings",
+      JSON.stringify({ schemaVersion: 1, guided: true }),
+    ),
+  );
+  await page.goto("/");
+  await expect(page.locator(".clock")).toBeVisible();
+  await expect(page.locator(".guide-box"), "看過了就不該自己出現").toHaveCount(
+    0,
+  );
+
+  await page.locator(".gear").click();
+  await page.locator("#tab-data").click();
+  // 這顆鈕會放掉旗標並關掉面板，引導自己會上來
+  // 用 class 不用文字：這份 build 沒有 chrome.i18n，畫面上是鍵名 s_guide_go
+  await page.locator(".guide-replay").click();
+
+  await expect(page.locator(".guide-box"), "按了要真的回來").toBeVisible();
+  await expect(
+    page.locator(".gd-dots i"),
+    "而且是從第一步開始的完整七步",
+  ).toHaveCount(7);
+  await expect(page.locator(".gd-dots i.on").first()).toBeVisible();
+});
