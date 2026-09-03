@@ -1554,10 +1554,39 @@ body::-webkit-scrollbar {
   border-color: var(--fg-2);
 }
 
+/*
+ * 講設定那一步，把齒輪圈出來。
+ *
+ * 齒輪本來就在畫面上，但「右下角那顆」還是要人自己找 —— 指出來比寫出來準。
+ * 不真的打開設定面板：那也是一個對話框，兩個焦點鎖疊在一起會互相搶。
+ *
+ * z-index 要比薄紗高，否則圈起來的東西還是壓在紗底下，看起來反而更暗。
+ */
+:root[data-guide-spot="gear"] .gear {
+  z-index: 31;
+  animation: gear-spot 1.8s ease-in-out infinite;
+}
+
+@keyframes gear-spot {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--gold, #c99a4e);
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .guide,
   .guide-box {
     animation-duration: 0.01ms;
+  }
+
+  /* 不閃，改成一直圈著 —— 少了動畫還是要看得出是哪一顆 */
+  :root[data-guide-spot="gear"] .gear {
+    animation: none;
+    box-shadow: 0 0 0 3px var(--gold, #c99a4e);
   }
 }
 

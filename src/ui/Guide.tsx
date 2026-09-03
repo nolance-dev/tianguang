@@ -1,4 +1,4 @@
-import { useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { t } from "../lib/i18n";
 import { useDialog } from "./useDialog";
 
@@ -25,11 +25,13 @@ interface Props {
  * 前三步講第一屏的東西（時鐘、搜尋、快速存取），第四五步講工作區，
  * 最後一步回到第一屏收在時辰盤和齒輪 —— 因為那是接下來要按的兩個地方。
  *
- * 挑的六件事有一個共同點：**看不出來**。第二屏收在畫面底下、時鐘可以點、
+ * 挑的東西有一個共同點：**看不出來**。第二屏收在畫面底下、時鐘可以點、
  * Ctrl K 是隱形的、天氣卡拉大會變雷達圖 —— 沒人講就不會發現。
- * 齒輪和卡片本身看得見，所以只帶過。
+ *
+ * 最後一步講設定：前面六步給的是「有這些東西」，這一步給的是「都可以改」，
+ * 放在結尾剛好是把控制權交出去。
  */
-const PAGE = [0, 0, 0, 1, 1, 0];
+const PAGE = [0, 0, 0, 1, 1, 0, 0];
 const STEPS = PAGE.length;
 
 export function Guide({ onPage, onDone }: Props) {
@@ -45,6 +47,23 @@ export function Guide({ onPage, onDone }: Props) {
   const next = useRef<HTMLButtonElement>(null);
   // 略過和看完是同一件事：都不要再出現
   const box = useDialog<HTMLDivElement>(onDone, next);
+
+  /*
+   * 講設定的時候讓右下角那顆齒輪亮起來。
+   *
+   * 用指的比用寫的準 —— 「右下角那顆齒輪」還是要讓人自己找。但不能真的
+   * 把設定面板打開：那也是一個 useDialog，兩個焦點鎖疊在一起會互相搶。
+   * 所以只在根元素掛一個記號，CSS 去把那顆鈕圈起來。
+   */
+  useEffect(() => {
+    const spot = step === STEPS - 1;
+    const r = document.documentElement;
+    if (spot) r.dataset.guideSpot = "gear";
+    else delete r.dataset.guideSpot;
+    return () => {
+      delete r.dataset.guideSpot;
+    };
+  }, [step]);
 
   const go = (next: number) => {
     if (next >= STEPS) {

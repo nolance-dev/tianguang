@@ -974,6 +974,12 @@
     "message": "Click the clock"
   },
   "gd_b5": {
-    "message": "A full dial that turns: the twelve double-hours, the twenty-four solar terms, today's arc of daylight, the twenty-eight mansions in the corners. The gear at the bottom right adjusts all of it."
+    "message": "A full dial that turns: the twelve double-hours, the twenty-four solar terms, today's arc of daylight, the twenty-eight mansions in the corners. Leave it open and it breathes."
+  },
+  "gd_h6": {
+    "message": "That gear, bottom right"
+  },
+  "gd_b6": {
+    "message": "Whether the background is the hour's gradient, a flat colour, or your own photo; which cards appear; a twelve or twenty-four hour clock; which city the weather follows. Settings has four pages — general, look, cards, data — and the last one exports the lot to a file you can carry to another machine."
   }
 }

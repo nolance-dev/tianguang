@@ -26,11 +26,11 @@ const fresh = async (page: Page) => {
   await page.reload();
 };
 
-test("剛裝好會出現，走完六步之後不再出現", async ({ page }) => {
+test("剛裝好會出現，走完七步之後不再出現", async ({ page }) => {
   await fresh(page);
   const box = page.locator(".guide-box");
   await expect(box, "第一次開分頁要看到引導").toBeVisible();
-  await expect(page.locator(".gd-dots i"), "六步就該有六個點").toHaveCount(6);
+  await expect(page.locator(".gd-dots i"), "七步就該有七個點").toHaveCount(7);
 
   // 前三步講第一屏的東西，都還在第一屏
   await expect(page.locator(".screen.desk.on")).toHaveCount(0);
@@ -54,16 +54,27 @@ test("剛裝好會出現，走完六步之後不再出現", async ({ page }) => 
   );
   await expect(page.locator(".gd-dots i.on")).toHaveCount(1);
 
-  // 最後一步回第一屏收在時辰盤
+  // 第六步回第一屏講時辰盤
   await page.locator(".gd-next").click();
-  await expect(page.locator(".screen.desk.on"), "最後一步回第一屏").toHaveCount(
+  await expect(page.locator(".screen.desk.on"), "第六步回第一屏").toHaveCount(
     0,
   );
+
+  // 最後一步講設定，要把齒輪圈出來 —— 用指的比用寫的準
+  await page.locator(".gd-next").click();
+  await expect(
+    page.locator("html[data-guide-spot='gear']"),
+    "設定那一步要標出齒輪",
+  ).toHaveCount(1);
 
   await page.locator(".gd-next").click();
   await expect(box, "看完就收起來").toHaveCount(0);
   // 收完回到第一屏，不要把人丟在工作區
   await expect(page.locator(".screen.desk.on")).toHaveCount(0);
+  await expect(
+    page.locator("html[data-guide-spot='gear']"),
+    "收起來就不要再圈著齒輪",
+  ).toHaveCount(0);
 
   await expect
     .poll(() =>
