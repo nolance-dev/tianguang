@@ -1,17 +1,19 @@
 {
   "name": "tianguang",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "Tianguang / Aubade - a new tab page built on the twelve shichen",
   "scripts": {
     "dev": "vite",
     "colors": "node scripts/gen-boot-colors.mjs",
     "build": "npm run colors && tsc --noEmit && vite build",
-    "icons": "node scripts/make-icons.mjs",
     "test": "vitest run",
-    "zip": "cd dist && powershell Compress-Archive -Path * -DestinationPath ../tianguang.zip -Force",
-    "e2e": "npm run build && playwright test"
+    "e2e": "npm run build && playwright test",
+    "icons": "node tools/icons.mjs",
+    "store": "node tools/store.mjs",
+    "shots": "node tools/shots.mjs",
+    "pack": "npm run build && node tools/pack.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

@@ -265,11 +265,21 @@ describe("時辰盤與設定", () => {
     await openTab("data");
 
     const about = document.querySelector(".panel .about")!;
-    expect(about.textContent).toContain("edge://extensions");
+    /*
+     * 網址由瀏覽器決定，所以這裡不能寫死其中一家 —— jsdom 認不出 Edge，
+     * 拿到的是 chrome://。真正要守的是「$1$ 有被換掉、而且換成的是一個
+     * 擴充功能管理頁」，兩家各自的判斷在 test/browser.test.ts。
+     */
+    expect(about.textContent).not.toContain("$1$");
+    expect(about.textContent).toMatch(/(edge|chrome):\/\/extensions/);
     expect(
       about.querySelector('a[href="https://open-meteo.com/"]'),
     ).not.toBeNull();
     expect(about.textContent).toContain("CC BY 4.0");
+    // 捐款那一行也在這一區，別人改版面時順手刪掉會被這裡擋下來
+    expect(
+      about.querySelector('a[href^="https://ko-fi.com/"]'),
+    ).not.toBeNull();
   });
 });
 

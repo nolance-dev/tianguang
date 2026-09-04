@@ -42,3 +42,35 @@ test("名字跟著語言換", async ({ page }) => {
     await expect(page).toHaveTitle(name);
   }
 });
+
+/**
+ * 設定最底下的「關於」。
+ *
+ * 捐款放在這裡，不放在看得到的地方 —— 新分頁是一天看五十次的畫面，
+ * 在第一屏擺一顆募款鈕是最快讓人解除安裝的做法。
+ *
+ * 順便守住 $1$ 有沒有真的被代換掉：那個佔位符沒填的話，畫面上會出現
+ * 一句「到 $1$ 把天光關掉」，而且只有真的算繪過才看得出來。
+ */
+test("關於裡有 Ko-fi 連結，而且瀏覽器網址有被填進去", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() =>
+    localStorage.setItem(
+      "tg.settings",
+      JSON.stringify({ schemaVersion: 1, guided: true, lang: "zh_TW" }),
+    ),
+  );
+  await page.reload();
+  await page.click(".gear");
+  await page.locator(".panel-tabs button").nth(3).click();
+
+  const kofi = page.locator('.panel .about a[href^="https://ko-fi.com/"]');
+  await expect(kofi).toHaveCount(1);
+  await expect(kofi).toHaveAttribute("target", "_blank");
+  // 外連一定要 noreferrer：不讓對方看到使用者是從哪個擴充功能 ID 過去的
+  await expect(kofi).toHaveAttribute("rel", "noreferrer");
+
+  const about = (await page.locator(".panel .about").textContent()) ?? "";
+  expect(about, "佔位符要被換掉").not.toContain("$1$");
+  expect(about).toMatch(/(edge|chrome):\/\/extensions/);
+});

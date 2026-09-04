@@ -267,7 +267,7 @@
     "message": "換回原生新分頁"
   },
   "s_restore_body": {
-    "message": "到 edge://extensions 把天光停用即可。停用不會刪掉你的設定，隨時可以開回來。"
+    "message": "到 $1$ 把天光關掉。停用不會刪掉設定，隨時可以開回來。"
   },
   "s_credits": {
     "message": "資料來源"
@@ -809,7 +809,7 @@
     "message": "這裡是開發伺服器，沒有瀏覽器的分頁 API。要用這張卡，得把 dist 載進 Edge 當擴充功能跑。"
   },
   "c_media_refused": {
-    "message": "沒有拿到權限。可以再按一次，或到 edge://extensions 裡開。"
+    "message": "沒有拿到權限。可以再按一次，或到 $1$ 裡開啟。"
   },
   "c_clock": {
     "message": "時鐘"
@@ -1044,5 +1044,14 @@
   },
   "fo_filter": {
     "message": "篩選專案"
+  },
+  "s_support": {
+    "message": "支持開發"
+  },
+  "s_support_body": {
+    "message": "天光不放廣告，也沒有付費版。"
+  },
+  "s_support_link": {
+    "message": "請我喝杯咖啡"
   }
 }

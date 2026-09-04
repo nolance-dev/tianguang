@@ -2,7 +2,8 @@
 // 從 "vite" 匯入的話，下面那段 test 設定會編不過（型別裡沒有這個鍵）。
 import { defineConfig } from "vitest/config";
 import type { Plugin } from "vite";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import pkg from "./package.json" with { type: "json" };
 
 /**
@@ -67,6 +68,32 @@ function bootPaint(): Plugin {
   };
 }
 
+/**
+ * 把版本號蓋進 manifest。
+ *
+ * 「版本號只有 package.json 一個來源」以前只對了一半：設定頁的「關於」讀的是
+ * package.json，manifest 裡卻另外寫死一個 —— 商店上顯示的版本和使用者在
+ * 設定裡看到的版本可以不一樣，而且不會有任何東西提醒你。
+ *
+ * 走 writeBundle 而不是 emitFile：manifest.json 是 publicDir 複製過去的，
+ * 兩邊都想產生同一個檔名會打架。等它複製完再改最省事。
+ */
+function stampVersion(): Plugin {
+  return {
+    name: "stamp-version",
+    apply: "build",
+    writeBundle(options) {
+      // options.dir 已經是絕對路徑，再包一次 new URL 會變成兩段路徑接在一起
+      const file = resolve(options.dir ?? "dist", "manifest.json");
+      const manifest = JSON.parse(readFileSync(file, "utf8")) as {
+        version: string;
+      };
+      manifest.version = pkg.version;
+      writeFileSync(file, JSON.stringify(manifest, null, 2) + "\n");
+    },
+  };
+}
+
 export default defineConfig({
   /*
    * e2e/ 不歸 vitest 管。
@@ -75,7 +102,7 @@ export default defineConfig({
    * 會整個檔案掛掉。它們由 npm run e2e 跑，見 playwright.config.ts。
    */
   test: { include: ["test/**/*.test.{ts,tsx}"] },
-  plugins: [bootPaint()],
+  plugins: [bootPaint(), stampVersion()],
   // 版本號只有 package.json 一個來源，設定頁的「關於」直接讀這個
   define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   // Vite 8 走 oxc，不是 esbuild。JSX 直接編到 preact/jsx-runtime，不裝 preset 外掛。

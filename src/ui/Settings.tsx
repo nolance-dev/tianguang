@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { t } from "../lib/i18n";
+import { extensionsUrl } from "../lib/browser";
 import { useDialog } from "./useDialog";
 import { ENGINES } from "../lib/search";
 import { DEFAULT_DESK, DEFAULT_HOME_DESK, LINKS_PER_CARD } from "../lib/desk";
@@ -509,7 +510,9 @@ export function SettingsPanel({
                   <h3>{t("s_about")}</h3>
                   <dl>
                     <dt>{t("s_restore")}</dt>
-                    <dd>{t("s_restore_body")}</dd>
+                    {/* 網址由瀏覽器決定 —— 同一份程式碼要同時上 Edge 與
+                        Chrome 兩家商店，寫死其中一個另一邊就找不到路 */}
+                    <dd>{t("s_restore_body", extensionsUrl())}</dd>
                     <dt>{t("s_credits")}</dt>
                     <dd>
                       <a
@@ -523,6 +526,23 @@ export function SettingsPanel({
                     </dd>
                     <dt>{t("s_version")}</dt>
                     <dd>{__APP_VERSION__}</dd>
+                    {/*
+                      捐款放在這裡，不放在看得到的地方。
+                      新分頁是一天看五十次的畫面，在第一屏擺一顆募款鈕是最快
+                      讓人解除安裝的做法。會翻到設定最底下的人本來就是在乎
+                      這個工具的人 —— 那才是該問的時機。
+                    */}
+                    <dt>{t("s_support")}</dt>
+                    <dd>
+                      {t("s_support_body")}{" "}
+                      <a
+                        href="https://ko-fi.com/nolance"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {t("s_support_link")}
+                      </a>
+                    </dd>
                   </dl>
                 </section>
               </>

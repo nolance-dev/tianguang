@@ -1,6 +1,7 @@
 import { useSignal } from "@preact/signals";
 import { useEffect } from "preact/hooks";
 import { t } from "../lib/i18n";
+import { extensionsUrl } from "../lib/browser";
 import {
   focus,
   hasMediaAccess,
@@ -81,7 +82,9 @@ export function MediaCard() {
               {t("c_media_allow")}
             </button>
           )}
-          {refused.value && <p class="err">{t("c_media_refused")}</p>}
+          {refused.value && (
+            <p class="err">{t("c_media_refused", extensionsUrl())}</p>
+          )}
         </div>
       </div>
     );
