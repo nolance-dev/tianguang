@@ -73,7 +73,7 @@
 
 ### 聯絡
 
-問題與建議請開 issue（見專案首頁）。
+問題與建議請開 issue：https://github.com/nolance/tianguang/issues
 
 ---
 
@@ -151,4 +151,4 @@ change is noted in the release notes.
 
 ### Contact
 
-Please open an issue on the project page.
+Please open an issue: https://github.com/nolance/tianguang/issues

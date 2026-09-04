@@ -148,7 +148,10 @@ browser's language.
 # 送審清單
 
 兩家商店各填一次。左邊是欄位，右邊是直接可以貼上去的值。
-**標成「⚠ 待補」的三格要等 GitHub 帳號名稱確定才寫得出來。**
+
+隱私權政策直接連 repo 裡的檔案，不架 GitHub Pages —— Pages 要設定 Jekyll，
+而 `.md` 最後會變成哪一個網址取決於設定，填錯進商店表單就是退件。
+連檔案是永久有效的公開網址，GitHub 自己會排版，零設定。
 
 ## 打包
 
@@ -179,9 +182,9 @@ npm run pack
 | 圖示 | `assets/store/logo-300.png` |
 | 截圖 | `assets/store/shot-1` ～ `shot-5`，1280×800 |
 | 宣傳圖 | `assets/store/tile-440x280.png`、`marquee-1400x560.png` |
-| 隱私權政策網址 | ⚠ 待補 —— `docs/PRIVACY.md` 發到 GitHub Pages 之後的網址 |
-| 支援網址 | ⚠ 待補 —— repo 的 Issues 頁 |
-| 官方網站 | ⚠ 待補 —— repo 首頁 |
+| 隱私權政策網址 | `https://github.com/nolance/tianguang/blob/main/docs/PRIVACY.md` |
+| 支援網址 | `https://github.com/nolance/tianguang/issues` |
+| 官方網站 | `https://github.com/nolance/tianguang` |
 | 發佈者顯示名稱 | Nolance |
 
 ## 資料蒐集聲明

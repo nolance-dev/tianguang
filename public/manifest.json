@@ -3,6 +3,7 @@
   "name": "__MSG_extensionName__",
   "description": "__MSG_extensionDescription__",
   "version": "1.0.0",
+  "homepage_url": "https://github.com/nolance/tianguang",
   "default_locale": "zh_TW",
   "minimum_edge_version": "120",
   "icons": {
