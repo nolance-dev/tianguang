@@ -12,7 +12,7 @@ import {
   ymd,
   type Event,
 } from "../lib/agenda";
-import { calYear, subDate, type SecondCal } from "../lib/secondcal";
+import { calLabel, calToday, subDate, type SecondCal } from "../lib/secondcal";
 
 /**
  * 日曆。
@@ -35,16 +35,13 @@ interface CardProps {
   holiday: string | null;
 }
 
-/** 年號曆在卡片上顯示「民國115年」，形狀跟 subDate 一致，呼叫端不必分兩種 */
-function eraSub(d: Date, cal: SecondCal) {
-  const year = calYear(d, cal);
-  return year ? { text: year, lead: true } : null;
-}
-
 export function CalendarCard({ events, now, secondCal, holiday }: CardProps) {
   const busy = onDay(events, ymd(now)).length;
-  // 民國／和曆逐日沒東西可寫（月日跟西曆相同），改成顯示年號
-  const sub = subDate(now, secondCal) ?? eraSub(now, secondCal);
+  /*
+   * 卡片只有一行，沒有標題可以交代框架，所以走 calToday —— 它會自己講完整
+   * （伊斯蘭曆帶月份名，民國帶年號），不像格子那樣只給一個裸數字。
+   */
+  const sub = calToday(now, secondCal);
   const fmt = (opts: Intl.DateTimeFormatOptions) =>
     new Intl.DateTimeFormat(intlLocale(), opts).format(now);
 
@@ -54,7 +51,7 @@ export function CalendarCard({ events, now, secondCal, holiday }: CardProps) {
       <b class="cal-day">{now.getDate()}</b>
       <span class="cal-mo">
         {fmt({ month: "long" })}
-        {sub && <i>{sub.text}</i>}
+        {sub && <i>{sub}</i>}
       </span>
       {holiday && <span class="cal-holi">{holiday}</span>}
       {busy > 0 && (
@@ -153,9 +150,9 @@ export function CalendarDetail({
               民國／和曆只換年份的稱呼，月和日跟西曆一模一樣 ——
               所以它要說的話在這裡說一次就夠，不必逐格重複四十二次。
             */}
-            {calYear(new Date(year.value, month.value, 1), secondCal) && (
+            {calLabel(new Date(year.value, month.value, 1), secondCal) && (
               <i class="cal-era">
-                {calYear(new Date(year.value, month.value, 1), secondCal)}
+                {calLabel(new Date(year.value, month.value, 1), secondCal)}
               </i>
             )}
           </b>

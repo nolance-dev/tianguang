@@ -130,28 +130,81 @@ export function subDate(d: Date, cal: SecondCal): Sub | null {
  * 民國 115 年、令和 8 年 —— 這是使用者選這套曆法時真正想看到的東西，
  * 而它一個月只需要說一次，不必每一格都講。
  */
-export function calYear(d: Date, cal: SecondCal): string | null {
-  if (cal !== "roc" && cal !== "japanese") return null;
+/**
+ * 月份標題旁邊那一句：這一個月在第二套曆法裡叫什麼。
+ *
+ * 這是「看不懂」的解藥。格子裡那個數字單看沒有意義 —— 伊斯蘭曆的 24 跟西曆的
+ * 24 長得一模一樣，沒有人知道它是哪一套曆法的第 24 天。所以框架在標題講一次：
+ *
+ *   民國／日本年號 → 年怎麼稱呼（月和日跟西曆相同，格子留白）
+ *   農曆／伊斯蘭曆／希伯來曆 → 這個月橫跨到的月份名（格子放日）
+ *
+ * 一個西曆月通常橫跨兩個陰曆月，所以要看月頭和月尾兩個名字，不同就都列出來。
+ */
+export function calLabel(d: Date, cal: SecondCal): string | null {
+  if (cal === "none") return null;
   try {
-    /*
-     * 民國那三個字要自己接。
-     *
-     * Edge 的 ICU 對 zh-TW-u-ca-roc 根本不給 era —— era 設 short、long、
-     * narrow 都一樣，formatToParts 裡連 era 那一項都沒有，拿到的永遠是
-     * 「115年」。單看那個數字沒有人知道它是民國。（同一份程式碼在 Node 的
-     * ICU 上會回「民國115年」，所以這件事只有在目標瀏覽器裡量才看得到。）
-     *
-     * 民國只有一個年號，補字是安全的。日本年號會換（令和、平成…），
-     * 那個一定要讓 Intl 給，不能寫死 —— 而它本來就給得出來。
-     */
-    const f = new Intl.DateTimeFormat(LOCALE[cal], {
-      era: "short",
-      year: "numeric",
-    });
-    if (cal === "japanese") return f.format(d);
-    const year = f.formatToParts(d).find((p) => p.type === "year")?.value;
-    return year ? t("cal_roc_year", year) : null;
+    if (cal === "roc" || cal === "japanese") return eraYear(d, cal);
+    const first = monthName(new Date(d.getFullYear(), d.getMonth(), 1), cal);
+    const last = monthName(new Date(d.getFullYear(), d.getMonth() + 1, 0), cal);
+    if (!first) return null;
+    return last && last !== first ? `${first}／${last}` : first;
   } catch {
     return null;
   }
+}
+
+/**
+ * 今天在第二套曆法裡怎麼念 —— 卡片上那一行。
+ *
+ * 跟格子不同，這裡只有一行，沒有標題可以交代框架，所以要自己講完整：
+ * 伊斯蘭曆得帶月份名，不然又是一個裸數字。農曆的「廿四」自帶字形，
+ * 一看就知道是農曆，不必再加月。
+ */
+export function calToday(d: Date, cal: SecondCal): string | null {
+  if (cal === "none") return null;
+  try {
+    if (cal === "roc" || cal === "japanese") return eraYear(d, cal);
+    const sub = subDate(d, cal);
+    if (!sub) return null;
+    if (cal === "chinese" || sub.lead) return sub.text;
+    const month = monthName(d, cal);
+    return month ? `${month} ${sub.text}` : sub.text;
+  } catch {
+    return null;
+  }
+}
+
+function monthName(d: Date, cal: SecondCal): string | null {
+  if (cal === "none") return null;
+  const key = LOCALE[cal] + "|m";
+  let f = cache.get(key);
+  if (!f) {
+    f = new Intl.DateTimeFormat(LOCALE[cal], { month: "long" });
+    cache.set(key, f);
+  }
+  return f.formatToParts(d).find((p) => p.type === "month")?.value ?? null;
+}
+
+/**
+ * 民國那三個字要自己接。
+ *
+ * Edge 的 ICU 對 zh-TW-u-ca-roc 根本不給 era —— era 設 short、long、narrow
+ * 都一樣，formatToParts 裡連 era 那一項都沒有，拿到的永遠是「115年」。
+ * 單看那個數字沒有人知道它是民國。（同一份程式碼在 Node 的 ICU 上會回
+ * 「民國115年」，所以這件事只有在目標瀏覽器裡量才看得到。）
+ *
+ * 民國只有一個年號，補字是安全的。日本年號會換（令和、平成…），那個一定要
+ * 讓 Intl 給，不能寫死 —— 而它本來就給得出來。
+ */
+function eraYear(d: Date, cal: "roc" | "japanese"): string | null {
+  const key = LOCALE[cal] + "|y";
+  let f = cache.get(key);
+  if (!f) {
+    f = new Intl.DateTimeFormat(LOCALE[cal], { era: "short", year: "numeric" });
+    cache.set(key, f);
+  }
+  if (cal === "japanese") return f.format(d);
+  const year = f.formatToParts(d).find((p) => p.type === "year")?.value;
+  return year ? t("cal_roc_year", year) : null;
 }

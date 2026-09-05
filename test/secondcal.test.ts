@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { calYear, subDate } from "../src/lib/secondcal";
+import { calLabel, calToday, subDate } from "../src/lib/secondcal";
 
 /**
  * 第二套曆法。
@@ -27,7 +27,7 @@ describe("第二曆法", () => {
   });
 
   it("民國要看得出是民國，不是一個孤零零的 115", () => {
-    const y = calYear(D, "roc");
+    const y = calLabel(D, "roc");
     expect(y).toContain("115");
     // Edge 的 ICU 對 roc 不給 era，只回「115年」—— 那三個字是我們自己接的
     expect(y).not.toBe("115年");
@@ -35,11 +35,39 @@ describe("第二曆法", () => {
   });
 
   it("日本年號由 Intl 給，不寫死 —— 年號會換", () => {
-    expect(calYear(D, "japanese")).toContain("8");
+    expect(calLabel(D, "japanese")).toContain("8");
   });
 
-  it("其餘曆法沒有年號可講", () => {
-    for (const cal of ["none", "chinese", "islamic", "hebrew"] as const)
-      expect(calYear(D, cal)).toBeNull();
+  it("每一套曆法在標題都要交代自己是誰", () => {
+    // 關掉才可以沒有；其餘五套都得說得出這個月叫什麼
+    expect(calLabel(D, "none")).toBeNull();
+    for (const cal of [
+      "chinese",
+      "roc",
+      "japanese",
+      "islamic",
+      "hebrew",
+    ] as const)
+      expect(calLabel(D, cal), `${cal} 標題沒東西`).toBeTruthy();
+  });
+
+  it("一個西曆月橫跨兩個陰曆月時，兩個名字都要列", () => {
+    // 2026-09 橫跨農曆七月與八月
+    expect(calLabel(D, "chinese")).toContain("／");
+  });
+
+  it("卡片上不能出現裸數字 —— 一行沒有標題可以交代框架", () => {
+    /*
+     * 伊斯蘭曆的 24 跟西曆的 24 長得一模一樣。卡片只有一行，沒有月份標題在
+     * 旁邊，所以那一行自己要帶月份名，不然沒有人知道那個數字是什麼。
+     */
+    for (const cal of ["islamic", "hebrew"] as const) {
+      const today = calToday(D, cal);
+      expect(today, `${cal} 卡片空的`).toBeTruthy();
+      expect(today, `${cal} 只印了一個裸數字`).not.toMatch(/^\d+$/);
+    }
+    // 農曆的「廿四」自帶字形，看得出是農曆，不必再加月
+    expect(calToday(D, "chinese")).toMatch(/[初廿十一二三四五六七八九]/);
+    expect(calToday(D, "roc")).toContain("115");
   });
 });
