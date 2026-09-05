@@ -68,3 +68,42 @@ test("日期照設定的語言排，不是照瀏覽器的", async ({ page }) => 
     /^[A-Z][a-z]{2}, \d{1,2} [A-Z][a-z]+ \d{4}$/,
   );
 });
+
+/**
+ * 開盤那五秒，相鄰的環要轉相反方向。
+ *
+ * 五環同向的時候看起來是「一整片在轉」—— 環與環之間沒有相對運動，眼睛分不出
+ * 那是五個獨立的盤還是一張貼上去的圖。層次是交界處的相對速度長出來的。
+ *
+ * 量的是 --spin 的正負號（決定方向）而不是它的絕對值（決定速度）——
+ * 以後有人調快慢，這條不會誤報。
+ */
+test("相鄰的環轉相反方向", async ({ page }) => {
+  await openDial(page, "zh_TW");
+
+  const spins = await page.evaluate(() =>
+    [...document.querySelectorAll(".dial .rg")].map((el) => ({
+      cls: (el.getAttribute("class") ?? "").replace("rg ", ""),
+      // DOM 順序就是由外而內：分、時、節氣、時辰、日照
+      spin: parseFloat((el as HTMLElement).style.getPropertyValue("--spin")),
+    })),
+  );
+
+  expect(spins.length, "五個環都要在").toBe(5);
+  for (const s of spins) expect(s.spin, `${s.cls} 沒有 --spin`).not.toBeNaN();
+  for (let i = 1; i < spins.length; i++)
+    expect(
+      Math.sign(spins[i]!.spin) * Math.sign(spins[i - 1]!.spin),
+      `${spins[i - 1]!.cls} 和 ${spins[i]!.cls} 同向`,
+    ).toBe(-1);
+
+  // 秒針在最裡面，也要跟它的鄰居（日照那環）相反
+  const sec = await page.evaluate(() =>
+    parseFloat(
+      (
+        document.querySelector(".dial .sec") as HTMLElement
+      ).style.getPropertyValue("--spin"),
+    ),
+  );
+  expect(Math.sign(sec) * Math.sign(spins[4]!.spin)).toBe(-1);
+});

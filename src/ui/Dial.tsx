@@ -193,6 +193,17 @@ export function Dial({ now, lat, lon, onClose }: Props) {
   //
   // 用 rotate 這個獨立變換屬性，不動 transform：transform 隨時間每分每秒在跳，
   // 動畫掛上去會蓋掉它。兩者各自算完再相乘，互不干涉。
+  /*
+   * 相鄰的環轉相反方向。
+   *
+   * 五環同向的時候，開盤那五秒看起來是「一整片在轉」—— 環與環之間沒有相對
+   * 運動，眼睛分不出那是五個獨立的盤還是一張貼上去的圖。一正一負交錯之後，
+   * 每一道交界都有相對速度，層次是那個交界長出來的，不是靠粗細或顏色。
+   * 渾天儀和星盤本來就是這樣：內外圈朝相反方向走。
+   *
+   * 正負只決定方向，圈數的絕對值仍然是速度（等速段的角速度是圈數的三分之一
+   * 每秒），所以下面那幾個數字的大小一個都沒動。
+   */
   const spin = (deg: number, turns = 0) =>
     `transform: rotate(${deg}deg); transform-origin: ${C}px ${C}px;` +
     ` --spin: ${turns * 360}deg`;
@@ -262,7 +273,7 @@ export function Dial({ now, lat, lon, onClose }: Props) {
           </g>
 
           {/* 二環：二十四小時，一天一圈，整點才跳 */}
-          <g class="rg rg-hour" style={spin(hourAngle, 1.47)}>
+          <g class="rg rg-hour" style={spin(hourAngle, -1.47)}>
             {Array.from({ length: 24 }, (_, h) => (
               <g key={h} transform={`rotate(${h * 15} ${C} ${C})`}>
                 <text
@@ -316,7 +327,7 @@ export function Dial({ now, lat, lon, onClose }: Props) {
           </g>
 
           {/* 四環：十二時辰／十二光相，兩小時跳一格 */}
-          <g class="rg rg-sc" style={spin(scAngle, 1.27)}>
+          <g class="rg rg-sc" style={spin(scAngle, -1.27)}>
             {Array.from({ length: 12 }, (_, k) => (
               <g key={k} transform={`rotate(${k * 30} ${C} ${C})`}>
                 <text
