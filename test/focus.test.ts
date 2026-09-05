@@ -17,9 +17,14 @@ import {
   type Session,
 } from "../src/lib/focus";
 
-const at = (y: number, m: number, d: number, h = 9) => new Date(y, m, d, h).getTime();
+const at = (y: number, m: number, d: number, h = 9) =>
+  new Date(y, m, d, h).getTime();
 
-const s = (when: number, ms: number, projectId: string | null = null): Session => ({
+const s = (
+  when: number,
+  ms: number,
+  projectId: string | null = null,
+): Session => ({
   id: `${when}-${ms}`,
   at: when,
   ms,
@@ -38,7 +43,9 @@ describe("時段長度", () => {
   it("夾在一到一百八十分鐘之間，壞值退回預設", () => {
     expect(normalizeDurations({ work: 0 }).work).toBe(1);
     expect(normalizeDurations({ work: 9999 }).work).toBe(180);
-    expect(normalizeDurations({ work: "二十五" }).work).toBe(DEFAULT_DURATIONS.work);
+    expect(normalizeDurations({ work: "二十五" }).work).toBe(
+      DEFAULT_DURATIONS.work,
+    );
     expect(normalizeDurations(undefined)).toEqual(DEFAULT_DURATIONS);
   });
 

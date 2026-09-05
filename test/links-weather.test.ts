@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, type MockInstance } from "vitest";
 import {
   initial,
   makeLink,
@@ -18,6 +18,30 @@ import {
   parseForecast,
   resolveCityQuery,
 } from "../src/lib/weather";
+
+/**
+ * 只回答預報那一支，其餘一律空陣列。
+ *
+ * 一次更新會打兩支網路：Open-Meteo 拿預報，再拿一次最近測站的實測。
+ * 只用 mockResolvedValueOnce 的話，第二支會掉到真實的 fetch 上 —— 測試
+ * 會偷偷連網，抓回當下真的機場氣溫，然後斷言就變成在比對今天的天氣。
+ * （這不是假設：改成三層來源之後，這一檔有三條測試就是這樣紅的，
+ * 而且紅出來的數字 27 和 19 是真的觀測值。）
+ */
+function onlyForecast(spy: MockInstance, ...bodies: string[]) {
+  let i = 0;
+  spy.mockImplementation((input: RequestInfo | URL) => {
+    const url = String(input);
+    if (!url.includes("open-meteo")) return Promise.resolve(new Response("[]"));
+    const body = bodies[Math.min(i++, bodies.length - 1)]!;
+    return Promise.resolve(new Response(body));
+  });
+}
+
+/** 只數預報那一支。觀測那層打幾次不是這幾條在守的東西 */
+function forecastCalls(spy: MockInstance): number {
+  return spy.mock.calls.filter((c) => String(c[0]).includes("open-meteo")).length;
+}
 
 describe("快速連結", () => {
   it("沒寫協定就補 https", () => {
@@ -153,23 +177,32 @@ describe("天氣降級", () => {
 
   it("三十分鐘內用快取，不重打網路", async () => {
     localStorage.clear();
-    const fetchSpy = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(new Response(JSON.stringify(raw)));
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    onlyForecast(fetchSpy, JSON.stringify(raw));
 
+    /*
+     * 數的是「有沒有再打一次」，不是絕對次數。
+     *
+     * 一次更新現在會打兩支：Open-Meteo 拿預報，再拿一次最近測站的實測。
+     * 寫死 1 的話，之後每加一層來源這條就要改一次數字 —— 而它要守的
+     * 從來不是幾支，是「保鮮期內不該再上網」。
+     */
     await fetchWeather(25, 121, 0);
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const first = fetchSpy.mock.calls.length;
+    expect(first).toBeGreaterThan(0);
     await fetchWeather(25, 121, 10 * 60 * 1000);
-    expect(fetchSpy, "還在保鮮期內就不該再打一次").toHaveBeenCalledTimes(1);
+    expect(
+      fetchSpy.mock.calls.length,
+      "還在保鮮期內就不該再打一次",
+    ).toBe(first);
 
     fetchSpy.mockRestore();
   });
 
   it("網路掛掉就給上一次成功的資料，並標成 stale —— 空格子比舊資料難看", async () => {
     localStorage.clear();
-    const fetchSpy = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(new Response(JSON.stringify(raw)));
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    onlyForecast(fetchSpy, JSON.stringify(raw));
     await fetchWeather(25, 121, 0);
 
     fetchSpy.mockRejectedValue(new TypeError("offline"));
@@ -252,8 +285,8 @@ describe("換城市要重新取得", () => {
     localStorage.clear();
     const spy = vi
       .spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(new Response(body(32)))
-      .mockResolvedValueOnce(new Response(body(14)));
+      .mockImplementation(() => Promise.resolve(new Response("[]")));
+    onlyForecast(spy, body(32), body(14));
 
     const taipei = await fetchWeather(25.033, 121.565, 0);
     expect(taipei!.temp).toBe(32);
@@ -261,7 +294,7 @@ describe("換城市要重新取得", () => {
     // 同一分鐘內換城市 —— 快取還在保鮮期，但地點不同，必須重打
     const sydney = await fetchWeather(-33.868, 151.209, 60_000);
     expect(sydney!.temp, "換了城市卻拿到上一個城市的溫度").toBe(14);
-    expect(spy).toHaveBeenCalledTimes(2);
+    expect(forecastCalls(spy), "換城市要重打預報").toBe(2);
     spy.mockRestore();
   });
 
@@ -269,10 +302,11 @@ describe("換城市要重新取得", () => {
     localStorage.clear();
     const spy = vi
       .spyOn(globalThis, "fetch")
-      .mockResolvedValue(new Response(body(32)));
+      .mockImplementation(() => Promise.resolve(new Response("[]")));
+    onlyForecast(spy, body(32));
     await fetchWeather(25.033, 121.565, 0);
     await fetchWeather(25.0331, 121.5651, 60_000);
-    expect(spy, "座標只差幾公尺不該讓快取失效").toHaveBeenCalledTimes(1);
+    expect(forecastCalls(spy), "座標只差幾公尺不該讓快取失效").toBe(1);
     spy.mockRestore();
   });
 
@@ -280,7 +314,8 @@ describe("換城市要重新取得", () => {
     localStorage.clear();
     const spy = vi
       .spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(new Response(body(32)));
+      .mockImplementation(() => Promise.resolve(new Response("[]")));
+    onlyForecast(spy, body(32));
     await fetchWeather(25.033, 121.565, 0);
 
     spy.mockRejectedValue(new TypeError("offline"));

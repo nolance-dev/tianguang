@@ -108,7 +108,11 @@ export function roundsToday(w: Workspace, now = new Date()): number {
  * 只要傳進來的 now 比 endsAt 的起算點早（畫面上那個時間戳晚一拍、或使用者
  * 改短了這個模式的長度），畫面就會出現「十五分鐘的倒數顯示 15:02」再跳回來。
  */
-export function remaining(p: Pomodoro, now = Date.now(), total = FALLBACK): number {
+export function remaining(
+  p: Pomodoro,
+  now = Date.now(),
+  total = FALLBACK,
+): number {
   if (p.pausedLeft !== null) return Math.min(total, p.pausedLeft);
   if (p.endsAt === null) return total;
   return Math.max(0, Math.min(total, p.endsAt - now));
@@ -149,12 +153,20 @@ export function advance(p: Pomodoro, now = new Date()): Pomodoro {
   };
 }
 
-export function start(p: Pomodoro, now = Date.now(), total = FALLBACK): Pomodoro {
+export function start(
+  p: Pomodoro,
+  now = Date.now(),
+  total = FALLBACK,
+): Pomodoro {
   const left = p.pausedLeft ?? total;
   return { ...p, endsAt: now + left, pausedLeft: null };
 }
 
-export function pause(p: Pomodoro, now = Date.now(), total = FALLBACK): Pomodoro {
+export function pause(
+  p: Pomodoro,
+  now = Date.now(),
+  total = FALLBACK,
+): Pomodoro {
   if (!isRunning(p)) return p;
   return { ...p, pausedLeft: remaining(p, now, total), endsAt: null };
 }
@@ -166,7 +178,12 @@ export function reset(p: Pomodoro): Pomodoro {
 export function makeTodo(text: string): Todo | null {
   const t = text.trim();
   if (!t) return null;
-  return { id: crypto.randomUUID(), text: t, done: false, createdAt: Date.now() };
+  return {
+    id: crypto.randomUUID(),
+    text: t,
+    done: false,
+    createdAt: Date.now(),
+  };
 }
 
 /* ---------- 儲存 ---------- */
@@ -183,9 +200,10 @@ export function migrate(raw: Record<string, unknown>): Workspace {
       ...EMPTY.pomodoro,
       ...((raw.pomodoro as Pomodoro) ?? {}),
       // 舊資料的 "rest" 在四個模式裡是短休
-      mode: ((raw.pomodoro as Pomodoro)?.mode as string) === "rest"
-        ? "short"
-        : ((raw.pomodoro as Pomodoro)?.mode ?? "work"),
+      mode:
+        ((raw.pomodoro as Pomodoro)?.mode as string) === "rest"
+          ? "short"
+          : ((raw.pomodoro as Pomodoro)?.mode ?? "work"),
     },
     // 陣列要自己補：展開運算子只在鍵不存在時才用預設，
     // 舊資料裡沒有 events 這個鍵，但存成 null 的話也得接住
@@ -200,8 +218,13 @@ export function migrate(raw: Record<string, unknown>): Workspace {
 export async function load(): Promise<Workspace> {
   try {
     if (hasChrome) {
-      const got = (await chrome.storage.local.get(KEY)) as Record<string, unknown>;
-      return got[KEY] ? migrate(got[KEY] as Record<string, unknown>) : { ...EMPTY };
+      const got = (await chrome.storage.local.get(KEY)) as Record<
+        string,
+        unknown
+      >;
+      return got[KEY]
+        ? migrate(got[KEY] as Record<string, unknown>)
+        : { ...EMPTY };
     }
     const raw = localStorage.getItem(KEY);
     return raw ? migrate(JSON.parse(raw)) : { ...EMPTY };

@@ -1,6 +1,14 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { byDay, makeEvent, monthGrid, onDay, shiftMonth, ymd, type Event } from "../src/lib/agenda";
+import {
+  byDay,
+  makeEvent,
+  monthGrid,
+  onDay,
+  shiftMonth,
+  ymd,
+  type Event,
+} from "../src/lib/agenda";
 
 const ev = (date: string, time: string, text: string): Event => ({
   id: `${date}-${time}-${text}`,
@@ -36,12 +44,20 @@ describe("某一天", () => {
   ];
 
   it("只挑那一天，整天的排最前面，其餘照時間", () => {
-    expect(onDay(list, "2026-09-01").map((e) => e.text)).toEqual(["整天的", "早上的", "下午的"]);
+    expect(onDay(list, "2026-09-01").map((e) => e.text)).toEqual([
+      "整天的",
+      "早上的",
+      "下午的",
+    ]);
   });
 
   it("分組一次就好，每組自己排好 —— 月曆一次要畫四十二格", () => {
     const map = byDay(list);
-    expect(map.get("2026-09-01")!.map((e) => e.text)).toEqual(["整天的", "早上的", "下午的"]);
+    expect(map.get("2026-09-01")!.map((e) => e.text)).toEqual([
+      "整天的",
+      "早上的",
+      "下午的",
+    ]);
     expect(map.get("2026-09-03")).toBeUndefined();
     expect(map.size).toBe(2);
   });

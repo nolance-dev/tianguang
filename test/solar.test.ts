@@ -64,16 +64,25 @@ describe("日出日落", () => {
   const TAIPEI: [number, number] = [25.033, 121.565];
 
   /** 回傳值繞回 [0, 24)，跨午夜時日落會小於日出，所以日長要用模減 */
-  const dayLength = ({ sunrise, sunset }: { sunrise: number | null; sunset: number | null }) =>
-    ((sunset! - sunrise!) % 24 + 24) % 24;
+  const dayLength = ({
+    sunrise,
+    sunset,
+  }: {
+    sunrise: number | null;
+    sunset: number | null;
+  }) => (((sunset! - sunrise!) % 24) + 24) % 24;
 
   it("春分前後全球日長都接近十二小時", () => {
     // 這條是自我驗證：不必去查任何一地的日出表，天文本身就決定了答案
     const equinox = new Date("2026-03-20T12:00:00Z");
     for (const lat of [-60, -35, 0, 25, 45, 60]) {
       const length = dayLength(sunTimes(equinox, lat, 0));
-      expect(length, `緯度 ${lat} 日長 ${length.toFixed(2)}`).toBeGreaterThan(11.7);
-      expect(length, `緯度 ${lat} 日長 ${length.toFixed(2)}`).toBeLessThan(12.3);
+      expect(length, `緯度 ${lat} 日長 ${length.toFixed(2)}`).toBeGreaterThan(
+        11.7,
+      );
+      expect(length, `緯度 ${lat} 日長 ${length.toFixed(2)}`).toBeLessThan(
+        12.3,
+      );
     }
   });
 
@@ -84,7 +93,10 @@ describe("日出日落", () => {
   });
 
   it("台北八月底的日出日落落在合理範圍", () => {
-    const { sunrise, sunset } = sunTimes(new Date("2026-08-30T12:00:00+08:00"), ...TAIPEI);
+    const { sunrise, sunset } = sunTimes(
+      new Date("2026-08-30T12:00:00+08:00"),
+      ...TAIPEI,
+    );
     expect(sunrise!).toBeGreaterThan(5.3);
     expect(sunrise!).toBeLessThan(5.9);
     expect(sunset!).toBeGreaterThan(18.0);
@@ -92,7 +104,11 @@ describe("日出日落", () => {
   });
 
   it("極區永晝永夜回傳 null，不要畫出一段假的弧", () => {
-    expect(sunTimes(new Date("2026-06-21T12:00:00Z"), 80, 0).sunrise).toBeNull();
-    expect(sunTimes(new Date("2026-12-21T12:00:00Z"), 80, 0).sunrise).toBeNull();
+    expect(
+      sunTimes(new Date("2026-06-21T12:00:00Z"), 80, 0).sunrise,
+    ).toBeNull();
+    expect(
+      sunTimes(new Date("2026-12-21T12:00:00Z"), 80, 0).sunrise,
+    ).toBeNull();
   });
 });

@@ -5,7 +5,18 @@ describe("羅馬數字", () => {
   it("分刻環實際會用到的十二個", () => {
     const marks = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60].map(roman);
     expect(marks).toEqual([
-      "V", "X", "XV", "XX", "XXV", "XXX", "XXXV", "XL", "XLV", "L", "LV", "LX",
+      "V",
+      "X",
+      "XV",
+      "XX",
+      "XXV",
+      "XXX",
+      "XXXV",
+      "XL",
+      "XLV",
+      "L",
+      "LV",
+      "LX",
     ]);
   });
 

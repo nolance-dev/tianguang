@@ -25,7 +25,11 @@ export interface Snapshot {
   workspace: Workspace;
 }
 
-export function pack(settings: Settings, workspace: Workspace, at = new Date()): Snapshot {
+export function pack(
+  settings: Settings,
+  workspace: Workspace,
+  at = new Date(),
+): Snapshot {
   return {
     app: "tianguang",
     version: SNAPSHOT_VERSION,
@@ -44,11 +48,14 @@ export function pack(settings: Settings, workspace: Workspace, at = new Date()):
  *
  * 認不出來就回 null，不猜。
  */
-export function unpack(raw: unknown): { settings: Settings; workspace: Workspace } | null {
+export function unpack(
+  raw: unknown,
+): { settings: Settings; workspace: Workspace } | null {
   if (!raw || typeof raw !== "object") return null;
   const snap = raw as Partial<Snapshot>;
   if (snap.app !== "tianguang") return null;
-  if (typeof snap.version !== "number" || snap.version > SNAPSHOT_VERSION) return null;
+  if (typeof snap.version !== "number" || snap.version > SNAPSHOT_VERSION)
+    return null;
 
   const settings = snap.settings as Record<string, unknown> | undefined;
   const workspace = snap.workspace as Record<string, unknown> | undefined;

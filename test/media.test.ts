@@ -59,7 +59,10 @@ describe("排序", () => {
   });
 
   it("同一個視窗裡，正在看的那個再排前面", () => {
-    const list = [p({ id: 1, windowId: 10 }), p({ id: 2, windowId: 10, active: true })];
+    const list = [
+      p({ id: 1, windowId: 10 }),
+      p({ id: 2, windowId: 10, active: true }),
+    ];
     expect(order(list, 10).map((x) => x.id)).toEqual([2, 1]);
   });
 

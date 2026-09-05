@@ -43,6 +43,7 @@
 | `tilecache.rainviewer.com` | 同上 | 圖磚的座標 |
 | `calendar.google.com` | 你開啟「顯示當地節日」時 | 沒有個人資料，取的是公開的 iCal 行事曆 |
 | `opendata.cwa.gov.tw` | 你在設定裡填了氣象署金鑰，而且所在地在台灣 | 你自己的金鑰。回來的是全台測站清單，我們在本機挑最近的一站 |
+| `aviationweather.gov` | 你開啟天氣卡之後 | 你所在地周邊的一個經緯度方框。回來的是那個範圍內機場的觀測報文，我們在本機挑最近的一座 |
 
 這些請求裡沒有識別碼、沒有 cookie、也沒有你的瀏覽紀錄。我們不會因此知道
 是誰發出的請求 —— 我們根本沒有參與這些請求。
@@ -118,6 +119,7 @@ requested.
 | `tilecache.rainviewer.com` | Same | Tile coordinates |
 | `calendar.google.com` | When you enable local holidays | No personal data; a public iCal calendar |
 | `opendata.cwa.gov.tw` | Only if you enter a CWA key and your location is in Taiwan | Your own key. The response is a list of all stations; the nearest is chosen locally |
+| `aviationweather.gov` | After you enable the weather card | A bounding box around your location. The response is airport observations in that box; the nearest is chosen locally |
 
 These requests carry no identifier, no cookie, and no browsing history. We do
 not learn who made them — we are not party to them at all.

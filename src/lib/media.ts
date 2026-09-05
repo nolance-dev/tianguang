@@ -14,7 +14,9 @@
  * 而且看一眼就知道聲音是從哪個站來的。
  */
 
-export const MEDIA_PERMISSIONS: chrome.permissions.Permissions = { permissions: ["tabs"] };
+export const MEDIA_PERMISSIONS: chrome.permissions.Permissions = {
+  permissions: ["tabs"],
+};
 
 export interface Playing {
   id: number;
@@ -43,7 +45,8 @@ export function hostOf(url: string): string {
  */
 export function order(list: Playing[], windowId: number | null): Playing[] {
   return [...list].sort((a, b) => {
-    const mine = Number(b.windowId === windowId) - Number(a.windowId === windowId);
+    const mine =
+      Number(b.windowId === windowId) - Number(a.windowId === windowId);
     if (mine) return mine;
     return Number(b.active) - Number(a.active);
   });
@@ -88,7 +91,8 @@ export async function focus(tab: Playing): Promise<void> {
   try {
     await chrome.tabs.update(tab.id, { active: true });
     // 分頁可能在另一個視窗，只設 active 的話那個視窗還是在背後
-    if (chrome.windows?.update) await chrome.windows.update(tab.windowId, { focused: true });
+    if (chrome.windows?.update)
+      await chrome.windows.update(tab.windowId, { focused: true });
   } catch {
     // 同上
   }

@@ -10,12 +10,16 @@ const item = (title: string, sub?: string): Item => ({
 
 describe("比對權重", () => {
   it("開頭命中最高", () => {
-    expect(score("GitHub", "git")).toBeGreaterThan(score("Awesome GitHub", "git"));
+    expect(score("GitHub", "git")).toBeGreaterThan(
+      score("Awesome GitHub", "git"),
+    );
   });
 
   it("詞首命中高於夾在字中間", () => {
     // "Awesome Git" 的 git 接在空白後，是詞首；"Legitimate" 的 git 夾在中間
-    expect(score("Awesome Git", "git")).toBeGreaterThan(score("Legitimate", "git"));
+    expect(score("Awesome Git", "git")).toBeGreaterThan(
+      score("Legitimate", "git"),
+    );
   });
 
   it("完全不match 回 -1", () => {
@@ -37,7 +41,9 @@ describe("比對權重", () => {
   });
 
   it("同樣命中時，短的排前面 —— 標題越短越可能是使用者要的", () => {
-    expect(score("Git", "git")).toBeGreaterThan(score("Git Extensions Manual", "git"));
+    expect(score("Git", "git")).toBeGreaterThan(
+      score("Git Extensions Manual", "git"),
+    );
   });
 });
 
@@ -50,7 +56,9 @@ describe("排序", () => {
   ];
 
   it("空查詢原樣回傳，不做排序", () => {
-    expect(rank(items, "").map((i) => i.title)).toEqual(items.map((i) => i.title));
+    expect(rank(items, "").map((i) => i.title)).toEqual(
+      items.map((i) => i.title),
+    );
   });
 
   it("開頭命中的排最前", () => {

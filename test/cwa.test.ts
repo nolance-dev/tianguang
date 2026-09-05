@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  distanceKm,
   inTaiwan,
-  nearest,
+  nearestCwa,
   observationUrl,
   parseStations,
 } from "../src/lib/cwa";
+import { distanceKm } from "../src/lib/station";
 
 /**
  * 氣象署測站。
@@ -95,6 +95,7 @@ describe("氣象署測站", () => {
       { records: {} },
       { records: { Station: "not an array" } },
       { records: { Station: [{}] } },
+      { records: { Station: [null] } },
       "401 Forbidden: Authorization key is not correct.",
     ])
       expect(parseStations(junk), JSON.stringify(junk)).toEqual([]);
@@ -125,14 +126,14 @@ describe("氣象署測站", () => {
 
   it("挑最近的那一站", () => {
     const s = parseStations(NEW_SHAPE);
-    expect(nearest(s, 25.033, 121.5654)?.name).toBe("臺北");
-    expect(nearest(s, 22.6, 120.3)?.name).toBe("高雄");
+    expect(nearestCwa(s, 25.033, 121.5654)?.name).toBe("臺北");
+    expect(nearestCwa(s, 22.6, 120.3)?.name).toBe("高雄");
   });
 
   it("太遠就不要 —— 寧可用模式推算，也不要拿一百公里外的測站充數", () => {
     const s = parseStations(NEW_SHAPE);
     // 台中離兩站都超過 30 公里
-    expect(nearest(s, 24.15, 120.68)).toBeNull();
+    expect(nearestCwa(s, 24.15, 120.68)).toBeNull();
   });
 
   it("距離算得對", () => {

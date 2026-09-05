@@ -21,7 +21,11 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 /** 空白的、日期不合格式的都不建立。回 null 讓呼叫端自己決定要不要提示。 */
-export function makeEvent(date: string, time: string, text: string): Event | null {
+export function makeEvent(
+  date: string,
+  time: string,
+  text: string,
+): Event | null {
   const body = text.trim();
   if (!body || !DATE.test(date)) return null;
   return {
@@ -36,7 +40,9 @@ export function makeEvent(date: string, time: string, text: string): Event | nul
 export function onDay(events: Event[], date: string): Event[] {
   return events
     .filter((e) => e.date === date)
-    .sort((a, b) => a.time.localeCompare(b.time) || a.text.localeCompare(b.text));
+    .sort(
+      (a, b) => a.time.localeCompare(b.time) || a.text.localeCompare(b.text),
+    );
 }
 
 /**
@@ -53,7 +59,9 @@ export function byDay(events: Event[]): Map<string, Event[]> {
     else out.set(e.date, [e]);
   }
   for (const bucket of out.values()) {
-    bucket.sort((a, b) => a.time.localeCompare(b.time) || a.text.localeCompare(b.text));
+    bucket.sort(
+      (a, b) => a.time.localeCompare(b.time) || a.text.localeCompare(b.text),
+    );
   }
   return out;
 }
@@ -70,7 +78,10 @@ export function monthGrid(year: number, month: number): Date[] {
   // 直接用「這個月的第 n 天」去偏移，Date 自己會處理跨月跨年。
   // 先算出起始日再拿它的 getDate() 是錯的 —— 那個數字是「上個月的 31 號」，
   // 拿回這個月來算就變成下下個月了。
-  return Array.from({ length: 42 }, (_, i) => new Date(year, month, 1 - lead + i));
+  return Array.from(
+    { length: 42 },
+    (_, i) => new Date(year, month, 1 - lead + i),
+  );
 }
 
 /**
@@ -89,7 +100,11 @@ export function isoWeek(date: Date): number {
 }
 
 /** 往前或往後 n 個月。用 1 號當基準，才不會在 1/31 往後跳成 3/3。 */
-export function shiftMonth(year: number, month: number, delta: number): [number, number] {
+export function shiftMonth(
+  year: number,
+  month: number,
+  delta: number,
+): [number, number] {
   const d = new Date(year, month + delta, 1);
   return [d.getFullYear(), d.getMonth()];
 }

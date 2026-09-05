@@ -21,16 +21,25 @@ export interface Durations {
   power: number;
 }
 
-export const DEFAULT_DURATIONS: Durations = { work: 25, short: 5, long: 15, power: 50 };
+export const DEFAULT_DURATIONS: Durations = {
+  work: 25,
+  short: 5,
+  long: 15,
+  power: 50,
+};
 
 /** 幾輪工作之後換長休 */
 export const ROUND = 4;
 
 /** 休息不是專注 —— 統計只算工作與強力那兩種。 */
-export const isFocus = (mode: Mode): boolean => mode === "work" || mode === "power";
+export const isFocus = (mode: Mode): boolean =>
+  mode === "work" || mode === "power";
 
 export function durationMs(mode: Mode, d: Durations): number {
-  const minutes = Math.min(180, Math.max(1, Math.round(d[mode] ?? DEFAULT_DURATIONS[mode])));
+  const minutes = Math.min(
+    180,
+    Math.max(1, Math.round(d[mode] ?? DEFAULT_DURATIONS[mode])),
+  );
   return minutes * 60_000;
 }
 
@@ -38,10 +47,18 @@ export function normalizeDurations(raw: unknown): Durations {
   const r = (raw ?? {}) as Partial<Record<Mode, unknown>>;
   const one = (mode: Mode): number => {
     const v = r[mode];
-    const n = typeof v === "number" && Number.isFinite(v) ? Math.round(v) : DEFAULT_DURATIONS[mode];
+    const n =
+      typeof v === "number" && Number.isFinite(v)
+        ? Math.round(v)
+        : DEFAULT_DURATIONS[mode];
     return Math.min(180, Math.max(1, n));
   };
-  return { work: one("work"), short: one("short"), long: one("long"), power: one("power") };
+  return {
+    work: one("work"),
+    short: one("short"),
+    long: one("long"),
+    power: one("power"),
+  };
 }
 
 /* ---------- 專案 ---------- */
@@ -95,7 +112,11 @@ export function makeSession(
 
 const dayOf = (at: number): string => today(new Date(at));
 
-export function msOnDay(sessions: Session[], day: string, projectId?: string | null): number {
+export function msOnDay(
+  sessions: Session[],
+  day: string,
+  projectId?: string | null,
+): number {
   let sum = 0;
   for (const s of sessions) {
     if (dayOf(s.at) !== day) continue;
@@ -105,7 +126,10 @@ export function msOnDay(sessions: Session[], day: string, projectId?: string | n
   return sum;
 }
 
-export function totalMs(sessions: Session[], projectId?: string | null): number {
+export function totalMs(
+  sessions: Session[],
+  projectId?: string | null,
+): number {
   let sum = 0;
   for (const s of sessions) {
     if (projectId !== undefined && s.projectId !== projectId) continue;
@@ -129,7 +153,12 @@ export interface Bar {
  * 沒有紀錄的那一天也要有一根高度為零的柱子 —— 跳過空日的話，
  * 圖上「連續五天」和「五天裡有做的那五天」長得一模一樣。
  */
-export function lastDays(sessions: Session[], days: number, end = new Date(), projectId?: string | null): Bar[] {
+export function lastDays(
+  sessions: Session[],
+  days: number,
+  end = new Date(),
+  projectId?: string | null,
+): Bar[] {
   const out: Bar[] = [];
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(end.getFullYear(), end.getMonth(), end.getDate() - i);

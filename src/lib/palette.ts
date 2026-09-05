@@ -8,7 +8,8 @@
  * 權限全部是選用的，而且分開要 —— 只想搜書籤的人不必連歷史一起交出去。
  */
 
-export type SourceId = "tabs" | "bookmarks" | "history" | "sessions" | "downloads";
+export type SourceId =
+  "tabs" | "bookmarks" | "history" | "sessions" | "downloads";
 
 export interface Item {
   id: string;
@@ -25,7 +26,10 @@ export interface Item {
 }
 
 /** 每個來源要哪些權限。分開宣告，才能一次只要一個。 */
-export const SOURCE_PERMISSIONS: Record<SourceId, chrome.permissions.Permissions> = {
+export const SOURCE_PERMISSIONS: Record<
+  SourceId,
+  chrome.permissions.Permissions
+> = {
   tabs: { permissions: ["tabs"] },
   bookmarks: { permissions: ["bookmarks"] },
   history: { permissions: ["history"] },
@@ -73,7 +77,10 @@ export function rank(items: Item[], query: string, limit = 40): Item[] {
   if (!query.trim()) return items.slice(0, limit);
   const scored: Array<[number, Item]> = [];
   for (const item of items) {
-    const s = Math.max(score(item.title, query), score(item.sub ?? "", query) - 60);
+    const s = Math.max(
+      score(item.title, query),
+      score(item.sub ?? "", query) - 60,
+    );
     if (s > 0) scored.push([s, item]);
   }
   scored.sort((a, b) => b[0] - a[0]);
@@ -164,7 +171,10 @@ export async function recentlyClosed(): Promise<Item[]> {
 
 export async function downloads(): Promise<Item[]> {
   if (!chrome.downloads?.search) return [];
-  const found = await chrome.downloads.search({ limit: 25, orderBy: ["-startTime"] });
+  const found = await chrome.downloads.search({
+    limit: 25,
+    orderBy: ["-startTime"],
+  });
   return found
     .filter((d) => d.state === "complete")
     .map((d) => ({

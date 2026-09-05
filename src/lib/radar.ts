@@ -45,11 +45,16 @@ export interface Frame {
  * 某個角落，城市本身可能歪到邊上。要讓城市剛好在正中央，得知道它在格子裡
  * 的哪個位置。
  */
-export function tileAt(lat: number, lon: number, z: number): { x: number; y: number } {
+export function tileAt(
+  lat: number,
+  lon: number,
+  z: number,
+): { x: number; y: number } {
   const n = 2 ** z;
   const clamped = Math.max(-85.05112878, Math.min(85.05112878, lat));
   const rad = (clamped * Math.PI) / 180;
-  const y = ((1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2) * n;
+  const y =
+    ((1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2) * n;
   return {
     x: ((lon + 180) / 360) * n,
     // 夾的是結果不是輸入。那個緯度上限是一個十進位近似值，
@@ -85,8 +90,14 @@ export function cover(
   const cells: Cell[] = [];
 
   const half = { w: width / 2, h: height / 2 };
-  const from = { x: Math.floor(fx - half.w / TILE), y: Math.floor(fy - half.h / TILE) };
-  const to = { x: Math.floor(fx + half.w / TILE), y: Math.floor(fy + half.h / TILE) };
+  const from = {
+    x: Math.floor(fx - half.w / TILE),
+    y: Math.floor(fy - half.h / TILE),
+  };
+  const to = {
+    x: Math.floor(fx + half.w / TILE),
+    y: Math.floor(fy + half.h / TILE),
+  };
 
   for (let ix = from.x; ix <= to.x; ix++) {
     for (let iy = from.y; iy <= to.y; iy++) {
@@ -138,7 +149,12 @@ export function echoLayer(
  *
  * 注意路徑是 /tile/{z}/{y}/{x}，列在前欄在後，跟 XYZ 的慣例相反。
  */
-export function baseTile(dark: boolean, z: number, x: number, y: number): string {
+export function baseTile(
+  dark: boolean,
+  z: number,
+  x: number,
+  y: number,
+): string {
   const style = dark ? "World_Dark_Gray_Base" : "World_Light_Gray_Base";
   return `https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/${style}/MapServer/tile/${z}/${y}/${x}`;
 }
@@ -153,7 +169,12 @@ export function baseTile(dark: boolean, z: number, x: number, y: number): string
  * 相鄰兩張各自算各自的，接縫兩側對不起來，畫面上就是一條筆直的斷線，
  * 而且剛好落在圖磚邊界上。回波糊一點沒關係，一條不存在的直線不行。
  */
-export function radarTile(frame: Frame, z: number, x: number, y: number): string {
+export function radarTile(
+  frame: Frame,
+  z: number,
+  x: number,
+  y: number,
+): string {
   return `${frame.base}/${TILE}/${z}/${x}/${y}/4/0_1.png`;
 }
 

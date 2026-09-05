@@ -20,16 +20,52 @@ export const HOLIDAY_ORIGINS = ["https://calendar.google.com/*"];
  * 前面的語系可以換（zh-tw.taiwan、ja.taiwan 都成立），所以只存後半。
  */
 export const FEEDS: Record<string, string> = {
-  AE: "ae", AR: "ar", AT: "austrian", AU: "australian", BE: "be",
-  BR: "brazilian", CA: "canadian", CH: "ch", CL: "cl", CN: "china",
-  CO: "co", CZ: "czech", DE: "german", DK: "danish", EG: "eg",
-  ES: "spain", FI: "finnish", FR: "french", GB: "uk", HK: "hong_kong",
-  ID: "indonesian", IE: "irish", IL: "jewish", IN: "indian", IT: "italian",
-  JP: "japanese", KR: "south_korea", MO: "mo", MX: "mexican", MY: "malaysia",
-  NL: "dutch", NO: "norwegian", NZ: "new_zealand", PH: "philippines",
-  PL: "polish", PT: "portuguese", RU: "russian", SA: "sa", SE: "swedish",
-  SG: "singapore", TH: "th", TR: "turkish", TW: "taiwan", UA: "ukrainian",
-  US: "usa", VN: "vietnamese",
+  AE: "ae",
+  AR: "ar",
+  AT: "austrian",
+  AU: "australian",
+  BE: "be",
+  BR: "brazilian",
+  CA: "canadian",
+  CH: "ch",
+  CL: "cl",
+  CN: "china",
+  CO: "co",
+  CZ: "czech",
+  DE: "german",
+  DK: "danish",
+  EG: "eg",
+  ES: "spain",
+  FI: "finnish",
+  FR: "french",
+  GB: "uk",
+  HK: "hong_kong",
+  ID: "indonesian",
+  IE: "irish",
+  IL: "jewish",
+  IN: "indian",
+  IT: "italian",
+  JP: "japanese",
+  KR: "south_korea",
+  MO: "mo",
+  MX: "mexican",
+  MY: "malaysia",
+  NL: "dutch",
+  NO: "norwegian",
+  NZ: "new_zealand",
+  PH: "philippines",
+  PL: "polish",
+  PT: "portuguese",
+  RU: "russian",
+  SA: "sa",
+  SE: "swedish",
+  SG: "singapore",
+  TH: "th",
+  TR: "turkish",
+  TW: "taiwan",
+  UA: "ukrainian",
+  US: "usa",
+  VN: "vietnamese",
 };
 
 export const supported = (cc: string): boolean => cc.toUpperCase() in FEEDS;
@@ -81,11 +117,18 @@ export function parseIcs(text: string): Holiday[] {
     if (at < 0) continue;
     const key = line.slice(0, at);
     const value = line.slice(at + 1);
-    if (key.startsWith("DTSTART") && key.includes("VALUE=DATE") && /^\d{8}$/.test(value)) {
+    if (
+      key.startsWith("DTSTART") &&
+      key.includes("VALUE=DATE") &&
+      /^\d{8}$/.test(value)
+    ) {
       date = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6, 8)}`;
     } else if (key === "SUMMARY" || key.startsWith("SUMMARY;")) {
       // ICS 用反斜線跳脫逗號、分號與換行
-      name = value.replace(/\\([,;\\])/g, "$1").replace(/\\n/gi, " ").trim();
+      name = value
+        .replace(/\\([,;\\])/g, "$1")
+        .replace(/\\n/gi, " ")
+        .trim();
     }
   }
   return out;
@@ -115,12 +158,16 @@ interface Cached {
   list: Holiday[];
 }
 
-const hasChrome = (): boolean => typeof chrome !== "undefined" && !!chrome.storage;
+const hasChrome = (): boolean =>
+  typeof chrome !== "undefined" && !!chrome.storage;
 
 async function read(): Promise<Cached | null> {
   try {
     if (hasChrome()) {
-      const got = (await chrome.storage.local.get(KEY)) as Record<string, unknown>;
+      const got = (await chrome.storage.local.get(KEY)) as Record<
+        string,
+        unknown
+      >;
       return (got[KEY] as Cached) ?? null;
     }
     const raw = localStorage.getItem(KEY);
@@ -145,9 +192,17 @@ async function write(value: Cached): Promise<void> {
  * 先給快取再背景更新 —— 節日不是即時資料，為了它讓日曆空著半秒不值得。
  * 抓不到就用舊的；連舊的都沒有就回空陣列，日曆照常畫。
  */
-export async function loadHolidays(cc: string, lang: string, now = Date.now()): Promise<Holiday[]> {
+export async function loadHolidays(
+  cc: string,
+  lang: string,
+  now = Date.now(),
+): Promise<Holiday[]> {
   const cached = await read();
-  const fresh = cached && cached.cc === cc && cached.lang === lang && now - cached.at < STALE_MS;
+  const fresh =
+    cached &&
+    cached.cc === cc &&
+    cached.lang === lang &&
+    now - cached.at < STALE_MS;
   if (fresh) return cached.list;
 
   const url = feedUrl(cc, lang);
@@ -166,7 +221,10 @@ export async function loadHolidays(cc: string, lang: string, now = Date.now()): 
 }
 
 /** 只留今年前後各一年的，畫月曆用不到 2015 年的行憲紀念日。 */
-export function around(list: Holiday[], year = new Date().getFullYear()): Holiday[] {
+export function around(
+  list: Holiday[],
+  year = new Date().getFullYear(),
+): Holiday[] {
   const lo = `${year - 1}-01-01`;
   const hi = `${year + 1}-12-31`;
   return list.filter((h) => h.date >= lo && h.date <= hi);

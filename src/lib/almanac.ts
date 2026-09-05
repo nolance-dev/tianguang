@@ -44,7 +44,7 @@ export function daysToNextJieqi(date: Date): number {
  * 所以春天是 21、22、23、0、1、2 這六個節氣，其後每六個換一季。
  */
 export function seasonSymbol(date: Date): number {
-  const season = Math.floor((((jieqiIndex(date) + 3) % 24) / 6)); // 0 春 1 夏 2 秋 3 冬
+  const season = Math.floor(((jieqiIndex(date) + 3) % 24) / 6); // 0 春 1 夏 2 秋 3 冬
   return [0, 3, 2, 1][season]; // 春青龍、夏朱雀、秋白虎、冬玄武
 }
 
@@ -57,7 +57,10 @@ let fmt: Intl.DateTimeFormat | null = null;
  */
 export function lunarDate(d: Date): string | null {
   try {
-    fmt ??= new Intl.DateTimeFormat("zh-TW-u-ca-chinese", { month: "long", day: "numeric" });
+    fmt ??= new Intl.DateTimeFormat("zh-TW-u-ca-chinese", {
+      month: "long",
+      day: "numeric",
+    });
     const parts = fmt.formatToParts(d);
     const month = parts.find((p) => p.type === "month")?.value ?? "";
     const day = Number(parts.find((p) => p.type === "day")?.value ?? "");

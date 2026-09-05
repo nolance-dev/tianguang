@@ -46,7 +46,10 @@ function open(): Promise<IDBDatabase> {
   });
 }
 
-function tx<T>(mode: IDBTransactionMode, run: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+function tx<T>(
+  mode: IDBTransactionMode,
+  run: (s: IDBObjectStore) => IDBRequest<T>,
+): Promise<T> {
   return open().then(
     (db) =>
       new Promise<T>((resolve, reject) => {
@@ -58,7 +61,9 @@ function tx<T>(mode: IDBTransactionMode, run: (s: IDBObjectStore) => IDBRequest<
 }
 
 /** 縮到最長邊 2048，轉 WebP，順便量平均亮度。 */
-async function process(file: File): Promise<Omit<StoredImage, "id" | "addedAt">> {
+async function process(
+  file: File,
+): Promise<Omit<StoredImage, "id" | "addedAt">> {
   const bitmap = await createImageBitmap(file);
   const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
   const width = Math.round(bitmap.width * scale);
@@ -67,7 +72,10 @@ async function process(file: File): Promise<Omit<StoredImage, "id" | "addedAt">>
   const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext("2d")!;
   ctx.drawImage(bitmap, 0, 0, width, height);
-  const blob = await canvas.convertToBlob({ type: "image/webp", quality: 0.86 });
+  const blob = await canvas.convertToBlob({
+    type: "image/webp",
+    quality: 0.86,
+  });
 
   // 縮到 32×32 再取樣就夠了。整張讀像素在 4K 圖上會卡一下，而我們只要一個平均值。
   const tiny = new OffscreenCanvas(32, 32);
@@ -77,7 +85,8 @@ async function process(file: File): Promise<Omit<StoredImage, "id" | "addedAt">>
   let sum = 0;
   for (let i = 0; i < data.length; i += 4) {
     // 感知亮度的近似式，比單純平均 RGB 準
-    sum += (0.2126 * data[i]! + 0.7152 * data[i + 1]! + 0.0722 * data[i + 2]!) / 255;
+    sum +=
+      (0.2126 * data[i]! + 0.7152 * data[i + 1]! + 0.0722 * data[i + 2]!) / 255;
   }
   bitmap.close();
 
@@ -114,7 +123,10 @@ export async function listImages(): Promise<StoredImage[]> {
 
 export async function deleteImage(id: string): Promise<void> {
   try {
-    await tx("readwrite", (s) => s.delete(id) as unknown as IDBRequest<undefined>);
+    await tx(
+      "readwrite",
+      (s) => s.delete(id) as unknown as IDBRequest<undefined>,
+    );
   } catch {
     // 刪不掉就算了。使用者要的是「畫面上不要再有這張」，
     // 而那件事在重讀清單時自然會發生 —— 讀不到就不會列出來。

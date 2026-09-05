@@ -46,7 +46,9 @@ describe("鋪滿一塊區域", () => {
     const f = tileAt(lat, lon, z);
 
     // 中心點落在哪一格、格子裡的哪個位置
-    const host = cells.find((c) => c.x === Math.floor(f.x) && c.y === Math.floor(f.y))!;
+    const host = cells.find(
+      (c) => c.x === Math.floor(f.x) && c.y === Math.floor(f.y),
+    )!;
     expect(host, "包含目標的那一格一定要在裡面").toBeTruthy();
     const px = host.left + (f.x % 1) * TILE;
     const py = host.top + (f.y % 1) * TILE;
@@ -57,9 +59,13 @@ describe("鋪滿一塊區域", () => {
   it("蓋滿整塊，四個角都有東西", () => {
     const cells = cover(25.033, 121.565, 7, 600, 400);
     expect(Math.min(...cells.map((c) => c.left))).toBeLessThanOrEqual(0);
-    expect(Math.max(...cells.map((c) => c.left + TILE))).toBeGreaterThanOrEqual(600);
+    expect(Math.max(...cells.map((c) => c.left + TILE))).toBeGreaterThanOrEqual(
+      600,
+    );
     expect(Math.min(...cells.map((c) => c.top))).toBeLessThanOrEqual(0);
-    expect(Math.max(...cells.map((c) => c.top + TILE))).toBeGreaterThanOrEqual(400);
+    expect(Math.max(...cells.map((c) => c.top + TILE))).toBeGreaterThanOrEqual(
+      400,
+    );
   });
 
   it("經度繞一圈，緯度不繞 —— 硬繞會把北極的圖磚畫到南極去", () => {
@@ -77,14 +83,25 @@ describe("鋪滿一塊區域", () => {
 
 describe("圖磚網址", () => {
   it("雷達是 {base}/{size}/{z}/{x}/{y}/{色階}/{平滑}_{雪}.png，平滑要關", () => {
-    const url = radarTile({ base: "https://tilecache.rainviewer.com/v2/radar/abc", time: 1 }, 6, 53, 27);
+    const url = radarTile(
+      { base: "https://tilecache.rainviewer.com/v2/radar/abc", time: 1 },
+      6,
+      53,
+      27,
+    );
     // 結尾的 0 是平滑關閉。開著的話每張圖磚自己平滑自己，接縫會變成一條直線
-    expect(url).toBe("https://tilecache.rainviewer.com/v2/radar/abc/256/6/53/27/4/0_1.png");
+    expect(url).toBe(
+      "https://tilecache.rainviewer.com/v2/radar/abc/256/6/53/27/4/0_1.png",
+    );
   });
 
   it("底圖跟著亮暗換，而且是 /tile/{z}/{y}/{x} —— 列在前，跟 XYZ 相反", () => {
-    expect(baseTile(true, 6, 53, 27)).toContain("World_Dark_Gray_Base/MapServer/tile/6/27/53");
-    expect(baseTile(false, 6, 53, 27)).toContain("World_Light_Gray_Base/MapServer/tile/6/27/53");
+    expect(baseTile(true, 6, 53, 27)).toContain(
+      "World_Dark_Gray_Base/MapServer/tile/6/27/53",
+    );
+    expect(baseTile(false, 6, 53, 27)).toContain(
+      "World_Light_Gray_Base/MapServer/tile/6/27/53",
+    );
   });
 });
 
@@ -110,7 +127,9 @@ describe("回波那一層", () => {
     const e = echoLayer(lat, lon, z, w, h);
     const f = tileAt(lat, lon, e.z);
 
-    const host = e.cells.find((c) => c.x === Math.floor(f.x) && c.y === Math.floor(f.y))!;
+    const host = e.cells.find(
+      (c) => c.x === Math.floor(f.x) && c.y === Math.floor(f.y),
+    )!;
     expect(host).toBeTruthy();
     const size = TILE * e.scale;
     expect(host.left + (f.x % 1) * size).toBeCloseTo(w / 2, 0);
@@ -121,8 +140,12 @@ describe("回波那一層", () => {
     const e = echoLayer(25.033, 121.565, RADAR_MAX_Z + 3, 600, 400);
     const size = TILE * e.scale;
     expect(Math.min(...e.cells.map((c) => c.left))).toBeLessThanOrEqual(0);
-    expect(Math.max(...e.cells.map((c) => c.left + size))).toBeGreaterThanOrEqual(600);
+    expect(
+      Math.max(...e.cells.map((c) => c.left + size)),
+    ).toBeGreaterThanOrEqual(600);
     expect(Math.min(...e.cells.map((c) => c.top))).toBeLessThanOrEqual(0);
-    expect(Math.max(...e.cells.map((c) => c.top + size))).toBeGreaterThanOrEqual(400);
+    expect(
+      Math.max(...e.cells.map((c) => c.top + size)),
+    ).toBeGreaterThanOrEqual(400);
   });
 });

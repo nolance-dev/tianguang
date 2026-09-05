@@ -1,13 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { around, byDate, feedUrl, parseIcs, supported } from "../src/lib/holidays";
+import {
+  around,
+  byDate,
+  feedUrl,
+  parseIcs,
+  supported,
+} from "../src/lib/holidays";
 import { isoWeek } from "../src/lib/agenda";
 import { subDate } from "../src/lib/secondcal";
 
 describe("行事曆代號", () => {
   it("代號沒有規律，所以只認表 —— en.tw 是 500，en.taiwan 才是對的", () => {
-    expect(feedUrl("TW", "zh-tw")).toContain(encodeURIComponent("zh-tw.taiwan#holiday"));
+    expect(feedUrl("TW", "zh-tw")).toContain(
+      encodeURIComponent("zh-tw.taiwan#holiday"),
+    );
     expect(feedUrl("US", "en")).toContain(encodeURIComponent("en.usa#holiday"));
-    expect(feedUrl("TH", "en"), "這個反而是 ISO 國碼").toContain(encodeURIComponent("en.th#holiday"));
+    expect(feedUrl("TH", "en"), "這個反而是 ISO 國碼").toContain(
+      encodeURIComponent("en.th#holiday"),
+    );
   });
 
   it("大小寫都收，表裡沒有的回 null 而不是猜一個", () => {
@@ -45,7 +55,11 @@ describe("讀 ICS", () => {
 
   it("只收整天的事件 —— 節日是一整天，帶時刻的是別的東西", () => {
     expect(list).toHaveLength(3);
-    expect(list.map((h) => h.date)).toEqual(["2026-01-01", "2026-02-17", "2026-02-28"]);
+    expect(list.map((h) => h.date)).toEqual([
+      "2026-01-01",
+      "2026-02-17",
+      "2026-02-28",
+    ]);
   });
 
   it("折行要接回去，不然長的名字會被切一半", () => {

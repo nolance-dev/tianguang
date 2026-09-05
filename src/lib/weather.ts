@@ -16,17 +16,26 @@ const CACHE_KEY = "tg.weather";
 import {
   CWA_ORIGINS,
   inTaiwan,
-  nearest,
+  nearestCwa,
   observationUrl,
   parseStations,
-  type Station,
 } from "./cwa";
+import { METAR_ORIGINS, bboxUrl, nearestMetar, parseMetar } from "./metar";
+import type { Station } from "./station";
 
 const FRESH_MS = 30 * 60 * 1000;
 
+/*
+ * 打開天氣就一次要齊。
+ *
+ * 機場 METAR 也放進來 —— 它是免金鑰的那一層，不該為了它再彈第二次權限視窗。
+ * 已經授權過舊清單的人不會自動拿到 aviationweather，那時 permissions.contains
+ * 回 false，就安靜退回模式推算；重新開關一次天氣就補齊了。
+ */
 export const WEATHER_ORIGINS = [
   "https://api.open-meteo.com/*",
   "https://geocoding-api.open-meteo.com/*",
+  "https://aviationweather.gov/*",
 ];
 
 export interface Place {
@@ -374,18 +383,42 @@ async function observe(
   lon: number,
   key: string,
 ): Promise<Station | null> {
+  return (await fromCwa(lat, lon, key)) ?? (await fromMetar(lat, lon));
+}
+
+/** 第一層：氣象署。最準，但要使用者自己的金鑰，而且只有台灣 */
+async function fromCwa(
+  lat: number,
+  lon: number,
+  key: string,
+): Promise<Station | null> {
   if (!key.trim() || !inTaiwan(lat, lon)) return null;
   try {
-    if (typeof chrome !== "undefined" && chrome.permissions) {
-      const ok = await chrome.permissions.contains({ origins: CWA_ORIGINS });
-      if (!ok) return null;
-    }
+    if (!(await granted(CWA_ORIGINS))) return null;
     const res = await fetch(observationUrl(key.trim()));
     if (!res.ok) return null;
-    return nearest(parseStations(await res.json()), lat, lon);
+    return nearestCwa(parseStations(await res.json()), lat, lon);
   } catch {
     return null;
   }
+}
+
+/** 第二層：最近的機場。免金鑰、全球，代價是整數度、大約一小時一筆 */
+async function fromMetar(lat: number, lon: number): Promise<Station | null> {
+  try {
+    if (!(await granted(METAR_ORIGINS))) return null;
+    const res = await fetch(bboxUrl(lat, lon));
+    if (!res.ok) return null;
+    return nearestMetar(parseMetar(await res.json()), lat, lon);
+  } catch {
+    return null;
+  }
+}
+
+/** 開發模式沒有 chrome.permissions，那時候一律當作有 */
+async function granted(origins: string[]): Promise<boolean> {
+  if (typeof chrome === "undefined" || !chrome.permissions) return true;
+  return chrome.permissions.contains({ origins });
 }
 
 /** 只有使用者按下開關那一刻才要網域權限，而且要在使用者手勢裡呼叫。 */

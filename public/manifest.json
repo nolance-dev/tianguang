@@ -23,6 +23,7 @@
   "optional_host_permissions": [
     "https://api.open-meteo.com/*",
     "https://geocoding-api.open-meteo.com/*",
+    "https://aviationweather.gov/*",
     "https://api.rainviewer.com/*",
     "https://calendar.google.com/*",
     "https://opendata.cwa.gov.tw/*"

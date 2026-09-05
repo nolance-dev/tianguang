@@ -13,10 +13,15 @@
  */
 
 /** 局屬有人測站的現在天氣觀測。自動站是 O-A0001-001，欄位一樣走下面那條解析 */
+import { nearest, type Station } from "./station";
+
 const DATASET = "O-A0003-001";
 const API = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/${DATASET}`;
 
 export const CWA_ORIGINS = ["https://opendata.cwa.gov.tw/*"];
+
+/** 氣象署的測站很密，超過三十公里就不算「這裡」了 */
+const MAX_KM = 30;
 
 /**
  * 台灣（含離島）的大概範圍。
@@ -26,52 +31,6 @@ export const CWA_ORIGINS = ["https://opendata.cwa.gov.tw/*"];
  */
 export function inTaiwan(lat: number, lon: number): boolean {
   return lat >= 21.5 && lat <= 26.5 && lon >= 118.0 && lon <= 122.5;
-}
-
-export interface Station {
-  name: string;
-  lat: number;
-  lon: number;
-  temp: number;
-}
-
-/** 兩點之間的距離，公里。半正矢公式 —— 台灣這個尺度用平面近似也行，但這個不會錯 */
-export function distanceKm(
-  aLat: number,
-  aLon: number,
-  bLat: number,
-  bLon: number,
-): number {
-  const R = 6371;
-  const rad = (x: number) => (x * Math.PI) / 180;
-  const dLat = rad(bLat - aLat);
-  const dLon = rad(bLon - aLon);
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(rad(aLat)) * Math.cos(rad(bLat)) * Math.sin(dLon / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(h));
-}
-
-/**
- * 最近的測站。太遠就不要 —— 寧可用模式推算，也不要拿一個一百公里外的
- * 測站假裝是這裡的天氣。
- */
-export function nearest(
-  list: Station[],
-  lat: number,
-  lon: number,
-  maxKm = 30,
-): Station | null {
-  let best: Station | null = null;
-  let bestKm = Infinity;
-  for (const s of list) {
-    const km = distanceKm(lat, lon, s.lat, s.lon);
-    if (km < bestKm) {
-      bestKm = km;
-      best = s;
-    }
-  }
-  return best && bestKm <= maxKm ? best : null;
 }
 
 /**
@@ -90,6 +49,8 @@ export function parseStations(raw: unknown): Station[] {
 
   const out: Station[] = [];
   for (const row of rows) {
+    // 陣列裡塞 null 是會發生的。先擋，不然下一行就丟例外
+    if (!row || typeof row !== "object") continue;
     const r = row as Record<string, unknown>;
     const name = str(r.StationName ?? r.locationName);
     const geo = r.GeoInfo as { Coordinates?: unknown } | undefined;
@@ -157,4 +118,9 @@ export function observationUrl(key: string): string {
 export async function requestCwa(): Promise<boolean> {
   if (typeof chrome === "undefined" || !chrome.permissions) return true;
   return chrome.permissions.request({ origins: CWA_ORIGINS });
+}
+
+/** 最近的氣象署測站。太遠回 null，讓上層往下一層退 */
+export function nearestCwa(list: Station[], lat: number, lon: number) {
+  return nearest(list, lat, lon, MAX_KM);
 }

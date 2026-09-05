@@ -33,7 +33,9 @@ describe("當地日期", () => {
 describe("番茄鐘", () => {
   it("沒在跑就回整段長度", () => {
     expect(remaining(fresh(), Date.now(), WORK_MS)).toBe(WORK_MS);
-    expect(remaining({ ...fresh(), mode: "short" }, Date.now(), REST_MS)).toBe(REST_MS);
+    expect(remaining({ ...fresh(), mode: "short" }, Date.now(), REST_MS)).toBe(
+      REST_MS,
+    );
     expect(isRunning(fresh())).toBe(false);
   });
 
@@ -41,7 +43,9 @@ describe("番茄鐘", () => {
     const p = start(fresh(), 1_000, WORK_MS);
     expect(p.endsAt).toBe(1_000 + WORK_MS);
     // 模擬「關掉分頁十分鐘後重開」：同一份狀態，換一個當下時間
-    expect(remaining(p, 1_000 + 10 * 60_000, WORK_MS)).toBe(WORK_MS - 10 * 60_000);
+    expect(remaining(p, 1_000 + 10 * 60_000, WORK_MS)).toBe(
+      WORK_MS - 10 * 60_000,
+    );
     expect(isRunning(p)).toBe(true);
   });
 
@@ -75,7 +79,10 @@ describe("番茄鐘", () => {
   it("每四輪一次長休", () => {
     const now = new Date(2026, 7, 31, 9, 0);
     const day = "2026-08-31";
-    const third = advance({ ...fresh(), rounds: ROUND - 1, roundsDate: day }, now);
+    const third = advance(
+      { ...fresh(), rounds: ROUND - 1, roundsDate: day },
+      now,
+    );
     expect(third.mode, "第四輪進長休").toBe("long");
     expect(third.rounds).toBe(ROUND);
 
@@ -100,7 +107,12 @@ describe("番茄鐘", () => {
   });
 
   it("重設不會把今天累積的輪數清掉", () => {
-    const p = reset({ ...fresh(), rounds: 3, roundsDate: "2026-08-31", endsAt: 999 });
+    const p = reset({
+      ...fresh(),
+      rounds: 3,
+      roundsDate: "2026-08-31",
+      endsAt: 999,
+    });
     expect(p.endsAt).toBeNull();
     expect(p.rounds).toBe(3);
   });
@@ -144,7 +156,9 @@ describe("剩餘時間不會比這一段本身還長", () => {
     const started = start(fresh(), 1_000, WORK_MS);
     // 畫面上那個時間戳停在按下開始之前 —— 相減會多出那一段
     expect(remaining(started, 0, WORK_MS)).toBe(WORK_MS);
-    expect(formatLeft(remaining(started, 0, WORK_MS))).toBe(formatLeft(WORK_MS));
+    expect(formatLeft(remaining(started, 0, WORK_MS))).toBe(
+      formatLeft(WORK_MS),
+    );
   });
 
   it("這個模式被改短之後，暫停剩下的那一段也跟著夾住", () => {

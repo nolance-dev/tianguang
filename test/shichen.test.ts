@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { centerHour, dayFraction, greetSlot, indexAt, range } from "../src/lib/shichen";
+import {
+  centerHour,
+  dayFraction,
+  greetSlot,
+  indexAt,
+  range,
+} from "../src/lib/shichen";
 import { ANCHORS, colorsAt, paletteAt } from "../src/lib/mesh";
 
 const at = (h: number, m = 0) => new Date(2026, 7, 30, h, m, 0);
@@ -75,7 +81,11 @@ describe("背景插值", () => {
     // 不是隔半小時差多少 —— 隔半小時本來就該差很多，那是一天在走。
     const delta = (a: string, b: string) =>
       [1, 3, 5].reduce(
-        (acc, i) => acc + Math.abs(parseInt(a.slice(i, i + 2), 16) - parseInt(b.slice(i, i + 2), 16)),
+        (acc, i) =>
+          acc +
+          Math.abs(
+            parseInt(a.slice(i, i + 2), 16) - parseInt(b.slice(i, i + 2), 16),
+          ),
         0,
       );
     let worst = 0;

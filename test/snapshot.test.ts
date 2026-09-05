@@ -6,9 +6,11 @@ import { EMPTY } from "../src/lib/workspace";
 describe("備份的包裝", () => {
   it("包起來再拆開，設定與工作區都還在", () => {
     const settings = { ...DEFAULTS, name: "阿明", linkCards: 3 };
-    const work = { ...EMPTY, note: "記一筆", todos: [
-      { id: "a", text: "買菜", done: false, createdAt: 1 },
-    ] };
+    const work = {
+      ...EMPTY,
+      note: "記一筆",
+      todos: [{ id: "a", text: "買菜", done: false, createdAt: 1 }],
+    };
 
     const got = unpack(JSON.parse(JSON.stringify(pack(settings, work))));
     expect(got).not.toBeNull();
@@ -24,11 +26,17 @@ describe("備份的包裝", () => {
     expect(unpack({})).toBeNull();
     expect(unpack({ app: "別的擴充功能", version: 1 })).toBeNull();
     // 比這一版還新的檔案不硬讀 —— 讀錯比讀不到糟
-    expect(unpack({ app: "tianguang", version: SNAPSHOT_VERSION + 1, settings: {} })).toBeNull();
+    expect(
+      unpack({ app: "tianguang", version: SNAPSHOT_VERSION + 1, settings: {} }),
+    ).toBeNull();
   });
 
   it("缺欄位的舊檔案補成預設，不是丟掉", () => {
-    const got = unpack({ app: "tianguang", version: 1, settings: { name: "只有名字" } });
+    const got = unpack({
+      app: "tianguang",
+      version: 1,
+      settings: { name: "只有名字" },
+    });
     expect(got).not.toBeNull();
     expect(got!.settings.name).toBe("只有名字");
     // 沒寫到的欄位回到預設，而不是 undefined
@@ -37,6 +45,8 @@ describe("備份的包裝", () => {
   });
 
   it("檔名帶到分鐘 —— 一個資料夾裡躺三份時只有它分得出來", () => {
-    expect(fileName(new Date(2026, 8, 2, 9, 5))).toBe("tianguang-20260902-0905.json");
+    expect(fileName(new Date(2026, 8, 2, 9, 5))).toBe(
+      "tianguang-20260902-0905.json",
+    );
   });
 });
