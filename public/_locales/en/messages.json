@@ -1017,5 +1017,8 @@
   },
   "s_support_link": {
     "message": "Buy me a coffee"
+  },
+  "cal_roc_year": {
+    "message": "Minguo $1$"
   }
 }

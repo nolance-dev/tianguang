@@ -2974,6 +2974,16 @@ body::-webkit-scrollbar {
 }
 
 /* 月份的前後鍵在最上面那一列，底下那塊就純粹是格子 */
+/* 月份標題後面那個年號。比標題小、比標題淡 —— 它是註腳不是標題 */
+.cal-era {
+  font-style: normal;
+  font-family: var(--f-cjk);
+  font-size: 0.72em;
+  letter-spacing: 0.08em;
+  opacity: 0.6;
+  margin-left: 0.5em;
+}
+
 .cal-nav {
   margin-left: auto;
   display: flex;

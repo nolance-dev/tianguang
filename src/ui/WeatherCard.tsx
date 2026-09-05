@@ -1,6 +1,6 @@
 import { useSignal } from "@preact/signals";
 import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
-import { isEnglish, t } from "../lib/i18n";
+import { intlLocale, t } from "../lib/i18n";
 import {
   condition,
   fetchWeather,
@@ -79,6 +79,17 @@ export function WeatherCard({ lat, lon, place, unit, dark }: Props) {
             <b>{formatTemp(w.temp, unit)}</b>
             <span class="meta">
               {place} · {t(condition(w.code))}
+              {/*
+                體感跟氣溫差得夠多才講。台灣的夏天這兩個數字可以差五六度，
+                而人在意的是體感 —— 只印氣溫會讓人以為這張卡在亂報。
+                差不到兩度就不講：那是雜訊，不是資訊。
+              */}
+              {Math.abs(w.feels - w.temp) >= 2 && (
+                <>
+                  {" · "}
+                  {t("wx_feels")} {formatTemp(w.feels, unit)}
+                </>
+              )}
             </span>
             {w.stale && <span class="stale">{t("wx_offline")}</span>}
           </>
@@ -91,10 +102,14 @@ export function WeatherCard({ lat, lon, place, unit, dark }: Props) {
 
       {w && !big.value && (
         <div class="wx-days">
-          {w.days.slice(1, 4).map((d) => (
+          {/*
+            這裡不能再 slice：parseForecast 已經切掉今天了，再切一次會把
+            明天也吃掉 —— 卡上顯示的是後天和大後天，而使用者以為那是明後天。
+          */}
+          {w.days.map((d) => (
             <span key={d.date}>
               <i>
-                {new Intl.DateTimeFormat(isEnglish() ? "en-GB" : undefined, {
+                {new Intl.DateTimeFormat(intlLocale(), {
                   weekday: "short",
                 }).format(new Date(`${d.date}T12:00:00`))}
               </i>

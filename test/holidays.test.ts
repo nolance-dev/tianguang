@@ -110,8 +110,14 @@ describe("第二套曆法", () => {
     expect(subDate(new Date(), "none")).toBeNull();
   });
 
-  it("民國與伊斯蘭曆走同一條路", () => {
-    expect(subDate(new Date(2026, 8, 2), "roc")?.text).toBe("2");
+  it("民國不逐格寫 —— 它的月和日跟西曆一模一樣", () => {
+    /*
+     * 這條原本斷言民國格子印「2」，也就是跟格子上方的西曆日期同一個數字。
+     * 那是把缺陷寫成了規格：四十二格重複四十二次同一個數，看的人只會覺得
+     * 這個功能壞了。年份改由 calYear 在月份標題講一次，逐格留白。
+     * 伊斯蘭曆不一樣，它的日跟西曆真的不同，所以照寫。
+     */
+    expect(subDate(new Date(2026, 8, 2), "roc")).toBeNull();
     expect(subDate(new Date(2026, 8, 1), "islamic")?.text).toBeTruthy();
   });
 });

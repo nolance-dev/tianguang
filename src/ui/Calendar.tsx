@@ -12,7 +12,7 @@ import {
   ymd,
   type Event,
 } from "../lib/agenda";
-import { subDate, type SecondCal } from "../lib/secondcal";
+import { calYear, subDate, type SecondCal } from "../lib/secondcal";
 
 /**
  * 日曆。
@@ -35,9 +35,16 @@ interface CardProps {
   holiday: string | null;
 }
 
+/** 年號曆在卡片上顯示「民國115年」，形狀跟 subDate 一致，呼叫端不必分兩種 */
+function eraSub(d: Date, cal: SecondCal) {
+  const year = calYear(d, cal);
+  return year ? { text: year, lead: true } : null;
+}
+
 export function CalendarCard({ events, now, secondCal, holiday }: CardProps) {
   const busy = onDay(events, ymd(now)).length;
-  const sub = subDate(now, secondCal);
+  // 民國／和曆逐日沒東西可寫（月日跟西曆相同），改成顯示年號
+  const sub = subDate(now, secondCal) ?? eraSub(now, secondCal);
   const fmt = (opts: Intl.DateTimeFormatOptions) =>
     new Intl.DateTimeFormat(intlLocale(), opts).format(now);
 
@@ -142,6 +149,15 @@ export function CalendarDetail({
               year: "numeric",
               month: "long",
             })}
+            {/*
+              民國／和曆只換年份的稱呼，月和日跟西曆一模一樣 ——
+              所以它要說的話在這裡說一次就夠，不必逐格重複四十二次。
+            */}
+            {calYear(new Date(year.value, month.value, 1), secondCal) && (
+              <i class="cal-era">
+                {calYear(new Date(year.value, month.value, 1), secondCal)}
+              </i>
+            )}
           </b>
           <button
             type="button"

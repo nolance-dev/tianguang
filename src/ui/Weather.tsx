@@ -1,6 +1,6 @@
 import { useSignal } from "@preact/signals";
 import { useEffect } from "preact/hooks";
-import { isEnglish, t } from "../lib/i18n";
+import { intlLocale, t } from "../lib/i18n";
 import {
   condition,
   fetchWeather,
@@ -48,7 +48,7 @@ export function Weather({ lat, lon, place, unit }: Props) {
   if (!w) return null;
 
   const day = (iso: string) =>
-    new Intl.DateTimeFormat(isEnglish() ? "en-GB" : undefined, {
+    new Intl.DateTimeFormat(intlLocale(), {
       weekday: "short",
     }).format(new Date(`${iso}T12:00:00`));
 

@@ -1053,5 +1053,8 @@
   },
   "s_support_link": {
     "message": "請我喝杯咖啡"
+  },
+  "cal_roc_year": {
+    "message": "民國$1$年"
   }
 }
