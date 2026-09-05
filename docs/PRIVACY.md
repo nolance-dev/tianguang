@@ -25,6 +25,7 @@
 | 待辦、筆記、番茄鐘紀錄、行程 | 瀏覽器的 `storage.local` | 不會 |
 | 照片牆的圖片 | 本機 IndexedDB | 不會 |
 | 語錄走到第幾句 | 本機 `localStorage` | 不會 |
+| 氣象署金鑰（若你填了） | 瀏覽器的 `storage.sync` | 跟其他設定一樣，只在你自己的瀏覽器帳號之間同步。我們沒有伺服器可以收它 |
 
 「同步」指的是瀏覽器自己的帳號同步功能（例如 Microsoft 帳號或 Google 帳號）。
 資料在你和瀏覽器廠商之間，不經過我們。
@@ -41,6 +42,7 @@
 | `api.rainviewer.com` | 你把天氣卡拉大成雷達圖時 | 沒有個人資料，只取圖磚索引 |
 | `tilecache.rainviewer.com` | 同上 | 圖磚的座標 |
 | `calendar.google.com` | 你開啟「顯示當地節日」時 | 沒有個人資料，取的是公開的 iCal 行事曆 |
+| `opendata.cwa.gov.tw` | 你在設定裡填了氣象署金鑰，而且所在地在台灣 | 你自己的金鑰。回來的是全台測站清單，我們在本機挑最近的一站 |
 
 這些請求裡沒有識別碼、沒有 cookie、也沒有你的瀏覽紀錄。我們不會因此知道
 是誰發出的請求 —— 我們根本沒有參與這些請求。
@@ -97,6 +99,7 @@ data. No data leaves your device for us — there is no server to receive it.
 | To-dos, notes, pomodoro history, events | Browser `storage.local` | No |
 | Photo wall images | Local IndexedDB | No |
 | Which quote you're up to | Local `localStorage` | No |
+| Your CWA key, if you enter one | Browser `storage.sync` | Syncs between your own browser profiles like any other setting. We have no server to receive it |
 
 "Sync" means the browser's own account sync (a Microsoft or Google account).
 That is between you and your browser vendor; it does not pass through us.
@@ -114,6 +117,7 @@ requested.
 | `api.rainviewer.com` | When you enlarge the weather card into radar | No personal data; a tile index |
 | `tilecache.rainviewer.com` | Same | Tile coordinates |
 | `calendar.google.com` | When you enable local holidays | No personal data; a public iCal calendar |
+| `opendata.cwa.gov.tw` | Only if you enter a CWA key and your location is in Taiwan | Your own key. The response is a list of all stations; the nearest is chosen locally |
 
 These requests carry no identifier, no cookie, and no browsing history. We do
 not learn who made them — we are not party to them at all.

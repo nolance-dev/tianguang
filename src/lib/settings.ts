@@ -30,6 +30,14 @@ export interface Settings {
   showSeconds: boolean;
   /** 介面語言。auto 跟著瀏覽器，其餘覆寫掉 chrome.i18n */
   lang: Lang;
+  /**
+   * 中央氣象署的開放資料金鑰（台灣，選填）。
+   *
+   * 填了之後氣溫改用最近測站的實測值，而不是 Open-Meteo 的模式推算 ——
+   * 實測過台北兩者可以差兩度，因為模式的網格抹掉了熱島。金鑰是每個使用者
+   * 自己到 opendata.cwa.gov.tw 申請的，我們沒有也不能代發。
+   */
+  cwaKey: string;
   searchEngine: string;
   background: BackgroundSource;
   solidColor: string;
@@ -107,6 +115,7 @@ export const DEFAULTS: Settings = {
   name: "",
   clock24: true,
   showSeconds: false,
+  cwaKey: "",
   lang: "auto",
   searchEngine: "bing",
   background: "mesh",
@@ -221,6 +230,7 @@ export function migrate(raw: Record<string, unknown>): Settings {
     lang: (["auto", "zh_TW", "en"] as const).includes(merged.lang)
       ? merged.lang
       : DEFAULTS.lang,
+    cwaKey: typeof merged.cwaKey === "string" ? merged.cwaKey.trim() : "",
   };
 }
 

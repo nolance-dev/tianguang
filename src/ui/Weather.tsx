@@ -22,16 +22,18 @@ interface Props {
   lon: number;
   place: string;
   unit: "c" | "f";
+  /** 氣象署金鑰，空字串就走模式推算 */
+  cwaKey: string;
 }
 
-export function Weather({ lat, lon, place, unit }: Props) {
+export function Weather({ lat, lon, place, unit, cwaKey }: Props) {
   const data = useSignal<W | null>(null);
   const open = useSignal(false);
 
   useEffect(() => {
     let alive = true;
     const load = () => {
-      void fetchWeather(lat, lon).then((w) => {
+      void fetchWeather(lat, lon, Date.now(), cwaKey).then((w) => {
         if (alive) data.value = w;
       });
     };
@@ -42,7 +44,7 @@ export function Weather({ lat, lon, place, unit }: Props) {
       alive = false;
       clearInterval(id);
     };
-  }, [lat, lon]);
+  }, [lat, lon, cwaKey]);
 
   const w = data.value;
   if (!w) return null;
@@ -82,7 +84,15 @@ export function Weather({ lat, lon, place, unit }: Props) {
               </span>
             </span>
           ))}
-          <span class="credit">Open-Meteo · CC BY 4.0</span>
+          {/*
+            這個氣溫是哪裡來的，要說得出口。模式推算跟測站實測在台北可以差
+            兩度 —— 使用者發現跟手機不一樣的時候，該看得到原因，而不是自己猜。
+          */}
+          <span class="credit">
+            {w.source === "station" && w.station
+              ? t("wx_station", w.station)
+              : "Open-Meteo · CC BY 4.0"}
+          </span>
         </span>
       )}
     </button>

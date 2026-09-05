@@ -24,7 +24,8 @@
     "https://api.open-meteo.com/*",
     "https://geocoding-api.open-meteo.com/*",
     "https://api.rainviewer.com/*",
-    "https://calendar.google.com/*"
+    "https://calendar.google.com/*",
+    "https://opendata.cwa.gov.tw/*"
   ],
   "optional_permissions": [
     "tabs",

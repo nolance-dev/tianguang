@@ -380,6 +380,7 @@ export function App() {
           lon={cfg.lon}
           place={cfg.placeName || t("s_city")}
           unit={cfg.unit}
+          cwaKey={cfg.cwaKey}
         />
       )}
     </header>
@@ -435,6 +436,7 @@ export function App() {
         lon: cfg.lon,
         place: cfg.placeName || t("s_city"),
         unit: cfg.unit,
+        cwaKey: cfg.cwaKey,
         dark: !palette.value.light,
       }}
       photo={{ id: cfg.photoId, rotate: cfg.photoRotate }}

@@ -1020,5 +1020,17 @@
   },
   "cal_roc_year": {
     "message": "Minguo $1$"
+  },
+  "s_cwa": {
+    "message": "CWA key"
+  },
+  "s_cwa_hint": {
+    "message": "Taiwan only, optional. With a key the temperature comes from the nearest weather station instead of a forecast model — in Taipei the two can differ by two degrees. Free from opendata.cwa.gov.tw; it stays in your own browser."
+  },
+  "s_cwa_ph": {
+    "message": "CWA-…"
+  },
+  "wx_station": {
+    "message": "$1$ station"
   }
 }

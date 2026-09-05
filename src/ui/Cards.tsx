@@ -77,6 +77,7 @@ interface Props extends Body {
     lon: number;
     place: string;
     unit: "c" | "f";
+    cwaKey: string;
     dark: boolean;
   };
 }

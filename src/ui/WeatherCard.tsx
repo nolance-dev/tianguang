@@ -28,17 +28,19 @@ interface Props {
   lon: number;
   place: string;
   unit: "c" | "f";
+  /** 氣象署金鑰，空字串就走模式推算 */
+  cwaKey: string;
   dark: boolean;
 }
 
-export function WeatherCard({ lat, lon, place, unit, dark }: Props) {
+export function WeatherCard({ lat, lon, place, unit, dark, cwaKey }: Props) {
   const data = useSignal<W | null>(null);
   const big = useSignal(false);
 
   useEffect(() => {
     let alive = true;
     const load = () => {
-      void fetchWeather(lat, lon).then((w) => {
+      void fetchWeather(lat, lon, Date.now(), cwaKey).then((w) => {
         if (alive) data.value = w;
       });
     };
@@ -48,7 +50,7 @@ export function WeatherCard({ lat, lon, place, unit, dark }: Props) {
       alive = false;
       clearInterval(id);
     };
-  }, [lat, lon]);
+  }, [lat, lon, cwaKey]);
 
   const w = data.value;
 

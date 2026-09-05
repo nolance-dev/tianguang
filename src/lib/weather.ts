@@ -13,6 +13,15 @@
 const GEO = "https://geocoding-api.open-meteo.com/v1/search";
 const API = "https://api.open-meteo.com/v1/forecast";
 const CACHE_KEY = "tg.weather";
+import {
+  CWA_ORIGINS,
+  inTaiwan,
+  nearest,
+  observationUrl,
+  parseStations,
+  type Station,
+} from "./cwa";
+
 const FRESH_MS = 30 * 60 * 1000;
 
 export const WEATHER_ORIGINS = [
@@ -40,6 +49,16 @@ export interface Day {
 
 export interface Weather {
   temp: number;
+  /**
+   * 這個氣溫是哪裡來的。
+   *
+   * model 是 Open-Meteo 的模式推算，station 是氣象署某個測站的實測。
+   * 存起來是為了讓介面說得出口 —— 兩個數字可以差一兩度，使用者有權知道
+   * 自己看的是哪一種，而不是自己去猜為什麼跟手機不一樣。
+   */
+  source?: "model" | "station";
+  /** 實測時是哪一站。模式推算時沒有 */
+  station?: string;
   feels: number;
   code: number;
   days: Day[];
@@ -101,7 +120,11 @@ export function geocodeUrl(name: string, language: string): string {
 }
 
 interface RawForecast {
-  current: { temperature_2m: number; apparent_temperature: number; weather_code: number };
+  current: {
+    temperature_2m: number;
+    apparent_temperature: number;
+    weather_code: number;
+  };
   daily: {
     time: string[];
     weather_code: number[];
@@ -110,7 +133,12 @@ interface RawForecast {
   };
 }
 
-export function parseForecast(raw: RawForecast, lat: number, lon: number, at = Date.now()): Weather {
+export function parseForecast(
+  raw: RawForecast,
+  lat: number,
+  lon: number,
+  at = Date.now(),
+): Weather {
   const d = raw.daily;
   return {
     temp: raw.current.temperature_2m,
@@ -140,25 +168,76 @@ export function parseForecast(raw: RawForecast, lat: number, lon: number, at = D
  * 表外的中文輸入會拿到一句提示，請使用者改打英文，而不是一個空清單。
  */
 export const CITY_ALIASES: Record<string, string> = {
-  台北: "Taipei", 臺北: "Taipei", 新北: "New Taipei", 桃園: "Taoyuan",
-  台中: "Taichung", 臺中: "Taichung", 台南: "Tainan", 臺南: "Tainan",
-  高雄: "Kaohsiung", 基隆: "Keelung", 新竹: "Hsinchu", 嘉義: "Chiayi",
-  苗栗: "Miaoli", 彰化: "Changhua", 南投: "Nantou", 雲林: "Douliu",
-  屏東: "Pingtung", 宜蘭: "Yilan", 花蓮: "Hualien", 台東: "Taitung",
-  臺東: "Taitung", 澎湖: "Magong", 金門: "Kinmen", 馬祖: "Nangan",
-  東京: "Tokyo", 大阪: "Osaka", 京都: "Kyoto", 札幌: "Sapporo",
-  福岡: "Fukuoka", 名古屋: "Nagoya", 橫濱: "Yokohama", 横浜: "Yokohama",
-  北京: "Beijing", 上海: "Shanghai", 廣州: "Guangzhou", 广州: "Guangzhou",
-  深圳: "Shenzhen", 香港: "Hong Kong", 澳門: "Macau", 澳门: "Macau",
-  成都: "Chengdu", 杭州: "Hangzhou", 南京: "Nanjing", 西安: "Xi'an",
-  首爾: "Seoul", 首尔: "Seoul", 釜山: "Busan",
-  新加坡: "Singapore", 曼谷: "Bangkok", 吉隆坡: "Kuala Lumpur",
-  河內: "Hanoi", 胡志明市: "Ho Chi Minh City", 馬尼拉: "Manila",
-  紐約: "New York", 倫敦: "London", 巴黎: "Paris", 柏林: "Berlin",
-  慕尼黑: "Munich", 羅馬: "Rome", 馬德里: "Madrid", 巴塞隆納: "Barcelona",
-  阿姆斯特丹: "Amsterdam", 洛杉磯: "Los Angeles", 舊金山: "San Francisco",
-  西雅圖: "Seattle", 溫哥華: "Vancouver", 多倫多: "Toronto",
-  雪梨: "Sydney", 墨爾本: "Melbourne", 奧克蘭: "Auckland",
+  台北: "Taipei",
+  臺北: "Taipei",
+  新北: "New Taipei",
+  桃園: "Taoyuan",
+  台中: "Taichung",
+  臺中: "Taichung",
+  台南: "Tainan",
+  臺南: "Tainan",
+  高雄: "Kaohsiung",
+  基隆: "Keelung",
+  新竹: "Hsinchu",
+  嘉義: "Chiayi",
+  苗栗: "Miaoli",
+  彰化: "Changhua",
+  南投: "Nantou",
+  雲林: "Douliu",
+  屏東: "Pingtung",
+  宜蘭: "Yilan",
+  花蓮: "Hualien",
+  台東: "Taitung",
+  臺東: "Taitung",
+  澎湖: "Magong",
+  金門: "Kinmen",
+  馬祖: "Nangan",
+  東京: "Tokyo",
+  大阪: "Osaka",
+  京都: "Kyoto",
+  札幌: "Sapporo",
+  福岡: "Fukuoka",
+  名古屋: "Nagoya",
+  橫濱: "Yokohama",
+  横浜: "Yokohama",
+  北京: "Beijing",
+  上海: "Shanghai",
+  廣州: "Guangzhou",
+  广州: "Guangzhou",
+  深圳: "Shenzhen",
+  香港: "Hong Kong",
+  澳門: "Macau",
+  澳门: "Macau",
+  成都: "Chengdu",
+  杭州: "Hangzhou",
+  南京: "Nanjing",
+  西安: "Xi'an",
+  首爾: "Seoul",
+  首尔: "Seoul",
+  釜山: "Busan",
+  新加坡: "Singapore",
+  曼谷: "Bangkok",
+  吉隆坡: "Kuala Lumpur",
+  河內: "Hanoi",
+  胡志明市: "Ho Chi Minh City",
+  馬尼拉: "Manila",
+  紐約: "New York",
+  倫敦: "London",
+  巴黎: "Paris",
+  柏林: "Berlin",
+  慕尼黑: "Munich",
+  羅馬: "Rome",
+  馬德里: "Madrid",
+  巴塞隆納: "Barcelona",
+  阿姆斯特丹: "Amsterdam",
+  洛杉磯: "Los Angeles",
+  舊金山: "San Francisco",
+  西雅圖: "Seattle",
+  溫哥華: "Vancouver",
+  多倫多: "Toronto",
+  雪梨: "Sydney",
+  墨爾本: "Melbourne",
+  奧克蘭: "Auckland",
 };
 
 const CJK = /[\u3400-\u9fff\uf900-\ufaff]/u;
@@ -178,7 +257,10 @@ export function resolveCityQuery(input: string): string {
   return q;
 }
 
-export async function geocode(name: string, language: string): Promise<Place[]> {
+export async function geocode(
+  name: string,
+  language: string,
+): Promise<Place[]> {
   const res = await fetch(geocodeUrl(resolveCityQuery(name), language));
   if (!res.ok) throw new Error(`geocode ${res.status}`);
   const json = (await res.json()) as {
@@ -206,7 +288,10 @@ const hasChrome = typeof chrome !== "undefined" && !!chrome.storage;
 async function readCache(): Promise<Weather | null> {
   try {
     if (hasChrome) {
-      const got = (await chrome.storage.local.get(CACHE_KEY)) as Record<string, Weather>;
+      const got = (await chrome.storage.local.get(CACHE_KEY)) as Record<
+        string,
+        Weather
+      >;
       return got[CACHE_KEY] ?? null;
     }
     const raw = localStorage.getItem(CACHE_KEY);
@@ -233,20 +318,73 @@ const sameSpot = (w: Weather, lat: number, lon: number) =>
  * 拿天氣。快取三十分鐘內直接用，過期才打網路。
  * 網路失敗時回傳快取並標成 stale —— 免費層沒有 SLA，空格子比舊資料難看得多。
  */
-export async function fetchWeather(lat: number, lon: number, now = Date.now()): Promise<Weather | null> {
+export async function fetchWeather(
+  lat: number,
+  lon: number,
+  now = Date.now(),
+  key = "",
+): Promise<Weather | null> {
   const cached = await readCache();
   // 只有同一個地點的快取才算數。別的城市的舊資料不是「舊」，是「錯」。
   const usable = cached && sameSpot(cached, lat, lon) ? cached : null;
-  if (usable && now - usable.fetchedAt < FRESH_MS) return { ...usable, stale: false };
+  if (usable && now - usable.fetchedAt < FRESH_MS)
+    return { ...usable, stale: false };
 
   try {
     const res = await fetch(forecastUrl(lat, lon));
     if (!res.ok) throw new Error(`forecast ${res.status}`);
-    const parsed = parseForecast((await res.json()) as RawForecast, lat, lon, now);
-    await writeCache(parsed);
-    return parsed;
+    const parsed = parseForecast(
+      (await res.json()) as RawForecast,
+      lat,
+      lon,
+      now,
+    );
+    /*
+     * 有金鑰就拿測站的實測值蓋掉模式推算的氣溫。
+     *
+     * 只蓋氣溫那一格 —— 預報三天、天氣代碼、體感都還是 Open-Meteo 的，
+     * 氣象署那支觀測資料集沒有那些。蓋不成（沒金鑰、金鑰錯、人不在台灣、
+     * 附近沒站、格式對不上）就維持原樣，天氣卡不會因此少一塊。
+     */
+    const observed = await observe(lat, lon, key);
+    const merged = observed
+      ? {
+          ...parsed,
+          temp: observed.temp,
+          source: "station" as const,
+          station: observed.name,
+        }
+      : { ...parsed, source: "model" as const };
+    await writeCache(merged);
+    return merged;
   } catch {
     return usable ? { ...usable, stale: true } : null;
+  }
+}
+
+/**
+ * 最近那一站的實測氣溫。任何一步不順就回 null，讓上層維持模式推算。
+ *
+ * 這裡刻意不丟例外也不記錄失敗：它是一個加分項，不是必要路徑。
+ * 氣象署掛了、金鑰過期、對方改了欄位 —— 使用者該看到的仍然是天氣，
+ * 不是一張壞掉的卡。
+ */
+async function observe(
+  lat: number,
+  lon: number,
+  key: string,
+): Promise<Station | null> {
+  if (!key.trim() || !inTaiwan(lat, lon)) return null;
+  try {
+    if (typeof chrome !== "undefined" && chrome.permissions) {
+      const ok = await chrome.permissions.contains({ origins: CWA_ORIGINS });
+      if (!ok) return null;
+    }
+    const res = await fetch(observationUrl(key.trim()));
+    if (!res.ok) return null;
+    return nearest(parseStations(await res.json()), lat, lon);
+  } catch {
+    return null;
   }
 }
 

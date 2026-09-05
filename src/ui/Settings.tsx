@@ -20,6 +20,7 @@ import {
   requestAccess,
   type Place,
 } from "../lib/weather";
+import { requestCwa } from "../lib/cwa";
 import { locale } from "../lib/i18n";
 import type { Settings as S } from "../lib/settings";
 import { ImagePicker } from "./ImagePicker";
@@ -762,6 +763,25 @@ function WeatherSettings({
       </div>
       {busy && <p class="note">…</p>}
       {note && <p class="note">{note}</p>}
+
+      {/*
+        金鑰欄位放在城市底下 —— 它是「這個城市的溫度從哪來」的延伸，
+        不是另一個功能。填了才去要網域權限：沒填的人永遠不會被問。
+      */}
+      <label class="row">
+        <span>{t("s_cwa")}</span>
+        <input
+          type="text"
+          value={value.cwaKey}
+          placeholder={t("s_cwa_ph")}
+          spellcheck={false}
+          onInput={(e) => onChange({ cwaKey: e.currentTarget.value.trim() })}
+          onBlur={(e) => {
+            if (e.currentTarget.value.trim()) void requestCwa();
+          }}
+        />
+      </label>
+      <p class="note">{t("s_cwa_hint")}</p>
 
       {places && places.length > 0 && (
         <ul class="places">

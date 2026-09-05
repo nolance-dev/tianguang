@@ -1056,5 +1056,17 @@
   },
   "cal_roc_year": {
     "message": "民國$1$年"
+  },
+  "s_cwa": {
+    "message": "氣象署金鑰"
+  },
+  "s_cwa_hint": {
+    "message": "台灣選填。填了之後氣溫改用最近測站的實測值 —— 模式推算跟測站在台北可以差兩度。金鑰到 opendata.cwa.gov.tw 免費申請，只存在你自己的瀏覽器裡。"
+  },
+  "s_cwa_ph": {
+    "message": "CWA-…"
+  },
+  "wx_station": {
+    "message": "$1$ 測站實測"
   }
 }
