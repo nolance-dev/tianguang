@@ -409,3 +409,157 @@ sign-in is involved and the user's own calendar is never accessed.
 All five are optional host permissions, requested only when the user turns on
 the matching feature.
 ```
+
+
+---
+
+# Edge「Store 清單」逐格：兩種語言各填一次
+
+兩列都要填完才會從「不完整」變綠。點右邊的「編輯詳細資料」。
+欄位順序以 Partner Center 當下畫面為準，沒出現的就跳過。
+
+## 中文 (臺灣)
+
+**延伸模組名稱**（已帶入，不用改）
+
+```
+天光
+```
+
+**簡短描述 / 說明**
+
+```
+以十二時辰為底的新分頁。背景跟著天光走，從破曉到入夜。
+```
+
+**描述**（純文字貼上，不要貼 Markdown 的星號）
+
+```
+天光是一個新分頁。它不放推薦內容、不放廣告、不問你要不要登入。
+
+■ 背景是一天的光
+十二個時辰各有一組顏色，從航海曙光、日出、日中，一路走到黃昏與夜半。
+字色不是挑好的，是照背後的亮度即時算出來的，所以任何一刻都讀得到。
+
+■ 時辰盤
+點一下時鐘，整個畫面變成一座盤：二十四小時、十二時辰、二十四節氣、
+二十八宿的四象，還有今天的日出日落弧。它是可以讀的，不只是好看。
+節氣是用天文公式即時算的，不是查表。
+
+■ 工作區
+往下捲還有一整屏：待辦、隨手記、番茄鐘、日曆、天氣（拉大變雷達回波圖）、
+快速存取、照片牆、正在播放。每一張卡都可以拖著換位置、拉著改大小，
+變大之後顯示的東西也會跟著變多。鍵盤也能改版面：方向鍵改大小，
+Shift 加方向鍵換位置。
+
+■ 東西留在你自己的瀏覽器
+沒有帳號、沒有伺服器、沒有分析追蹤。設定和版面走瀏覽器自己的同步，
+進度（待辦、筆記、番茄鐘紀錄）留在本機。要搬家的話，設定裡可以把整份
+匯出成一個 JSON 檔。
+
+■ 權限只在你按下去的那一刻要
+分頁、書籤、瀏覽紀錄、最近關閉、下載這五項全部是選用權限，
+不點那些功能就永遠不會被問到。
+
+■ 繁體中文與英文
+可以在設定裡直接切換，不必跟著瀏覽器的語言。中英文不是互相翻譯：
+英文版叫 Aubade，十二時辰換成十二個光相，節氣換成傳統滿月名。
+
+原始碼公開：https://github.com/nolance-dev/tianguang
+```
+
+**搜尋字詞**（一格一個）
+
+```
+新分頁
+時辰
+待辦
+番茄鐘
+天氣
+個人化
+極簡
+```
+
+## 英文
+
+**延伸模組名稱**（已帶入，不用改）
+
+```
+Aubade
+```
+
+**簡短描述 / 說明**
+
+```
+A new tab page built on the twelve phases of the day, with a background that moves with the light.
+```
+
+**描述**
+
+```
+Aubade is a new tab page. No feed, no ads, no sign-in.
+
+■ The background is the light of the day
+Twelve phases, each with its own palette, from nautical dawn through sunrise
+and zenith to dusk and the small hours. Text colour is not picked, it is
+computed against the brightness behind it, so it stays readable at every hour.
+
+■ The dial
+Click the clock and the page becomes an instrument: twenty-four hours, twelve
+phases, the traditional moons, the four symbols of the twenty-eight mansions,
+and today's sunrise-to-sunset arc. It is meant to be read, not just looked at.
+
+■ A second screen
+Scroll down for to-dos, notes, a pomodoro timer, a calendar, weather with
+radar, quick links, a photo wall and now playing. Every card can be dragged to
+a new place and resized, and shows more as it grows. The keyboard works too:
+arrow keys resize, Shift with arrows moves.
+
+■ Everything stays in your own browser
+No account, no server, no analytics. Settings and layout ride the browser's own
+sync; your progress stays on the machine. Settings can export the whole thing
+to a single JSON file.
+
+■ Permissions are asked for at the moment you press the button
+Tabs, bookmarks, history, recently closed and downloads are all optional. If
+you never open those features, you are never asked.
+
+■ English and 繁體中文
+Switchable in settings rather than tied to the browser's language. The two are
+not translations of each other: the Chinese build is called 天光 and runs on
+the twenty-four solar terms.
+
+Source: https://github.com/nolance-dev/tianguang
+```
+
+**搜尋字詞**
+
+```
+new tab
+clock
+todo
+pomodoro
+weather
+minimal
+dashboard
+```
+
+## 兩種語言共用的檔案
+
+| 欄位 | 檔案 |
+| --- | --- |
+| 商店標誌 300×300 | `assets/store/logo-300.png` |
+| 螢幕擷取畫面（至少一張，Edge 要 1366×768） | `assets/store/shot-1-home-1366x768.png` 到 `shot-5-calendar-1366x768.png` |
+| 小型宣傳磚 440×280（有這格才傳） | `assets/store/tile-440x280.png` |
+| 大型宣傳磚（有這格才傳） | `assets/store/marquee-1400x560.png` |
+
+上傳截圖時務必挑 **1366×768** 那五張，1280×800 是給 Chrome 的，
+在 Edge 會被擋。
+
+## 附加資訊那一段
+
+| 欄位 | 值 |
+| --- | --- |
+| 支援聯絡資訊 / 網址 | `https://github.com/nolance-dev/tianguang/issues` |
+| 網站 | `https://github.com/nolance-dev/tianguang` |
+| 隱私權政策網址 | `https://github.com/nolance-dev/tianguang/blob/main/docs/PRIVACY.md` |
