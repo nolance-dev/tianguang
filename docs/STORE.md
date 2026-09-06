@@ -184,9 +184,9 @@ npm run pack
 | 圖示 | `assets/store/logo-300.png` |
 | 截圖 | `assets/store/shot-1` ～ `shot-5`，1280×800 |
 | 宣傳圖 | `assets/store/tile-440x280.png`、`marquee-1400x560.png` |
-| 隱私權政策網址 | `https://github.com/nolance/tianguang/blob/main/docs/PRIVACY.md` |
-| 支援網址 | `https://github.com/nolance/tianguang/issues` |
-| 官方網站 | `https://github.com/nolance/tianguang` |
+| 隱私權政策網址 | `https://github.com/Nicholas2017-create/tianguang/blob/main/docs/PRIVACY.md` |
+| 支援網址 | `https://github.com/Nicholas2017-create/tianguang/issues` |
+| 官方網站 | `https://github.com/Nicholas2017-create/tianguang` |
 | 發佈者顯示名稱 | Nolance |
 
 ## 資料蒐集聲明
