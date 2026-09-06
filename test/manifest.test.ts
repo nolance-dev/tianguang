@@ -58,3 +58,26 @@ describe("上架前的一致性", () => {
     expect(store).not.toContain("⚠");
   });
 });
+
+/**
+ * 商店對 manifest 裡的簡述有硬上限。
+ *
+ * Edge 的 Partner Center 在上傳當下就擋：「地區設定 en 中的欄位 Description
+ * 翻譯太長…超過 190 個字元的大小上限」。那不是商店陳列的說明，是套件自己的
+ * description，而且每個語系各自算。英文版原本 271 字元，整包被退回。
+ *
+ * 這種錯只有真的按下上傳才會知道 —— 除非在這裡先擋下來。
+ */
+describe("套件簡述的長度", () => {
+  const LIMIT = 190;
+  for (const loc of ["zh_TW", "en"]) {
+    it(`${loc} 的 description 不超過 ${LIMIT} 字元`, () => {
+      const bundle = JSON.parse(
+        readFileSync(`public/_locales/${loc}/messages.json`, "utf8"),
+      ) as Record<string, { message: string }>;
+      const text = bundle.extensionDescription?.message ?? "";
+      expect(text.length, `${loc} 現在是 ${text.length} 字元`).toBeLessThanOrEqual(LIMIT);
+      expect(text.length, "空的也不行").toBeGreaterThan(0);
+    });
+  }
+});
