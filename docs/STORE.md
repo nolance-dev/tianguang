@@ -306,3 +306,106 @@ Open a new tab. Scroll down (or press the chevron) for the second screen.
 Click the clock for the dial. The gear at the bottom right opens settings;
 the tour can be replayed from Settings > Data > Show it again.
 ```
+
+
+---
+
+# Edge 隱私權那一區：逐格的文字
+
+Partner Center 的「隱私權」不是問卷，是自由欄位，每一個權限各一格，
+而且頁面明說「要求不必要的權限將導致此版本遭拒絕」。以下直接貼。
+英文寫的，因為審查用英文讀。
+
+## 單一用途描述
+
+```
+A new tab page. The extension's single purpose is to replace the browser's
+new tab with one page that shows the time and a small set of personal tools
+the user arranges themselves: a clock and greeting based on the twelve
+traditional phases of the day, a search box, quick links, and an optional
+second screen with to-dos, notes, a pomodoro timer, a calendar and weather.
+
+Every feature serves that one page. The extension has no content scripts, no
+background service worker, no remote code, no account, no server and no
+analytics. It never runs on, reads or modifies any other website.
+```
+
+## storage 理由
+
+```
+Stores the user's own settings and content for the new tab page: layout,
+chosen background, quick links, to-dos, notes, pomodoro history and calendar
+entries.
+
+Settings and layout use storage.sync so they follow the user's own browser
+account across their devices. Larger, growing data uses storage.local so it
+does not hit sync quotas. Nothing is transmitted anywhere — this extension
+has no server of its own.
+```
+
+## topSites 理由
+
+```
+Powers a single button in settings, "import from most visited", which fills
+the user's quick-link tiles in one step instead of making them type each
+address by hand.
+
+It is read only at the moment the user presses that button — never
+continuously, never in the background — and the result stays on the device.
+```
+
+## favicon 理由
+
+```
+Draws the site icons on the quick-link tiles, using the browser's own favicon
+cache via _favicon/.
+
+This permission is requested specifically so that the extension does NOT
+fetch icons from the sites themselves. Fetching them directly would disclose
+the user's saved sites to third parties, which we do not want to do. Using
+the browser's cache also means icons still appear when offline.
+```
+
+## 若另有「選用權限」的欄位
+
+以下五個都宣告在 `optional_permissions`，安裝時不會索取，只有使用者打開對應
+功能時才用 `chrome.permissions.request()` 在使用者手勢中詢問；拒絕不影響其他功能。
+
+```
+tabs — The "now playing" card lists tabs that are currently producing sound
+(tabs.query({audible: true})) so the user can mute one or switch to it. No
+page content is read and no content script is injected; the extension has
+none.
+
+bookmarks / history / sessions / downloads — The command palette (Ctrl+K)
+searches the user's bookmarks, browsing history, recently closed tabs and
+recent downloads so they can reopen something without leaving the new tab.
+Matching happens locally and results are never transmitted.
+```
+
+## 若另有「主機權限理由」的欄位
+
+```
+api.open-meteo.com, geocoding-api.open-meteo.com — Weather. The request
+carries the latitude and longitude of a city the user typed into settings.
+The extension does not use the geolocation API and holds no location
+permission.
+
+aviationweather.gov — Airport observations (METAR) from the US National
+Weather Service, public domain and keyless, used to show a measured
+temperature rather than a modelled one. The request carries a bounding box
+around the user's chosen city and nothing else.
+
+api.rainviewer.com — Radar tile index, used only when the user enlarges the
+weather card into radar view.
+
+opendata.cwa.gov.tw — Taiwan's Central Weather Administration open data, used
+only if the user pastes their own free API key into settings and their city
+is in Taiwan.
+
+calendar.google.com — A public iCal calendar of local public holidays. No
+sign-in is involved and the user's own calendar is never accessed.
+
+All five are optional host permissions, requested only when the user turns on
+the matching feature.
+```
