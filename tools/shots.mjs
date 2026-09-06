@@ -27,8 +27,8 @@ const seed = () => {
       lang: "zh_TW",
       name: "",
       weatherOn: true,
-      lat: 25.03,
-      lon: 121.56,
+      lat: 25.033,
+      lon: 121.5654,
       placeName: "台北市",
       cards: {
         todos: true,
@@ -55,6 +55,33 @@ const seed = () => {
   );
   const now = Date.now();
   const DAY = 86400000;
+  /*
+   * 天氣餵固定資料，不打網路。
+   *
+   * 商店素材不該取決於當下的網路狀況 —— 上一版就拍到一張「讀取中…」，
+   * 因為多了一層觀測之後非同步鏈比等待窗還長。而且外面的服務掛掉時，
+   * 重跑一次素材就會拍出一張空卡。fetchedAt 用頁面自己的 Date.now()，
+   * 那是被釘住的假時鐘，所以永遠落在保鮮期內。
+   */
+  localStorage.setItem(
+    "tg.weather",
+    JSON.stringify({
+      temp: 26.4,
+      feels: 31.8,
+      code: 2,
+      days: [
+        { date: day(1), code: 0, max: 30, min: 25 },
+        { date: day(2), code: 51, max: 31, min: 25 },
+        { date: day(3), code: 61, max: 29, min: 24 },
+      ],
+      fetchedAt: Date.now(),
+      lat: 25.033,
+      lon: 121.5654,
+      stale: false,
+      source: "station",
+      station: "臺北",
+    }),
+  );
   localStorage.setItem(
     "tg.workspace",
     JSON.stringify({

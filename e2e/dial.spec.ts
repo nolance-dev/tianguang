@@ -25,9 +25,24 @@ async function openDial(page: Page, lang: string) {
   await page.reload();
   await page.locator(".badge").click();
   await expect(page.locator(".dial")).toBeVisible();
-  // 邊註和日出日落的點是 2.8 秒之後才淡入的，早了量不到
-  await page.locator(".sunlab").first().waitFor();
-  await page.waitForTimeout(3600);
+  /*
+   * 等環真的停下來，不要用固定秒數。
+   *
+   * .sunlab 一開始就在 DOM 裡（只是 opacity 0），所以 waitFor 立刻就回來，
+   * 固定等三秒六其實還落在五秒的開盤動畫中間 —— 量到的是轉到一半的位置，
+   * 相不相交純看運氣。這條測試曾經因此綠著，也曾經因此紅過。
+   *
+   * 盤面停下來的定義很明確：每一環的 rotate 都回到零。
+   */
+  await page.waitForFunction(
+    () =>
+      [...document.querySelectorAll(".dial [style*='--spin']")].every((el) => {
+        const r = getComputedStyle(el).rotate;
+        return r === "none" || Math.abs(parseFloat(r)) < 0.01;
+      }),
+    undefined,
+    { timeout: 15000 },
+  );
 }
 
 /** 中央每一行 × 每個金色標籤，相交的組合 */
