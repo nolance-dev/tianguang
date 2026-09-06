@@ -76,7 +76,7 @@
 
 ### 聯絡
 
-問題與建議請開 issue：https://github.com/Nicholas2017-create/tianguang/issues
+問題與建議請開 issue：https://github.com/nolance-dev/tianguang/issues
 
 ---
 
@@ -157,4 +157,4 @@ change is noted in the release notes.
 
 ### Contact
 
-Please open an issue: https://github.com/Nicholas2017-create/tianguang/issues
+Please open an issue: https://github.com/nolance-dev/tianguang/issues
