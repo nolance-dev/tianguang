@@ -135,12 +135,15 @@ browser's language.
 | `assets/store/logo-300.png` | 300×300 | 商店方形圖 |
 | `assets/store/tile-440x280.png` | 440×280 | 小宣傳圖 |
 | `assets/store/marquee-1400x560.png` | 1400×560 | 大宣傳圖 |
-| `assets/store/shot-1-home.png` | 1280×800 | 第一屏（卯時） |
-| `assets/store/shot-2-desk.png` | 1280×800 | 工作區（午時） |
-| `assets/store/shot-3-dial.png` | 1280×800 | 時辰盤（酉時） |
-| `assets/store/shot-4-focus.png` | 1280×800 | 番茄鐘整屏（辰時） |
-| `assets/store/shot-5-calendar.png` | 1280×800 | 日曆整屏（亥時） |
+| `assets/store/shot-1-home-*.png` | 1280×800 / 1366×768 | 第一屏（卯時） |
+| `assets/store/shot-2-desk-*.png` | 1280×800 / 1366×768 | 工作區（午時） |
+| `assets/store/shot-3-dial-*.png` | 1280×800 / 1366×768 | 時辰盤（酉時） |
+| `assets/store/shot-4-focus-*.png` | 1280×800 / 1366×768 | 番茄鐘整屏（辰時） |
+| `assets/store/shot-5-calendar-*.png` | 1280×800 / 1366×768 | 日曆整屏（亥時） |
 | `public/icons/icon*.png` | 16/32/48/128 | 擴充功能圖示 |
+
+兩種尺寸都產：Chrome 收 1280×800，Edge 常見的是 1366×768。尺寸不對是上傳
+當下就被擋，所以兩套都留著，上傳時挑對的。
 
 截圖裡的資料是示範用的中性內容（「把報告的第三節寫完」這類），
 快速連結指向 `example.com`，不是任何真實網站或真實的個人資料。
@@ -233,3 +236,73 @@ npm run pack
 Edge 與 Chrome 的審查時間不一樣，兩邊各自會回。**任何一邊要求修改，都要
 改在同一份原始碼上再重跑 `npm run pack`** —— 不要只改其中一包，兩邊版本
 分岔之後就再也對不回來了。
+
+
+---
+
+# 給審查人員的備註
+
+送審表單通常有一欄「Notes for certification / 提交備註」。**把下面這段整段貼進去。**
+審查是逐條問權限的，先寫在這裡可以省掉一整輪來回。用英文，因為審查用英文讀。
+
+```
+WHAT THIS IS
+A new tab page. It replaces the default new tab with a clock, a search box,
+quick links, and an optional second screen of cards (to-dos, notes, pomodoro,
+calendar, weather). No account, no server, no analytics, no remote code.
+Everything is bundled; nothing is fetched and executed at runtime.
+
+Source: https://github.com/nolance-dev/tianguang
+Privacy policy: https://github.com/nolance-dev/tianguang/blob/main/docs/PRIVACY.md
+
+REQUIRED PERMISSIONS
+- storage: settings, layout, to-dos and notes. Settings and layout use
+  storage.sync so they follow the user's own browser account; larger,
+  growing data uses storage.local. Nothing is uploaded anywhere.
+- topSites: read once, only at the moment the user presses "import from most
+  visited" in settings, to create quick links in one step. Never read
+  continuously, never transmitted.
+- favicon: site icons on quick links, drawn from the browser's own icon cache
+  via _favicon/. This is specifically so we do NOT fetch icons from the sites
+  themselves, which would disclose the user's browsing to third parties.
+
+OPTIONAL PERMISSIONS
+All five are declared under optional_permissions and requested at runtime
+with chrome.permissions.request(), inside a user gesture, only when the user
+opens the matching feature. A user who never opens those features is never
+prompted, and declining leaves the rest of the extension working.
+- tabs: the "now playing" card lists tabs currently producing sound
+  (tabs.query({audible:true})) so the user can mute them or switch to them.
+  No page content is read. No content scripts are injected anywhere — the
+  extension has none.
+- bookmarks / history / sessions / downloads: the command palette (Ctrl+K)
+  searches the user's bookmarks, history, recently closed tabs and recent
+  downloads. Matching happens locally; results are never transmitted.
+
+OPTIONAL HOST PERMISSIONS
+Requested only when the user enables the matching feature.
+- api.open-meteo.com, geocoding-api.open-meteo.com: weather. The request
+  contains the latitude and longitude of a city the user typed in settings.
+  There is no geolocation API use and no location permission.
+- aviationweather.gov: airport observations (METAR) from the US National
+  Weather Service, public domain, no key. Used to show a measured temperature
+  instead of a modelled one. The request contains a bounding box around the
+  user's chosen city and nothing else.
+- api.rainviewer.com: radar tile index, used only when the weather card is
+  enlarged into radar view.
+- opendata.cwa.gov.tw: Taiwan's Central Weather Administration open data.
+  Used only if the user pastes their own free API key in settings and their
+  city is in Taiwan.
+- calendar.google.com: a public iCal calendar of local public holidays. No
+  sign-in, and the user's own calendar is never accessed.
+
+DATA
+Nothing is collected, transmitted for our benefit, or sold. There is no
+server belonging to this extension. Photos added to the photo wall stay in
+local IndexedDB.
+
+HOW TO TEST
+Open a new tab. Scroll down (or press the chevron) for the second screen.
+Click the clock for the dial. The gear at the bottom right opens settings;
+the tour can be replayed from Settings > Data > Show it again.
+```

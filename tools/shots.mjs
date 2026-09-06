@@ -11,7 +11,14 @@ import { mkdirSync } from "node:fs";
  * 字母磚。那是刻意留著的，示範資料本來就不該是別人的真實網站圖示。
  */
 
-const SIZE = { width: 1280, height: 800 };
+/*
+ * 兩家商店的截圖規格不同 —— Chrome 收 1280×800，Edge 那邊常見的是 1366×768。
+ * 尺寸不對是上傳當下就被擋，所以兩套都產，檔名帶尺寸，上傳時挑對的那一套。
+ */
+const SIZES = [
+  { width: 1280, height: 800, tag: "1280x800" },
+  { width: 1366, height: 768, tag: "1366x768" },
+];
 
 const seed = () => {
   const day = (n) => {
@@ -139,7 +146,14 @@ const b = await chromium.launch({ channel: "msedge" });
 mkdirSync("assets/store", { recursive: true });
 
 async function frame(file, hour, min, go, settle = 400) {
-  const page = await b.newPage({ viewport: SIZE, deviceScaleFactor: 1 });
+  for (const size of SIZES) await one(file, hour, min, go, settle, size);
+}
+
+async function one(file, hour, min, go, settle, size) {
+  const page = await b.newPage({
+    viewport: { width: size.width, height: size.height },
+    deviceScaleFactor: 1,
+  });
   await page.clock.install({ time: AT(hour, min) });
   await page.goto("http://localhost:4321/");
   await page.evaluate(seed);
@@ -152,9 +166,10 @@ async function frame(file, hour, min, go, settle = 400) {
   // CSS 的過場走的是真實時間，假時鐘推不動它 —— 時辰盤的邊註要等
   // 2.2 秒的延遲加 1.1 秒的淡入才到齊，早拍就是一張只有環的圖
   await page.waitForTimeout(settle);
-  await page.screenshot({ path: `assets/store/${file}` });
+  const named = file.replace(/\.png$/, `-${size.tag}.png`);
+  await page.screenshot({ path: `assets/store/${named}` });
   await page.close();
-  console.log(file);
+  console.log(named);
 }
 
 // 卯時的天光、午時的晴、酉時的暮、亥時的夜 —— 一組看得出一天
