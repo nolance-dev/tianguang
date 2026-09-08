@@ -29,9 +29,16 @@ describe("上架前的一致性", () => {
   });
 
   it("每一個網域在上架文件和隱私頁裡都有說明", () => {
-    // manifest 寫的是 https://host/*，文件裡寫的是主機名
+    /*
+     * manifest 寫的是比對樣式（https://host/*、*://*.host/*），
+     * 文件裡寫的是人看的主機名。把樣式那一層剝掉再比 ——
+     * 要求文件照抄 "*://*.youtube.com" 只會逼出一份沒人想讀的文件。
+     */
     const hosts = manifest.optional_host_permissions.map((h) =>
-      h.replace(/^https:\/\//, "").replace(/\/\*$/, ""),
+      h
+        .replace(/^(?:https?|\*):\/\//, "")
+        .replace(/^\*\./, "")
+        .replace(/\/\*$/, ""),
     );
     expect(
       hosts.filter((h) => !store.includes(h)),
@@ -52,6 +59,23 @@ describe("上架前的一致性", () => {
   it("官方網站填了，而且跟文件裡的是同一個", () => {
     expect(manifest.homepage_url).toMatch(/^https:\/\//);
     expect(store).toContain(manifest.homepage_url);
+  });
+
+  it("認證注意事項塞得進 Partner Center 的格子", () => {
+    /*
+     * Partner Center 每次提交都要求認證注意事項，而且上限 2000 字元。
+     * 那一格是最後一關，超過的當下已經填完前面所有東西了 ——
+     * 而且新增權限一定要往這份文件加字，所以它只會越長越長。
+     *
+     * 換行有可能被算成兩個字元（CRLF），所以連最壞的情況一起擋。
+     */
+    const notes = readFileSync("docs/cert-notes.txt", "utf8").trimEnd();
+    // 用 split 數換行，不用正規式 —— 這一行經過太多層跳脫了
+    const worst =
+      notes.length + notes.split(String.fromCharCode(10)).length - 1;
+    expect(worst, `現在 ${notes.length} 字元，換行 CRLF 的話 ${worst}`).toBeLessThan(2000);
+    // 空的也不行：沒寫會被標記或退件
+    expect(notes.length).toBeGreaterThan(400);
   });
 
   it("送審清單裡沒有沒填的格子", () => {

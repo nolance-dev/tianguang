@@ -70,9 +70,17 @@ inline script 一律被擋，而 `extension_pages` 不收 sha256 hash。
 並提示一次，不靜默吞掉。
 
 **權限只在使用者按下去的那一刻要。** `tabs`、`bookmarks`、`history`、
-`sessions`、`downloads` 全部是 `optional_permissions`，走
+`sessions`、`downloads`、`scripting` 全部是 `optional_permissions`，走
 `chrome.permissions.request()`；不點那些功能就永遠不會被問到。
 每一條的用途寫在 [`docs/STORE.md`](docs/STORE.md)。
+
+**播放控制是逐站的，而且選擇器是量出來的。** 瀏覽器沒有給擴充功能全域媒體
+控制的 API，`navigator.mediaSession` 的處理器是頁面自己註冊的、從外面叫不動。
+所以「正在播放」的播放／暫停是注進那個分頁去抓 `<video>`／`<audio>`，
+上一首／下一首則是點該站自己的按鈕 —— 那幾條選擇器由
+`tools/probe-media.mjs` 實地量出來，量不到的站就不長那兩顆鈕。
+宣告的是十個具名網站而不是 `<all_urls>`，而且是按下去的那一刻才向
+那一個網域要權限。
 
 **語言存在 signal 裡，不是普通變數。** `@preact/signals` 給每個元件裝了
 `shouldComponentUpdate`，props 淺比較沒變、訂閱的 signal 也沒動就不重繪。

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   COLS,
   DEFAULT_DESK,
+  fitCols,
   kindOf,
   LINKS_PER_CARD,
   MAX_H,
@@ -9,6 +10,7 @@ import {
   normalize,
   nudge,
   resize,
+  tileId,
   type Tile,
 } from "../src/lib/desk";
 
@@ -177,5 +179,68 @@ describe("快速存取只能左右拉", () => {
       w: 4,
       h: 1,
     });
+  });
+});
+
+describe("同一種可以有好幾張", () => {
+  it("編號的 id 認得出種類", () => {
+    expect(kindOf("photos")).toBe("photos");
+    expect(kindOf("photos2")).toBe("photos");
+    expect(kindOf("links3")).toBe("links");
+    // 不要誤傷：pomodoro 不是 photos
+    expect(kindOf("pomodoro")).toBe("pomodoro");
+  });
+
+  it("第一張沒有編號 —— 改名會讓舊版存的版面全變孤兒", () => {
+    expect(tileId("photos", 0)).toBe("photos");
+    expect(tileId("photos", 1)).toBe("photos2");
+    expect(tileId("links", 0)).toBe("links");
+    expect(tileId("links", 2)).toBe("links3");
+  });
+
+  it("多出來的那幾張沿用同種類第一張的尺寸，不是隨便給", () => {
+    const out = normalize([], ["photos2", "links2"]);
+    const first = (kind: string) => DEFAULT_DESK.find((d) => d.id === kind)!;
+    const p2 = out.find((x) => x.id === "photos2")!;
+    const l2 = out.find((x) => x.id === "links2")!;
+    expect([p2.w, p2.h]).toEqual([first("photos").w, first("photos").h]);
+    // 快速存取的高度永遠是 1，拉不高
+    expect([l2.w, l2.h]).toEqual([first("links").w, 1]);
+  });
+
+  it("補在最後面，不插隊到使用者排好的順序裡", () => {
+    const saved: Tile[] = [
+      { id: "note", w: 2, h: 1 },
+      { id: "photos", w: 2, h: 2 },
+    ];
+    const out = normalize(saved, ["photos2"]);
+    expect(out[0]!.id).toBe("note");
+    expect(out[1]!.id).toBe("photos");
+    expect(out.at(-1)!.id).toBe("photos2");
+  });
+});
+
+describe("一列放得下的", () => {
+  const t = (id: string, w: number): Tile => ({ id: id as Tile["id"], w, h: 1 });
+
+  it("加起來超過就不畫", () => {
+    const out = fitCols([t("a", 2), t("b", 2), t("c", 2)], COLS);
+    expect(out.map((x) => x.id)).toEqual(["a", "b"]);
+  });
+
+  it("前面卡住不代表後面小的也不能進 —— 用 continue 不是 break", () => {
+    const out = fitCols([t("a", 3), t("b", 4), t("c", 1)], COLS);
+    expect(out.map((x) => x.id)).toEqual(["a", "c"]);
+  });
+
+  it("剛好放滿算放得下", () => {
+    expect(fitCols([t("a", 4)], COLS).map((x) => x.id)).toEqual(["a"]);
+  });
+
+  it("不動原本的版面 —— 沒畫出來的還在設定裡，縮窄前面的就會回來", () => {
+    const list = [t("a", 4), t("b", 1)];
+    const copy = structuredClone(list);
+    fitCols(list, COLS);
+    expect(list).toEqual(copy);
   });
 });

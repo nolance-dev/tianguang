@@ -11,6 +11,7 @@ import {
   supported,
 } from "../lib/holidays";
 import { MAX_LINKS, suggestFromTopSites } from "../lib/links";
+import { MAX_PHOTO_WALLS } from "../lib/settings";
 import { fileName, pack, unpack } from "../lib/snapshot";
 import type { Workspace } from "../lib/workspace";
 import {
@@ -476,6 +477,46 @@ export function SettingsPanel({
                     {t("s_link_cards_hint", String(LINKS_PER_CARD))}
                   </p>
                   <LinkImport value={value} onChange={onChange} />
+                </section>
+
+                <section>
+                  <h3>{t("s_card_photos")}</h3>
+                  <div class="row">
+                    <span>{t("s_photo_cards")}</span>
+                    <div class="step" role="group" aria-label={t("s_photo_cards")}>
+                      <button
+                        type="button"
+                        aria-label={t("s_photo_cards_less")}
+                        disabled={value.photoWalls.length <= 1}
+                        onClick={() =>
+                          onChange({
+                            // 從最後一張拿掉。中間抽掉的話，後面每一張掛的
+                            // 照片都會往前挪一格 —— 使用者看到的是「照片自己跑了」
+                            photoWalls: value.photoWalls.slice(0, -1),
+                          })
+                        }
+                      >
+                        −
+                      </button>
+                      <output>{value.photoWalls.length}</output>
+                      <button
+                        type="button"
+                        aria-label={t("s_photo_cards_more")}
+                        disabled={value.photoWalls.length >= MAX_PHOTO_WALLS}
+                        onClick={() =>
+                          onChange({
+                            photoWalls: [
+                              ...value.photoWalls,
+                              { id: null, rotate: 0 },
+                            ],
+                          })
+                        }
+                      >
+                        ＋
+                      </button>
+                    </div>
+                  </div>
+                  <p class="note">{t("s_photo_cards_hint")}</p>
                 </section>
               </>
             )}

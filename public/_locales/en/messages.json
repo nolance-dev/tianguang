@@ -479,6 +479,9 @@
   "c_resize": {
     "message": "Resize this card: arrow keys to size, shift and arrow keys to reorder"
   },
+  "c_resize_x": {
+    "message": "Resize this card: left and right arrows to size, shift and arrow keys to reorder"
+  },
   "s_desk": {
     "message": "Desk layout"
   },
@@ -757,6 +760,21 @@
   "c_media_quiet": {
     "message": "Nothing is making sound right now"
   },
+  "c_media_prev": {
+    "message": "Previous track"
+  },
+  "c_media_next": {
+    "message": "Next track"
+  },
+  "c_media_play": {
+    "message": "Play"
+  },
+  "c_media_pause": {
+    "message": "Pause"
+  },
+  "c_media_ctl_no": {
+    "message": "Aubade was not given access to $1, so the transport controls will not do anything. Press play again to be asked once more."
+  },
   "c_media_mute": {
     "message": "Mute"
   },
@@ -882,6 +900,18 @@
   },
   "s_desk_reset_home": {
     "message": "Reset home layout"
+  },
+  "s_photo_cards": {
+    "message": "Photo cards"
+  },
+  "s_photo_cards_more": {
+    "message": "One more photo card"
+  },
+  "s_photo_cards_less": {
+    "message": "One fewer photo card"
+  },
+  "s_photo_cards_hint": {
+    "message": "One card holds one picture, so add a card for every picture you want on the wall. The home strip is a single row: cards that no longer fit are not drawn, but they stay in the layout and come back when you narrow the others."
   },
   "s_link_cards": {
     "message": "Cards"

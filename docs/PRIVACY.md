@@ -45,6 +45,22 @@
 | `opendata.cwa.gov.tw` | 你在設定裡填了氣象署金鑰，而且所在地在台灣 | 你自己的金鑰。回來的是全台測站清單，我們在本機挑最近的一站 |
 | `aviationweather.gov` | 你開啟天氣卡之後 | 你所在地周邊的一個經緯度方框。回來的是那個範圍內機場的觀測報文，我們在本機挑最近的一座 |
 
+### 播放控制會進到哪裡
+
+「正在播放」那張卡上的播放／暫停與上下首，是把一小段程式注入到**正在發聲的
+那一個分頁**去執行的 —— 瀏覽器沒有給擴充功能全域的媒體控制 API，這是唯一的
+做法。那段程式只做兩件事：找到頁面上的 `<video>`／`<audio>` 呼叫播放或暫停，
+或點該站自己的上一首／下一首按鈕。它**不讀取頁面內容、不送出任何東西**，
+按完就結束，沒有常駐的 content script。
+
+可以控制的站只有這十個：`youtube.com`（含 music.youtube.com）、
+`open.spotify.com`、`soundcloud.com`、`bilibili.com`、`music.apple.com`、
+`twitch.tv`、`nicovideo.jp`、`mixcloud.com`、`deezer.com`、`bandcamp.com`。
+
+**權限是一站一站要的。** 你按下某一列的播放鍵時，瀏覽器才會問你要不要讓天光
+存取那一個網域；沒按過的站一個都不會問。拒絕了，靜音與切過去照常運作。
+我們刻意不要 `<all_urls>`。
+
 這些請求裡沒有識別碼、沒有 cookie、也沒有你的瀏覽紀錄。我們不會因此知道
 是誰發出的請求 —— 我們根本沒有參與這些請求。
 
@@ -65,6 +81,8 @@
 - **bookmarks** / **history** / **sessions** / **downloads** — 命令面板
   （Ctrl K）搜尋你的書籤、瀏覽紀錄、最近關閉的分頁與最近的下載。搜尋在本機
   進行，結果不外送。
+- **scripting** — 「正在播放」的播放控制，見上一節。只在你按下控制鍵的那一刻
+  注入一次，不讀頁面內容，也不常駐。
 
 ### 兒童
 
@@ -121,6 +139,25 @@ requested.
 | `opendata.cwa.gov.tw` | Only if you enter a CWA key and your location is in Taiwan | Your own key. The response is a list of all stations; the nearest is chosen locally |
 | `aviationweather.gov` | After you enable the weather card | A bounding box around your location. The response is airport observations in that box; the nearest is chosen locally |
 
+### Where the playback controls reach
+
+Play/pause and next/previous on the "now playing" card work by injecting a
+short script into the tab that is currently making sound. The browser gives
+extensions no global media-control API, so this is the only way. That script
+does two things only: find the page's `<video>`/`<audio>` and play or pause it,
+or click that site's own next/previous button. It reads no page content and
+sends nothing anywhere, and it stops as soon as it has run. There is no
+persistent content script.
+
+Only ten sites can be controlled: `youtube.com` (including music.youtube.com),
+`open.spotify.com`, `soundcloud.com`, `bilibili.com`, `music.apple.com`,
+`twitch.tv`, `nicovideo.jp`, `mixcloud.com`, `deezer.com` and `bandcamp.com`.
+
+**Access is asked for one site at a time.** When you press play on a row, the
+browser asks whether Aubade may access that one domain; sites you never press
+are never asked about. Declining leaves mute and switch-to working. We
+deliberately do not ask for `<all_urls>`.
+
 These requests carry no identifier, no cookie, and no browsing history. We do
 not learn who made them — we are not party to them at all.
 
@@ -145,6 +182,9 @@ else working):
 - **bookmarks** / **history** / **sessions** / **downloads** — the command
   palette (Ctrl K) searches your bookmarks, history, recently closed tabs and
   recent downloads. Searching happens locally; results are never transmitted.
+- **scripting** — the playback controls, described above. Injected once at the
+  moment you press a control, reading no page content and leaving nothing
+  behind.
 
 ### Children
 

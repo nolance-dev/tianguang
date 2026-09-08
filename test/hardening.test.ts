@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { resolve, looksLikeUrl } from "../src/lib/search";
 import { sunTimes } from "../src/lib/solar";
-import { migrate, DEFAULTS } from "../src/lib/settings";
+import { migrate, DEFAULTS, MAX_PHOTO_WALLS } from "../src/lib/settings";
 import { normalize } from "../src/lib/desk";
 
 /**
@@ -137,5 +137,66 @@ describe("時刻不會出現第 60 分", () => {
     expect(hhmm(17.9999)).toBe("18:00");
     expect(hhmm(23.9999)).toBe("00:00");
     expect(hhmm(5.5)).toBe("05:30");
+  });
+});
+
+/**
+ * 照片牆從一張變成很多張。
+ *
+ * 1.0 存的是 photoId／photoRotate 兩個欄位，那些設定現在還在使用者的
+ * 瀏覽器裡（而且會透過 storage.sync 同步回來）。直接改欄位名，
+ * 使用者掛好的那張照片就消失了 —— 而他不會知道是升級弄的。
+ */
+describe("照片牆的搬家", () => {
+  it("1.0 的 photoId／photoRotate 變成第一張", () => {
+    const out = migrate({
+      schemaVersion: 1,
+      photoId: "img-7",
+      photoRotate: 60,
+    } as never);
+    expect(out.photoWalls).toEqual([{ id: "img-7", rotate: 60 }]);
+  });
+
+  it("沒掛過照片的舊設定也走得通，不是變成空陣列", () => {
+    const out = migrate({ schemaVersion: 1 } as never);
+    expect(out.photoWalls).toEqual([{ id: null, rotate: 0 }]);
+  });
+
+  it("新的清單原樣留著", () => {
+    const walls = [
+      { id: "a", rotate: 0 },
+      { id: null, rotate: 15 },
+    ];
+    expect(migrate({ schemaVersion: 1, photoWalls: walls } as never).photoWalls)
+      .toEqual(walls);
+  });
+
+  it("永遠至少一張 —— 零張的話介面上沒有辦法變回一張", () => {
+    expect(
+      migrate({ schemaVersion: 1, photoWalls: [] } as never).photoWalls,
+    ).toHaveLength(1);
+  });
+
+  it("手改過的備份不會炸，也不會塞進垃圾", () => {
+    const out = migrate({
+      schemaVersion: 1,
+      photoWalls: [null, { id: 5, rotate: "x" }, { id: "ok", rotate: -3 }],
+    } as never);
+    // null 丟掉；型別不對的欄位退回預設；負的輪播間隔夾成 0
+    expect(out.photoWalls).toEqual([
+      { id: null, rotate: 0 },
+      { id: "ok", rotate: 0 },
+    ]);
+  });
+
+  it("有上限，不會被同步回來的一大包撐爆 storage.sync", () => {
+    const many = Array.from({ length: 50 }, () => ({ id: "x", rotate: 0 }));
+    expect(
+      migrate({ schemaVersion: 1, photoWalls: many } as never).photoWalls,
+    ).toHaveLength(MAX_PHOTO_WALLS);
+  });
+
+  it("預設就是一張空的", () => {
+    expect(DEFAULTS.photoWalls).toEqual([{ id: null, rotate: 0 }]);
   });
 });

@@ -1673,11 +1673,22 @@ body::-webkit-scrollbar {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--glass);
+  /*
+   * 純色的底，不是玻璃。
+   *
+   * 玻璃在這裡撐不住：抽屜蓋住的是時鐘那幾個一百多像素高的字，10% 的白
+   * 加再多模糊也糊不掉筆畫的邊 —— 「稱呼」那一格的輸入框正好落在 24° 上面，
+   * 兩層字疊在一起。模糊只會讓底下的東西變成一團髒，不會讓它消失。
+   *
+   * --solid 是這個時刻的主題色，--solid-fg 是配它算出來的字色，那一組
+   * 全天任何時刻都有 4.5 以上的對比（test/contrast.test.ts 盯著）。
+   * 所以換成純色不會犧牲可讀性，反而是把它補回來。
+   */
+  background: var(--solid, #12161f);
+  color: var(--solid-fg, #f4f2ee);
+  --fg: var(--solid-fg, #f4f2ee);
+  --fg-2: var(--solid-fg-2, rgba(244, 242, 238, 0.66));
   border-left: 1px solid var(--glass-line);
-  backdrop-filter: blur(28px) saturate(1.3);
-  -webkit-backdrop-filter: blur(28px) saturate(1.3);
-  color: var(--fg);
   animation: slide-in 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1698,8 +1709,6 @@ body::-webkit-scrollbar {
   justify-content: space-between;
   padding: 1rem 1.2rem;
   border-bottom: 1px solid var(--glass-line);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
 }
 
 /*
@@ -1713,9 +1722,8 @@ body::-webkit-scrollbar {
   display: flex;
   gap: 0.25rem;
   padding: 0.55rem 1.2rem 0.6rem;
+  /* 底已經是純色，這裡只要一層淡的區隔，不需要再模糊一次 */
   background: var(--glass-solid, rgba(255, 255, 255, 0.14));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--glass-line);
 }
 
@@ -1890,6 +1898,42 @@ body::-webkit-scrollbar {
 .seg {
   display: flex;
   gap: 0.4rem;
+}
+
+/* 加減一張。跟 .seg 同一套外觀，差別是中間那格是數字不是選項 */
+.step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  border-radius: 9px;
+  padding: 2px;
+  background: var(--glass);
+}
+.step button {
+  min-width: 1.9rem;
+  padding: 0.28rem 0;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: inherit;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    opacity 0.15s;
+}
+.step button:hover:not(:disabled) {
+  background: var(--glass);
+}
+.step button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.step output {
+  min-width: 1.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .seg button {
@@ -2569,6 +2613,19 @@ body::-webkit-scrollbar {
   opacity: 0;
   transition: opacity 0.2s;
   touch-action: none;
+}
+
+/*
+ * 主頁面的把手只能左右拉，游標就該說實話。
+ *
+ * 給 nwse-resize 卻拉不動高度，是介面在騙人 —— 使用者會以為自己拉錯了，
+ * 而不是以為這裡不能拉。箭頭也從斜的換成橫的。
+ */
+.grow.x {
+  cursor: ew-resize;
+}
+.grow.x::after {
+  rotate: 45deg;
 }
 
 .grow::after {
@@ -4342,11 +4399,61 @@ body::-webkit-scrollbar {
   white-space: nowrap;
 }
 
+/*
+ * 傳輸鍵。
+ *
+ * 平常淡著，滑到那一列或用鍵盤走到才亮 —— 一列上四顆鈕同時全亮，
+ * 眼睛會先看到一排按鈕而不是「在放什麼」，而那才是這張卡要回答的問題。
+ * :focus-within 是給鍵盤的：Tab 進來的時候鈕必須看得見。
+ */
+.media-ctl {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  margin-inline-start: auto;
+}
+.media-ctl button {
+  flex: none;
+  border: 0;
+  background: none;
+  color: inherit;
+  padding: 0.3rem 0.35rem;
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.42;
+  transition:
+    opacity 0.15s,
+    scale 0.12s;
+}
+.media-list li:hover .media-ctl button,
+.media-list li:focus-within .media-ctl button {
+  opacity: 0.8;
+}
+.media-ctl button:hover,
+.media-ctl button:focus-visible {
+  opacity: 1;
+}
+.media-ctl button:active {
+  scale: 0.88;
+}
+.media-ctl .play {
+  font-size: 0.95rem;
+}
+/* 暫停的那一列整列退到後面，但播放鍵反而要亮 —— 它是這一列現在的用途 */
+.media-list li.paused {
+  opacity: 0.62;
+}
+.media-list li.paused .media-ctl .play {
+  opacity: 0.95;
+}
+
 .media-list .mute {
   flex: none;
   border: 0;
   background: none;
-  padding: 0.3rem 0.45rem;
+  padding: 0.3rem 0.4rem;
   font-size: 0.85rem;
   line-height: 1;
   cursor: pointer;

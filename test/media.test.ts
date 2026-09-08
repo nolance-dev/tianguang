@@ -1,5 +1,12 @@
-import { describe, expect, it } from "vitest";
-import { hostOf, order, toPlaying, type Playing } from "../src/lib/media";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  forgetRecent,
+  hostOf,
+  order,
+  playing,
+  toPlaying,
+  type Playing,
+} from "../src/lib/media";
 
 const tab = (over: Partial<chrome.tabs.Tab>): chrome.tabs.Tab =>
   ({
@@ -21,6 +28,7 @@ const p = (over: Partial<Playing>): Playing => ({
   favicon: null,
   muted: false,
   active: false,
+  paused: false,
   ...over,
 });
 
@@ -75,5 +83,79 @@ describe("排序", () => {
     const list = [p({ id: 1 }), p({ id: 2, active: true })];
     order(list, null);
     expect(list.map((x) => x.id)).toEqual([1, 2]);
+  });
+});
+
+/**
+ * 暫停的分頁要留在清單上。
+ *
+ * chrome.tabs.query({ audible: true }) 只給「現在正在發出聲音」的。
+ * 沒有播放控制時那是對的；有了之後，按下暫停那一列立刻消失，
+ * 播放鍵就變成一次性的自毀鈕 —— 按下去就再也按不回來。
+ */
+describe("響過的分頁", () => {
+  const tabs = (audible: chrome.tabs.Tab[], all: chrome.tabs.Tab[]) => {
+    (globalThis as unknown as { chrome: unknown }).chrome = {
+      tabs: {
+        query: vi.fn().mockResolvedValue(audible),
+        get: vi.fn((id: number) => {
+          const found = all.find((x) => x.id === id);
+          return found ? Promise.resolve(found) : Promise.reject(new Error("gone"));
+        }),
+      },
+    };
+  };
+
+  afterEach(() => {
+    forgetRecent();
+    delete (globalThis as unknown as { chrome?: unknown }).chrome;
+  });
+
+  it("暫停之後還在清單上，而且標成 paused", async () => {
+    const yt = tab({ id: 1, title: "song" });
+    tabs([yt], [yt]);
+    expect((await playing()).map((p) => [p.id, p.paused])).toEqual([[1, false]]);
+
+    // 使用者按了暫停：分頁還開著，但不再發聲
+    tabs([], [yt]);
+    const after = await playing();
+    expect(after.map((p) => [p.id, p.paused])).toEqual([[1, true]]);
+  });
+
+  it("分頁關掉就真的不見，不是永遠掛在那裡", async () => {
+    const yt = tab({ id: 1 });
+    tabs([yt], [yt]);
+    await playing();
+    tabs([], []);
+    expect(await playing()).toEqual([]);
+    // 而且要忘掉它 —— 不忘的話每一輪都白問一次 chrome.tabs.get
+    tabs([], [yt]);
+    expect(await playing()).toEqual([]);
+  });
+
+  it("記憶有上限，不會一整天累積成一長串", async () => {
+    // 分頁一個一個開始響，而且都還開著 —— all 要累積，不然上一輪的
+    // 會在這一輪被判定成關掉了，測到的就不是淘汰而是清空
+    const all: chrome.tabs.Tab[] = [];
+    for (let i = 1; i <= 10; i++) {
+      const one = tab({ id: i });
+      all.push(one);
+      tabs([one], all);
+      await playing();
+    }
+    tabs([], all);
+    const kept = (await playing()).map((p) => p.id);
+    expect(kept).toHaveLength(8);
+    // 淘汰從最舊的開始
+    expect(kept).not.toContain(1);
+    expect(kept).toContain(10);
+  });
+
+  it("正在響的排在暫停的前面，不管在哪個視窗", () => {
+    const rows = [
+      p({ id: 1, paused: true, windowId: 10, active: true }),
+      p({ id: 2, paused: false, windowId: 99 }),
+    ];
+    expect(order(rows, 10).map((x) => x.id)).toEqual([2, 1]);
   });
 });

@@ -27,6 +27,14 @@ export interface Playing {
   favicon: string | null;
   muted: boolean;
   active: boolean;
+  /**
+   * 暫停中。曾經響過、分頁還開著，但現在沒聲音。
+   *
+   * 有了播放控制之後這一格才有意義：按下暫停的那一刻 audible 就變 false，
+   * 分頁會從清單上消失 —— 於是那顆播放鍵按一下就把自己弄不見了，
+   * 沒有辦法再按回來。所以響過的要留著。
+   */
+  paused: boolean;
 }
 
 export function hostOf(url: string): string {
@@ -45,6 +53,9 @@ export function hostOf(url: string): string {
  */
 export function order(list: Playing[], windowId: number | null): Playing[] {
   return [...list].sort((a, b) => {
+    // 正在響的一律排在暫停的前面，不管它在哪個視窗
+    const live = Number(a.paused) - Number(b.paused);
+    if (live) return live;
     const mine =
       Number(b.windowId === windowId) - Number(a.windowId === windowId);
     if (mine) return mine;
@@ -64,19 +75,70 @@ export function toPlaying(tab: chrome.tabs.Tab): Playing | null {
     favicon: tab.favIconUrl ?? null,
     muted: tab.mutedInfo?.muted ?? false,
     active: tab.active ?? false,
+    paused: false,
   };
+}
+
+/**
+ * 響過的分頁記在這裡。
+ *
+ * chrome.tabs.query({ audible: true }) 問的是「現在正在發出聲音」，
+ * 暫停的分頁不在裡面。沒有播放控制的時候那是對的行為；有了之後就不是 ——
+ * 按下暫停，那一列立刻消失，播放鍵等於一次性的自毀鈕。
+ *
+ * 所以響過的留著，直到分頁真的關掉。上限八個，滿了丟最舊的 ——
+ * 不設上限的話，一整天下來會累積出一長串早就不聽了的東西。
+ */
+const RECENT_MAX = 8;
+const recent = new Map<number, Playing>();
+
+/** 測試用。模組層的狀態要能歸零，否則前一條測試會漏到下一條。 */
+export function forgetRecent(): void {
+  recent.clear();
+}
+
+async function stillOpen(id: number): Promise<Playing | null> {
+  try {
+    const tab = await chrome.tabs.get(id);
+    return toPlaying(tab);
+  } catch {
+    return null;
+  }
 }
 
 export async function playing(): Promise<Playing[]> {
   if (typeof chrome === "undefined" || !chrome.tabs?.query) return [];
+  let audible: Playing[];
   try {
-    // audible 是「現在正在發出聲音」。暫停中的分頁不算 —— 那是對的，
-    // 一個暫停的 YouTube 分頁不該出現在「正在播放」裡。
     const tabs = await chrome.tabs.query({ audible: true });
-    return tabs.map(toPlaying).filter((p): p is Playing => p !== null);
+    audible = tabs.map(toPlaying).filter((p): p is Playing => p !== null);
   } catch {
     return [];
   }
+
+  for (const p of audible) {
+    // 先刪再塞，讓它排到 Map 的最後面 —— 淘汰要從最舊的開始
+    recent.delete(p.id);
+    recent.set(p.id, p);
+  }
+  while (recent.size > RECENT_MAX) {
+    const oldest = recent.keys().next();
+    if (oldest.done) break;
+    recent.delete(oldest.value);
+  }
+
+  const live = new Set(audible.map((p) => p.id));
+  const out = [...audible];
+  for (const id of [...recent.keys()]) {
+    if (live.has(id)) continue;
+    const now = await stillOpen(id);
+    if (!now) {
+      recent.delete(id);
+      continue;
+    }
+    out.push({ ...now, paused: true });
+  }
+  return out;
 }
 
 export async function setMuted(id: number, muted: boolean): Promise<void> {

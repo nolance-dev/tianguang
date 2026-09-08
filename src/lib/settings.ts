@@ -23,6 +23,16 @@ export const SCHEMA_VERSION = 1;
 
 export type BackgroundSource = "mesh" | "solid" | "image";
 
+export interface PhotoWall {
+  /** 牆上現在掛的那張。null 代表還沒挑過 */
+  id: string | null;
+  /** 輪播間隔（秒），0 是不輪播 */
+  rotate: number;
+}
+
+/** 照片牆最多幾張。不是版面的限制，是 storage.sync 那 8KB 的限制。 */
+export const MAX_PHOTO_WALLS = 12;
+
 export interface Settings {
   schemaVersion: number;
   name: string;
@@ -80,10 +90,16 @@ export interface Settings {
   linkCards: number;
   /** 工作區卡片的順序與尺寸。畫之前一律過 desk.normalize()。 */
   desk: Tile[];
-  /** 照片牆上掛的那張。跟桌布的 imageId 是兩回事，各記各的。 */
-  photoId: string | null;
-  /** 輪播間隔（秒）。0 是不輪播，就掛 photoId 那一張。 */
-  photoRotate: number;
+  /**
+   * 照片牆。一張卡一格，想掛幾張就有幾筆。
+   *
+   * 長度就是卡的張數 —— 不另外存一個 photoCards，那種存法只要有一次寫入
+   * 沒對齊，就會出現「說有三張但只有兩筆資料」的狀態，而畫面上看到的是
+   * 第三張永遠是空的、換了照片也不會記住。
+   *
+   * 跟桌布的 imageId 是兩回事，各記各的。
+   */
+  photoWalls: PhotoWall[];
   /** 自訂名言。留白就用內建那批隨機抽。 */
   quoteText: string;
   quoteBy: string;
@@ -147,8 +163,7 @@ export const DEFAULTS: Settings = {
   homeDesk: DEFAULT_HOME_DESK,
   linkCards: 1,
   desk: DEFAULT_DESK,
-  photoId: null,
-  photoRotate: 0,
+  photoWalls: [{ id: null, rotate: 0 }],
   quoteText: "",
   quoteBy: "",
   links: [],
@@ -207,6 +222,44 @@ function safeColor(raw: unknown, fallback: string): string {
     : fallback;
 }
 
+/**
+ * 照片牆的清單。
+ *
+ * 1.0 只有一張，存成 photoId／photoRotate 兩個欄位。那些設定還在使用者的
+ * 瀏覽器裡，直接改欄位名等於把他們掛好的照片弄丟 —— 所以舊的兩個欄位
+ * 仍然讀，讀完轉成第一張。
+ *
+ * 一定至少有一張：零張的話「照片牆」這個開關打開會什麼都沒有，
+ * 而使用者沒有任何辦法從介面上把它變回一張。
+ */
+function photoWalls(raw: Record<string, unknown>): PhotoWall[] {
+  const list = Array.isArray(raw.photoWalls) ? raw.photoWalls : null;
+  const out: PhotoWall[] = [];
+  for (const item of list ?? []) {
+    const w = item as Partial<PhotoWall> | null;
+    if (!w || typeof w !== "object") continue;
+    out.push({
+      id: typeof w.id === "string" ? w.id : null,
+      rotate:
+        typeof w.rotate === "number" && Number.isFinite(w.rotate)
+          ? Math.max(0, Math.round(w.rotate))
+          : 0,
+    });
+    if (out.length >= MAX_PHOTO_WALLS) break;
+  }
+  if (out.length) return out;
+  // 1.0 的兩個欄位
+  return [
+    {
+      id: typeof raw.photoId === "string" ? raw.photoId : null,
+      rotate:
+        typeof raw.photoRotate === "number" && Number.isFinite(raw.photoRotate)
+          ? Math.max(0, Math.round(raw.photoRotate))
+          : 0,
+    },
+  ];
+}
+
 export function migrate(raw: Record<string, unknown>): Settings {
   const v = typeof raw.schemaVersion === "number" ? raw.schemaVersion : 0;
 
@@ -231,6 +284,7 @@ export function migrate(raw: Record<string, unknown>): Settings {
       ? merged.lang
       : DEFAULTS.lang,
     cwaKey: typeof merged.cwaKey === "string" ? merged.cwaKey.trim() : "",
+    photoWalls: photoWalls(raw),
   };
 }
 

@@ -515,6 +515,9 @@
   "c_resize": {
     "message": "調整這張卡：方向鍵改大小，Shift 加方向鍵換位置"
   },
+  "c_resize_x": {
+    "message": "調整這張卡：左右鍵改寬度，Shift 加方向鍵換位置"
+  },
   "s_desk": {
     "message": "工作區版面"
   },
@@ -793,6 +796,21 @@
   "c_media_quiet": {
     "message": "現在沒有分頁在發出聲音"
   },
+  "c_media_prev": {
+    "message": "上一首"
+  },
+  "c_media_next": {
+    "message": "下一首"
+  },
+  "c_media_play": {
+    "message": "播放"
+  },
+  "c_media_pause": {
+    "message": "暫停"
+  },
+  "c_media_ctl_no": {
+    "message": "沒有拿到 $1 的權限，播放控制不會有作用。再按一次播放鍵就會再問一次。"
+  },
   "c_media_mute": {
     "message": "靜音"
   },
@@ -918,6 +936,18 @@
   },
   "s_desk_reset_home": {
     "message": "重設主頁面版面"
+  },
+  "s_photo_cards": {
+    "message": "照片牆張數"
+  },
+  "s_photo_cards_more": {
+    "message": "多一張照片牆"
+  },
+  "s_photo_cards_less": {
+    "message": "少一張照片牆"
+  },
+  "s_photo_cards_hint": {
+    "message": "一張卡掛一張照片，想牆上多一張就多開一張卡。主頁面那一排只有一列，塞不下的不會畫出來 —— 版面還留著，把前面的縮窄就會回來。"
   },
   "s_link_cards": {
     "message": "卡片張數"

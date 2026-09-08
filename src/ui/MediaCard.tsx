@@ -11,6 +11,13 @@ import {
   setMuted,
   type Playing,
 } from "../lib/media";
+import {
+  canControl,
+  canSkip,
+  control,
+  grantControl,
+  type Cmd,
+} from "../lib/mediactl";
 
 /**
  * 正在播放。
@@ -27,6 +34,8 @@ export function MediaCard() {
   const allowed = useSignal<boolean | null>(null);
   const windowId = useSignal<number | null>(null);
   const refused = useSignal(false);
+  /** 剛剛被拒絕控制權限的那個網域。給一行說明，不是靜靜地什麼都不做 */
+  const denied = useSignal<string | null>(null);
   // 開發伺服器上沒有 chrome.permissions。按了不會有任何事，
   // 而一顆按了沒反應的鈕比不給還糟 —— 直接講明白為什麼。
   const inExtension = typeof chrome !== "undefined" && !!chrome.permissions;
@@ -57,7 +66,30 @@ export function MediaCard() {
   }, [allowed.value]);
 
   const rows = order(list.value, windowId.value);
-  const lead = rows[0];
+  const lead = rows.find((r) => !r.paused) ?? rows[0];
+
+  /**
+   * 下一個指令。
+   *
+   * 權限直接 request，不先問 contains —— 中間多一個 await 會讓瀏覽器
+   * 不再把這次呼叫算成使用者手勢，對話框就跳不出來。已經給過的話
+   * request 會直接回 true，不會重複打擾。
+   */
+  async function send(p: Playing, cmd: Cmd) {
+    const ok = await grantControl(p.host);
+    if (!ok) {
+      denied.value = p.host;
+      return;
+    }
+    denied.value = null;
+    const r = await control(p.id, p.host, cmd);
+    // 輪詢兩秒才一次，按下去要當場看到鍵換了樣子
+    if (cmd === "toggle" && (r === "playing" || r === "paused")) {
+      list.value = list.value.map((x) =>
+        x.id === p.id ? { ...x, paused: r === "paused" } : x,
+      );
+    }
+  }
 
   if (allowed.value === false) {
     return (
@@ -111,7 +143,12 @@ export function MediaCard() {
       ) : (
         <ul class="media-list">
           {rows.map((p) => (
-            <li key={p.id} class={p.muted ? "muted" : undefined}>
+            <li
+              key={p.id}
+              class={[p.muted && "muted", p.paused && "paused"]
+                .filter(Boolean)
+                .join(" ")}
+            >
               <button type="button" class="go" onClick={() => void focus(p)}>
                 {p.favicon ? (
                   <img src={p.favicon} alt="" loading="lazy" />
@@ -123,25 +160,60 @@ export function MediaCard() {
                   <span>{p.host}</span>
                 </span>
               </button>
-              <button
-                type="button"
-                class="mute"
-                aria-pressed={p.muted}
-                aria-label={t(p.muted ? "c_media_unmute" : "c_media_mute")}
-                onClick={() => {
-                  void setMuted(p.id, !p.muted);
-                  // 等下一次輪詢會慢兩秒，按下去要馬上有反應
-                  list.value = list.value.map((x) =>
-                    x.id === p.id ? { ...x, muted: !x.muted } : x,
-                  );
-                }}
-              >
-                {p.muted ? "🔇" : "🔊"}
-              </button>
+              <span class="media-ctl">
+                {/* 沒宣告過的來源要不到權限，長出鈕來只是騙人 */}
+                {/* 這一站有沒有上下首是量出來的，量不到就不長那兩顆鈕 ——
+                    按了沒反應比沒有那顆鈕更糟 */}
+                {canSkip(p.host) && (
+                  <button
+                    type="button"
+                    aria-label={t("c_media_prev")}
+                    onClick={() => void send(p, "prev")}
+                  >
+                    ⏮
+                  </button>
+                )}
+                {canControl(p.host) && (
+                  <button
+                    type="button"
+                    class="play"
+                    aria-label={t(p.paused ? "c_media_play" : "c_media_pause")}
+                    onClick={() => void send(p, "toggle")}
+                  >
+                    {p.paused ? "▶" : "⏸"}
+                  </button>
+                )}
+                {canSkip(p.host) && (
+                  <button
+                    type="button"
+                    aria-label={t("c_media_next")}
+                    onClick={() => void send(p, "next")}
+                  >
+                    ⏭
+                  </button>
+                )}
+                <button
+                  type="button"
+                  class="mute"
+                  aria-pressed={p.muted}
+                  aria-label={t(p.muted ? "c_media_unmute" : "c_media_mute")}
+                  onClick={() => {
+                    void setMuted(p.id, !p.muted);
+                    // 等下一次輪詢會慢兩秒，按下去要馬上有反應
+                    list.value = list.value.map((x) =>
+                      x.id === p.id ? { ...x, muted: !x.muted } : x,
+                    );
+                  }}
+                >
+                  {p.muted ? "🔇" : "🔊"}
+                </button>
+              </span>
             </li>
           ))}
         </ul>
       )}
+
+      {denied.value && <p class="err">{t("c_media_ctl_no", denied.value)}</p>}
     </div>
   );
 }

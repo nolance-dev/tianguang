@@ -28,7 +28,7 @@ import { wheelPixels } from "../lib/wheel";
 import { SettingsPanel } from "./Settings";
 import { Weather } from "./Weather";
 import { Cards } from "./Cards";
-import type { CardId, Tile } from "../lib/desk";
+import { COLS, type CardId, type Tile } from "../lib/desk";
 import { CalendarDetail } from "./Calendar";
 import {
   around,
@@ -410,8 +410,12 @@ export function App() {
     show: Record<CardId, boolean>,
     desk: Tile[],
     onDesk: (desk: Tile[]) => void,
+    lockHeight = false,
+    maxCols?: number,
   ) => (
     <Cards
+      lockHeight={lockHeight}
+      maxCols={maxCols}
       value={work.value}
       onChange={patchWork}
       show={show}
@@ -439,11 +443,12 @@ export function App() {
         cwaKey: cfg.cwaKey,
         dark: !palette.value.light,
       }}
-      photo={{ id: cfg.photoId, rotate: cfg.photoRotate }}
-      onPhoto={(p) =>
+      photoWalls={cfg.photoWalls}
+      onPhotoWall={(index, p) =>
         patch({
-          ...(p.id !== undefined ? { photoId: p.id } : {}),
-          ...(p.rotate !== undefined ? { photoRotate: p.rotate } : {}),
+          photoWalls: cfg.photoWalls.map((w, i) =>
+            i === index ? { ...w, ...p } : w,
+          ),
         })
       }
     />
@@ -468,6 +473,10 @@ export function App() {
         },
         cfg.homeDesk,
         (homeDesk) => patch({ homeDesk }),
+        // 主頁面只准左右拉：往下長會把時鐘擠出第一屏
+        true,
+        // 而且只有一列。塞不下的卡不畫，版面本身留著
+        COLS,
       )
     : null;
   const notices = (

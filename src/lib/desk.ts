@@ -22,17 +22,32 @@ export type CardId =
 /**
  * 版面上一格的識別碼。
  *
- * 不等於卡的種類：快速存取一張最多裝十六個，滿了就多開一張，
- * 所以會有 links、links2、links3……。其餘的卡一種只有一張，id 就是種類。
+ * 不等於卡的種類：快速存取一張最多裝十六個，滿了就多開一張，所以會有
+ * links、links2、links3……；照片牆想掛幾張就有幾張，photos、photos2……。
+ * 其餘的卡一種只有一張，id 就是種類。
  * 要種類請用 kindOf()，不要自己比字串。
  */
-export type TileId = CardId | `links${number}`;
+export type TileId = CardId | `links${number}` | `photos${number}`;
 
 /** 一張快速存取最多裝幾個。滿了自動開下一張，不是把同一張越拉越長。 */
 export const LINKS_PER_CARD = 16;
 
+/** 可以同時存在很多張的卡。它們的 id 是「種類 + 編號」 */
+const MULTI = ["links", "photos"] as const;
+
 export function kindOf(id: TileId): CardId {
-  return (id.startsWith("links") ? "links" : id) as CardId;
+  for (const k of MULTI) if (id.startsWith(k)) return k;
+  return id as CardId;
+}
+
+/**
+ * 第 n 張（從 0 起算）的 id。
+ *
+ * 第一張沒有編號 —— 那是舊版存下來的樣子，改名等於把所有人排好的版面
+ * 都變成孤兒鍵，normalize() 會直接丟掉。
+ */
+export function tileId(kind: "links" | "photos", index: number): TileId {
+  return (index === 0 ? kind : `${kind}${index + 1}`) as TileId;
 }
 
 export interface Tile {
@@ -137,12 +152,12 @@ export function normalize(raw: unknown, extra: TileId[] = []): Tile[] {
   for (const d of DEFAULT_DESK) {
     if (!out.some((x) => x.id === d.id)) out.push({ ...d });
   }
-  // 第二張之後的快速存取。由連結的數量長出來，所以補在最後面 ——
-  // 使用者排好的順序不因為多了一張而被推開
-  const linkSize = DEFAULT_DESK.find((d) => d.id === "links")!;
+  // 第二張之後的快速存取與照片牆。它們由數量長出來，所以補在最後面 ——
+  // 使用者排好的順序不因為多了一張而被推開。尺寸沿用同種類第一張的預設
   for (const id of extra) {
-    if (!out.some((x) => x.id === id))
-      out.push({ id, w: linkSize.w, h: heightOf(id, linkSize.h) });
+    if (out.some((x) => x.id === id)) continue;
+    const size = DEFAULT_DESK.find((d) => d.id === kindOf(id))!;
+    out.push({ id, w: size.w, h: heightOf(id, size.h) });
   }
   return out;
 }
@@ -175,4 +190,26 @@ export function resize(list: Tile[], id: TileId, w: number, h: number): Tile[] {
   return list.map((x) =>
     x.id === id ? { ...x, w: clampW(w), h: heightOf(id, h) } : x,
   );
+}
+
+/**
+ * 只留放得下的那幾張。
+ *
+ * 主頁面那一排用。第一屏的高度是給時鐘的，卡片排到第二列就會把時鐘擠出
+ * 畫面 —— 所以那一排就是一列，塞不下的不畫。
+ *
+ * 用 continue 不是 break：前面一張四欄的擋住了，後面那張一欄的還是該有
+ * 機會補進來。使用者把大的排在前面，不代表小的就活該不見。
+ *
+ * 版面本身不動 —— 沒畫出來的那幾張還在設定裡，把前面的縮窄就會自己回來。
+ */
+export function fitCols(tiles: Tile[], cols: number): Tile[] {
+  let used = 0;
+  const out: Tile[] = [];
+  for (const t of tiles) {
+    if (used + t.w > cols) continue;
+    used += t.w;
+    out.push(t);
+  }
+  return out;
 }

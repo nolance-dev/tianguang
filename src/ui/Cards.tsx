@@ -8,16 +8,18 @@ import type { SecondCal } from "../lib/secondcal";
 import { WeatherCard } from "./WeatherCard";
 import { MediaCard } from "./MediaCard";
 import { ClockCard } from "./ClockCard";
-import type { Settings } from "../lib/settings";
+import type { PhotoWall as PhotoWallState, Settings } from "../lib/settings";
 import { MAX_LINKS, type Link } from "../lib/links";
 import {
   COLS,
+  fitCols,
   move,
   kindOf,
   LINKS_PER_CARD,
   normalize,
   nudge,
   resize,
+  tileId,
   type CardId,
   type Tile,
   type TileId,
@@ -62,9 +64,9 @@ interface Props extends Body {
   onLinks: (links: Link[]) => void;
   /** 快速存取要幾張卡。由設定決定，不是由連結數量長出來 */
   linkCards: number;
-  /** 照片牆的狀態。跟桌布無關 */
-  photo: { id: string | null; rotate: number };
-  onPhoto: (patch: Partial<{ id: string | null; rotate: number }>) => void;
+  /** 照片牆。一張卡一格，長度就是張數。跟桌布無關 */
+  photoWalls: PhotoWallState[];
+  onPhotoWall: (index: number, patch: Partial<PhotoWallState>) => void;
   now: Date;
   onExpand: (id: CardId) => void;
   /** 時鐘卡要看十二／二十四小時制 */
@@ -80,6 +82,21 @@ interface Props extends Body {
     cwaKey: string;
     dark: boolean;
   };
+  /**
+   * 這一排最多幾欄。超過的卡不畫，版面本身留著。
+   *
+   * 主頁面傳 COLS（一列）。工作區不傳 —— 它可以一直往下長，
+   * 那正是它跟第一屏的差別。
+   */
+  maxCols?: number;
+  /**
+   * 只准左右拉，高度鎖死。主頁面那一排用。
+   *
+   * 第一屏的高度是給時鐘的 —— 那一排卡片再往下長就會把時鐘擠出畫面，
+   * 或者自己被切掉一半。橫向不一樣：四欄制本來就是拿來分配寬度的，
+   * 拉寬只是重新分配同一排的空間，不會動到別人的位置。
+   */
+  lockHeight?: boolean;
 }
 
 const VARIANT: Record<CardId, string> = {
@@ -106,8 +123,10 @@ export function Cards({
   links,
   onLinks,
   linkCards,
-  photo,
-  onPhoto,
+  lockHeight = false,
+  maxCols,
+  photoWalls,
+  onPhotoWall,
   now,
   onExpand,
   weather,
@@ -138,16 +157,28 @@ export function Cards({
     MAX_LINKS / LINKS_PER_CARD,
   );
   const linkIds: TileId[] = Array.from({ length: cardCount }, (_, i) =>
-    i === 0 ? "links" : (`links${i + 1}` as TileId),
+    tileId("links", i),
   );
+  /*
+   * 照片牆的張數就是 photoWalls 的長度。
+   *
+   * 跟快速存取不同：連結是塞進卡裡的東西，卡滿了才需要下一張；照片牆是
+   * 一張卡就是一張照片，所以「加一張卡」本身就是使用者要的動作，
+   * 那筆資料跟那張卡是同一件事。
+   */
+  const photoIds: TileId[] = photoWalls.map((_, i) => tileId("photos", i));
 
-  const order = live.value ?? normalize(desk, linkIds);
-  const tiles = order.filter((tl) => {
+  const order = live.value ?? normalize(desk, [...linkIds, ...photoIds]);
+  const shownTiles = order.filter((tl) => {
     const kind = kindOf(tl.id);
     if (!show[kind]) return false;
-    // 連結變少之後，多出來的那幾張不畫（版面裡的位置留著，加回來還在原位）
-    return kind !== "links" || linkIds.includes(tl.id);
+    // 張數變少之後，多出來的那幾張不畫（版面裡的位置留著，加回來還在原位）
+    if (kind === "links") return linkIds.includes(tl.id);
+    if (kind === "photos") return photoIds.includes(tl.id);
+    return true;
   });
+  // 主頁面那一排只有一列，塞不下的不畫 —— 再往下長會把時鐘擠出第一屏
+  const tiles = maxCols ? fitCols(shownTiles, maxCols) : shownTiles;
 
   /**
    * 卡片的名字。
@@ -159,8 +190,11 @@ export function Cards({
   function nameOf(id: TileId): string {
     const kind = kindOf(id);
     const base = t(`s_card_${kind}`);
-    if (kind !== "links" || linkIds.length < 2) return base;
-    return `${base} ${linkIds.indexOf(id) + 1}`;
+    // 同一種有好幾張時才編號。只有一張的時候「照片牆 1」是多餘的噪音
+    const siblings =
+      kind === "links" ? linkIds : kind === "photos" ? photoIds : [];
+    if (siblings.length < 2) return base;
+    return `${base} ${siblings.indexOf(id) + 1}`;
   }
 
   /** 拖曳結束的共同收尾：放手才落盤 */
@@ -250,7 +284,10 @@ export function Cards({
 
     const onMove = (ev: PointerEvent) => {
       const w = tile.w + Math.round((ev.clientX - x0) / unitX);
-      const h = tile.h + Math.round((ev.clientY - y0) / unitY);
+      // 主頁面鎖高度：縱向拖多少都不算，把手只有左右有意義
+      const h = lockHeight
+        ? tile.h
+        : tile.h + Math.round((ev.clientY - y0) / unitY);
       // 沒跨過格就什麼都不做。每一次 pointermove 都重設一次訊號的話，
       // 動畫會一直被自己打斷，看起來反而更頓。夾過範圍再比，
       // 才不會在拉到底之後還一直重算。
@@ -284,11 +321,13 @@ export function Cards({
     const dx = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
     const dy = e.key === "ArrowDown" ? 1 : e.key === "ArrowUp" ? -1 : 0;
     if (!dx && !dy) return;
+    // 鎖高度時，單按上下不該送出一次「改成一樣的大小」再朗讀一遍
+    if (lockHeight && !e.shiftKey && !dx) return;
     e.preventDefault();
     const shown = new Set(tiles.map((t) => t.id));
     const next = e.shiftKey
       ? nudgeVisible(order, tile.id, dx || dy, shown)
-      : resize(order, tile.id, tile.w + dx, tile.h + dy);
+      : resize(order, tile.id, tile.w + dx, tile.h + (lockHeight ? 0 : dy));
     // 推不動就不要報 —— 「還在原位」也是一種回答，但不是用同一句話重念一次
     if (next === order) return;
     slide(grid.current, () => onDesk(next));
@@ -362,8 +401,11 @@ export function Cards({
           {tile.id === "pomodoro" && (
             <PomodoroCard value={value} onChange={onChange} />
           )}
-          {tile.id === "photos" && (
-            <PhotoWall photo={photo} onPhoto={onPhoto} />
+          {kindOf(tile.id) === "photos" && (
+            <PhotoWall
+              photo={photoWalls[photoIds.indexOf(tile.id)] ?? { id: null, rotate: 0 }}
+              onPhoto={(patch) => onPhotoWall(photoIds.indexOf(tile.id), patch)}
+            />
           )}
           {tile.id === "calendar" && (
             <CalendarCard
@@ -426,10 +468,16 @@ export function Cards({
 
           <button
             type="button"
-            class="grow"
+            class={lockHeight ? "grow x" : "grow"}
             // 九張卡的把手念起來要不一樣，不然只知道「有個調整大小的鈕」
-            aria-label={`${nameOf(tile.id)} ${t("c_resize")}`}
-            aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Shift+ArrowUp Shift+ArrowDown Shift+ArrowLeft Shift+ArrowRight"
+            aria-label={`${nameOf(tile.id)} ${t(
+              lockHeight ? "c_resize_x" : "c_resize",
+            )}`}
+            aria-keyshortcuts={
+              lockHeight
+                ? "ArrowLeft ArrowRight Shift+ArrowUp Shift+ArrowDown Shift+ArrowLeft Shift+ArrowRight"
+                : "ArrowUp ArrowDown ArrowLeft ArrowRight Shift+ArrowUp Shift+ArrowDown Shift+ArrowLeft Shift+ArrowRight"
+            }
             onPointerDown={(e) => startResize(e, tile)}
             onKeyDown={(e) => onHandleKey(e, tile)}
           />
