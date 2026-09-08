@@ -70,6 +70,47 @@ describe("語系檔", () => {
     }
   });
 
+  it("佔位符是 chrome.i18n 收得下的寫法", () => {
+    /*
+     * 這一條是拿商店退件換來的。
+     *
+     * chrome.i18n 有兩種佔位符：位置式的 $1，以及具名的 $NAME$ —— 後者
+     * 一定要在同一則訊息裡附一份 placeholders。我把 cal_roc_year 寫成
+     * 「民國$1$年」，兩頭都有錢字號，於是被當成一個叫 1 的具名佔位符，
+     * 卻沒有定義。Edge 在安裝的那一刻就整包判無效：
+     *   Package is invalid. Details: 'Variable $1$ used but not defined.'
+     *
+     * 為什麼一路綠燈到上架：i18n.ts 的 fill() 用 /\$(\d)\$?/ 兩種都吃，
+     * 而 fill() 只在「設定裡選了語言」時才走。跟著瀏覽器語言那條路是
+     * chrome.i18n 自己解析的 —— 那條路只有真的裝進瀏覽器才會執行到，
+     * 單元測試和 vite dev 都碰不到。
+     *
+     * 所以這裡直接照 chrome 的規則驗檔案本身，不經過任何自己寫的程式。
+     */
+    const bad: string[] = [];
+    for (const loc of readdirSync(DIR)) {
+      const pack = JSON.parse(
+        readFileSync(`${DIR}/${loc}/messages.json`, "utf8"),
+      ) as Record<
+        string,
+        { message: string; placeholders?: Record<string, unknown> }
+      >;
+      for (const [key, entry] of Object.entries(pack)) {
+        const defined = new Set(
+          Object.keys(entry.placeholders ?? {}).map((n) => n.toLowerCase()),
+        );
+        // $$ 是錢字號的跳脫，先拿掉再掃，免得誤判
+        for (const m of entry.message
+          .replace(/\$\$/g, "")
+          .matchAll(/\$([A-Za-z0-9_]+)\$/g)) {
+          if (!defined.has(m[1]!.toLowerCase()))
+            bad.push(`${loc}/${key}: $${m[1]}$`);
+        }
+      }
+    }
+    expect(bad, "Edge 會在安裝時整包退掉，不是只有這一句壞掉").toEqual([]);
+  });
+
   it("留白的翻譯是刻意的，數量要盯著", () => {
     /*
      * 留白現在會原封不動顯示成空白，所以每一個都必須是故意的。

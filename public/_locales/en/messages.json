@@ -231,7 +231,7 @@
     "message": "Restore the original new tab"
   },
   "s_restore_body": {
-    "message": "Open $1$ and turn Aubade off. Turning it off keeps your settings, so you can switch back any time."
+    "message": "Open $1 and turn Aubade off. Turning it off keeps your settings, so you can switch back any time."
   },
   "s_credits": {
     "message": "Data"
@@ -773,7 +773,7 @@
     "message": "This is the dev server — no tabs API here. Load dist into Edge as an extension to use this card."
   },
   "c_media_refused": {
-    "message": "Permission was not granted. Try again, or turn it on in $1$."
+    "message": "Permission was not granted. Try again, or turn it on in $1."
   },
   "c_clock": {
     "message": "Clock"
@@ -1001,10 +1001,10 @@
     "message": "Match the browser"
   },
   "c_sized": {
-    "message": "$1$ is now $2$ by $3$"
+    "message": "$1 is now $2 by $3"
   },
   "c_moved": {
-    "message": "$1$ moved to $2$ of $3$"
+    "message": "$1 moved to $2 of $3"
   },
   "fo_filter": {
     "message": "Filter by project"
@@ -1019,7 +1019,7 @@
     "message": "Buy me a coffee"
   },
   "cal_roc_year": {
-    "message": "Minguo $1$"
+    "message": "Minguo $1"
   },
   "s_cwa": {
     "message": "CWA key"
@@ -1031,6 +1031,6 @@
     "message": "CWA-…"
   },
   "wx_station": {
-    "message": "$1$ station"
+    "message": "$1 station"
   }
 }

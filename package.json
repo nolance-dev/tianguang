@@ -1,7 +1,7 @@
 {
   "name": "tianguang",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "Tianguang / Aubade - a new tab page built on the twelve shichen",
   "scripts": {
@@ -13,7 +13,8 @@
     "icons": "node tools/icons.mjs",
     "store": "node tools/store.mjs",
     "shots": "node tools/shots.mjs",
-    "pack": "npm run build && node tools/pack.mjs"
+    "loadcheck": "node tools/loadcheck.mjs",
+    "pack": "npm run build && npm run loadcheck && node tools/pack.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

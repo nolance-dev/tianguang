@@ -267,7 +267,7 @@
     "message": "換回原生新分頁"
   },
   "s_restore_body": {
-    "message": "到 $1$ 把天光關掉。停用不會刪掉設定，隨時可以開回來。"
+    "message": "到 $1 把天光關掉。停用不會刪掉設定，隨時可以開回來。"
   },
   "s_credits": {
     "message": "資料來源"
@@ -809,7 +809,7 @@
     "message": "這裡是開發伺服器，沒有瀏覽器的分頁 API。要用這張卡，得把 dist 載進 Edge 當擴充功能跑。"
   },
   "c_media_refused": {
-    "message": "沒有拿到權限。可以再按一次，或到 $1$ 裡開啟。"
+    "message": "沒有拿到權限。可以再按一次，或到 $1 裡開啟。"
   },
   "c_clock": {
     "message": "時鐘"
@@ -1037,10 +1037,10 @@
     "message": "跟著瀏覽器"
   },
   "c_sized": {
-    "message": "$1$ 寬 $2$ 高 $3$"
+    "message": "$1 寬 $2 高 $3"
   },
   "c_moved": {
-    "message": "$1$ 移到第 $2$ 張，共 $3$ 張"
+    "message": "$1 移到第 $2 張，共 $3 張"
   },
   "fo_filter": {
     "message": "篩選專案"
@@ -1055,7 +1055,7 @@
     "message": "請我喝杯咖啡"
   },
   "cal_roc_year": {
-    "message": "民國$1$年"
+    "message": "民國$1年"
   },
   "s_cwa": {
     "message": "氣象署金鑰"
@@ -1067,6 +1067,6 @@
     "message": "CWA-…"
   },
   "wx_station": {
-    "message": "$1$ 測站實測"
+    "message": "$1 測站實測"
   }
 }

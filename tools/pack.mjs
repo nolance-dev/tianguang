@@ -44,20 +44,25 @@ for (const [store, spec] of Object.entries(STORES)) {
 
   const zip = resolve(out, `${store}-${pkg.version}.zip`);
   /*
-   * 一定要在暫存夾「裡面」壓，不能從外面指 stage\*。
-   *
-   * 從外面指的話 Compress-Archive 會把那層資料夾名字一起寫進項目名稱
-   * （量過：項目是 edge\manifest.json 而不是 manifest.json），
-   * 而兩家商店都要求 manifest.json 在壓縮檔的根目錄 —— 上傳會直接被退。
+   * 不用 Compress-Archive。它在 Windows PowerShell 5.1 底下寫出來的項目名
+   * 帶反斜線（量過：assets\index-....css），不符合 ZIP 規範。Edge 收了，
+   * 但兩家商店都要求 manifest.json 在根目錄，分隔符錯了就是在賭對方的
+   * 解壓縮夠寬容。tools/zip.ps1 自己寫項目名，一律斜線。
    */
   execFileSync(
     "powershell",
     [
       "-NoProfile",
-      "-Command",
-      `Compress-Archive -Path * -DestinationPath "${zip}" -Force`,
+      "-ExecutionPolicy",
+      "Bypass",
+      "-File",
+      resolve("tools/zip.ps1"),
+      "-Source",
+      stage,
+      "-Destination",
+      zip,
     ],
-    { cwd: stage },
+    { stdio: "inherit" },
   );
   rmSync(stage, { recursive: true, force: true });
   console.log(`${store}: ${zip}`);
