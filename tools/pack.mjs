@@ -44,6 +44,19 @@ for (const [store, spec] of Object.entries(STORES)) {
 
   const zip = resolve(out, `${store}-${pkg.version}.zip`);
   /*
+   * 壓之前先把這一份真的裝進 Edge 一次。
+   *
+   * 1.0.0 上架了卻裝不起來 —— 語系檔的佔位符寫成 $1$ 少了宣告，瀏覽器在
+   * 安裝那一刻整包判無效。那條路是 chrome.i18n 自己解析的，單元測試、
+   * vite dev、商店的上傳驗證、人工審查全部繞過它。
+   *
+   * 驗的是 stage 而不是 dist：兩家的 manifest 差一個鍵，那個差異也要驗到。
+   */
+  execFileSync("node", [resolve("tools/loadcheck.mjs"), stage], {
+    stdio: "inherit",
+  });
+
+  /*
    * 不用 Compress-Archive。它在 Windows PowerShell 5.1 底下寫出來的項目名
    * 帶反斜線（量過：assets\index-....css），不符合 ZIP 規範。Edge 收了，
    * 但兩家商店都要求 manifest.json 在根目錄，分隔符錯了就是在賭對方的
