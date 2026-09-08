@@ -412,7 +412,11 @@ export function App() {
     onDesk: (desk: Tile[]) => void,
     lockHeight = false,
     maxCols?: number,
-  ) => (
+    // 主頁面與工作區各有一份照片牆，改一邊不會動到另一邊
+    key: "photoWalls" | "homePhotoWalls" = "photoWalls",
+  ) => {
+    const walls = cfg[key];
+    return (
     <Cards
       lockHeight={lockHeight}
       maxCols={maxCols}
@@ -443,16 +447,15 @@ export function App() {
         cwaKey: cfg.cwaKey,
         dark: !palette.value.light,
       }}
-      photoWalls={cfg.photoWalls}
+      photoWalls={walls}
       onPhotoWall={(index, p) =>
         patch({
-          photoWalls: cfg.photoWalls.map((w, i) =>
-            i === index ? { ...w, ...p } : w,
-          ),
+          [key]: walls.map((w, i) => (i === index ? { ...w, ...p } : w)),
         })
       }
-    />
-  );
+      />
+    );
+  };
 
   const cards = cardsFor(cfg.cards, cfg.desk, (desk) => patch({ desk }));
 
@@ -477,6 +480,7 @@ export function App() {
         true,
         // 而且只有一列。塞不下的卡不畫，版面本身留著
         COLS,
+        "homePhotoWalls",
       )
     : null;
   const notices = (

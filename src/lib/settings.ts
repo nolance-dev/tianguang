@@ -100,6 +100,14 @@ export interface Settings {
    * 跟桌布的 imageId 是兩回事，各記各的。
    */
   photoWalls: PhotoWall[];
+  /**
+   * 主頁面那一排的照片牆，跟工作區完全分開。
+   *
+   * 兩邊共用一份的話，在工作區加一張，第一屏也會跟著多一張 —— 而第一屏
+   * 只有一列，多出來的那張擠掉的是使用者放在那裡的別的東西。兩個地方是
+   * 兩種用途：第一屏是一眼看到的那張，工作區是牆。
+   */
+  homePhotoWalls: PhotoWall[];
   /** 自訂名言。留白就用內建那批隨機抽。 */
   quoteText: string;
   quoteBy: string;
@@ -164,6 +172,7 @@ export const DEFAULTS: Settings = {
   linkCards: 1,
   desk: DEFAULT_DESK,
   photoWalls: [{ id: null, rotate: 0 }],
+  homePhotoWalls: [{ id: null, rotate: 0 }],
   quoteText: "",
   quoteBy: "",
   links: [],
@@ -232,8 +241,11 @@ function safeColor(raw: unknown, fallback: string): string {
  * 一定至少有一張：零張的話「照片牆」這個開關打開會什麼都沒有，
  * 而使用者沒有任何辦法從介面上把它變回一張。
  */
-function photoWalls(raw: Record<string, unknown>): PhotoWall[] {
-  const list = Array.isArray(raw.photoWalls) ? raw.photoWalls : null;
+function photoWalls(
+  value: unknown,
+  raw: Record<string, unknown>,
+): PhotoWall[] {
+  const list = Array.isArray(value) ? value : null;
   const out: PhotoWall[] = [];
   for (const item of list ?? []) {
     const w = item as Partial<PhotoWall> | null;
@@ -284,7 +296,9 @@ export function migrate(raw: Record<string, unknown>): Settings {
       ? merged.lang
       : DEFAULTS.lang,
     cwaKey: typeof merged.cwaKey === "string" ? merged.cwaKey.trim() : "",
-    photoWalls: photoWalls(raw),
+    photoWalls: photoWalls(raw.photoWalls, raw),
+    // 主頁面沒有 1.0 的舊欄位可以承接 —— 它那時候跟工作區是同一張
+    homePhotoWalls: photoWalls(raw.homePhotoWalls, raw),
   };
 }
 

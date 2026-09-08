@@ -200,3 +200,39 @@ describe("照片牆的搬家", () => {
     expect(DEFAULTS.photoWalls).toEqual([{ id: null, rotate: 0 }]);
   });
 });
+
+describe("主頁面與工作區的照片牆分開", () => {
+  it("兩份各自遷移，不會互相灌", () => {
+    const out = migrate({
+      schemaVersion: 1,
+      photoWalls: [
+        { id: "a", rotate: 0 },
+        { id: "b", rotate: 0 },
+      ],
+      homePhotoWalls: [{ id: "c", rotate: 30 }],
+    } as never);
+    expect(out.photoWalls).toHaveLength(2);
+    expect(out.homePhotoWalls).toEqual([{ id: "c", rotate: 30 }]);
+  });
+
+  it("1.0 的單一 photoId 兩邊都接得住，而且各是各的", () => {
+    const out = migrate({ schemaVersion: 1, photoId: "old" } as never);
+    expect(out.photoWalls).toEqual([{ id: "old", rotate: 0 }]);
+    expect(out.homePhotoWalls).toEqual([{ id: "old", rotate: 0 }]);
+    // 同樣的內容但不是同一個物件 —— 改一邊不該動到另一邊
+    expect(out.homePhotoWalls).not.toBe(out.photoWalls);
+  });
+
+  it("只設了工作區的話，主頁面不會跟著變多", () => {
+    const out = migrate({
+      schemaVersion: 1,
+      photoWalls: [
+        { id: null, rotate: 0 },
+        { id: null, rotate: 0 },
+        { id: null, rotate: 0 },
+      ],
+    } as never);
+    expect(out.photoWalls).toHaveLength(3);
+    expect(out.homePhotoWalls).toHaveLength(1);
+  });
+});

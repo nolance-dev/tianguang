@@ -3,14 +3,19 @@ import { expect, test } from "@playwright/test";
 /**
  * 設定裡的語言切換。
  *
- * 預覽版沒有 chrome.i18n，所以「跟著瀏覽器」那一檔會顯示鍵名（settings_title）——
- * 這反而讓這條測試很好判斷：選了語言之後出現真的字串，就代表 t() 真的改讀
- * 打包進來的字串包了。
+ * 瀏覽器語言釘成 zh-TW：預覽版沒有 chrome.i18n，「跟著瀏覽器」那一檔會照
+ * navigator.language 挑字串包。釘死之後起點是確定的中文，選了英文才有東西可比。
+ *
+ * （這裡本來斷言起點會顯示鍵名 settings_title —— 那是 t() 在正式產物加上
+ * 沒有 chrome.i18n 時直接 return key 的結果，也就是使用者在預覽頁看到滿版
+ * 鍵名的那個 bug。現在那條路退回字串包，所以起點是真的字。）
  *
  * 換完之後只等兩個影格再讀，不用 expect.poll：時鐘每秒會重繪一次整頁，
  * 用輪詢的話「換語言當下就生效」跟「等到下一秒才生效」是分不出來的，
  * 而那正是這條要守的東西（setLang 要在算繪之前跑，不能放在 effect 裡）。
  */
+
+test.use({ locale: "zh-TW" });
 
 test("選了語言，整頁當下就換過去", async ({ page }) => {
   await page.goto("/");
@@ -24,7 +29,7 @@ test("選了語言，整頁當下就換過去", async ({ page }) => {
   await page.click(".gear");
 
   const heading = page.locator(".panel-h b");
-  await expect(heading).toHaveText("settings_title");
+  await expect(heading).toHaveText("設定");
 
   const lang = page.locator(".panel-body select.lang");
   await lang.selectOption("en");
@@ -51,7 +56,7 @@ test("選了語言，整頁當下就換過去", async ({ page }) => {
   );
   expect(await heading.textContent()).toBe("設定");
 
-  // 存得住：重開之後還是中文，不是回到鍵名。
+  // 存得住：重開之後還是中文。
   // 寫入 debounce 300ms，落盤了才重新整理 —— 不等的話重開讀到的是上一個值
   await expect
     .poll(() =>

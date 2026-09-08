@@ -1,10 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   around,
   byDate,
   feedUrl,
   parseIcs,
   supported,
+  loadHolidays,
 } from "../src/lib/holidays";
 import { isoWeek } from "../src/lib/agenda";
 import { subDate } from "../src/lib/secondcal";
@@ -133,5 +134,83 @@ describe("第二套曆法", () => {
      */
     expect(subDate(new Date(2026, 8, 2), "roc")).toBeNull();
     expect(subDate(new Date(2026, 8, 1), "islamic")?.text).toBeTruthy();
+  });
+});
+
+/**
+ * 換語言之後，舊的那一份不能頂上來。
+ *
+ * 使用者的快取裡抓到現行犯：{"cc":"TW","lang":"en","list":[Mid-Autumn Festival…]}，
+ * 而畫面是中文的。原本抓不到就拿舊的頂，只比國碼不比語言，於是中文介面
+ * 配一整排英文節日名，而且不會自己好。
+ */
+describe("節日的語言", () => {
+  const store = new Map<string, unknown>();
+  const setup = (cached: unknown, fetchOk: boolean, body = "") => {
+    store.clear();
+    if (cached) store.set("tg.holidays", cached);
+    (globalThis as unknown as { chrome: unknown }).chrome = {
+      storage: {
+        local: {
+          get: (k: string) =>
+            Promise.resolve(store.has(k) ? { [k]: store.get(k) } : {}),
+          set: (o: Record<string, unknown>) => {
+            for (const [k, v] of Object.entries(o)) store.set(k, v);
+            return Promise.resolve();
+          },
+        },
+      },
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() =>
+        fetchOk
+          ? Promise.resolve({ ok: true, text: () => Promise.resolve(body) })
+          : Promise.resolve({ ok: false, status: 404 }),
+      ),
+    );
+  };
+
+  const ICS = [
+    "BEGIN:VEVENT",
+    "DTSTART;VALUE=DATE:20260925",
+    "SUMMARY:中秋節",
+    "END:VEVENT",
+  ].join(String.fromCharCode(13, 10));
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delete (globalThis as unknown as { chrome?: unknown }).chrome;
+  });
+
+  const enCache = {
+    cc: "TW",
+    lang: "en",
+    at: Date.now(),
+    list: [{ date: "2026-09-25", name: "Mid-Autumn Festival" }],
+  };
+
+  it("語言不對的舊資料寧可不給，也不要顯示成另一種語言", async () => {
+    setup(enCache, false);
+    expect(await loadHolidays("TW", "zh-tw")).toEqual([]);
+  });
+
+  it("語言對得上就照常頂著用 —— 離線時月曆仍然有節日", async () => {
+    setup(enCache, false);
+    expect(await loadHolidays("TW", "en")).toEqual(enCache.list);
+  });
+
+  it("抓得到就換成新的那一份", async () => {
+    setup(enCache, true, ICS);
+    const got = await loadHolidays("TW", "zh-tw");
+    expect(got).toEqual([{ date: "2026-09-25", name: "中秋節" }]);
+    // 而且要把語言一起存進去，下次才不會又拿英文那份頂
+    expect((store.get("tg.holidays") as { lang: string }).lang).toBe("zh-tw");
+  });
+
+  it("同語言而且還新鮮就不重抓", async () => {
+    setup({ ...enCache, at: Date.now() }, true, ICS);
+    await loadHolidays("TW", "en");
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

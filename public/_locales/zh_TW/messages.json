@@ -1,4 +1,8 @@
 {
+  "locale_tag": {
+    "message": "zh-TW",
+    "description": "This pack's BCP 47 tag. Not shown to users: it is how the page knows which pack the browser actually chose."
+  },
   "extensionName": {
     "message": "天光"
   },
@@ -937,8 +941,11 @@
   "s_desk_reset_home": {
     "message": "重設主頁面版面"
   },
-  "s_photo_cards": {
-    "message": "照片牆張數"
+  "s_photo_cards_home": {
+    "message": "主頁面"
+  },
+  "s_photo_cards_desk": {
+    "message": "工作區"
   },
   "s_photo_cards_more": {
     "message": "多一張照片牆"

@@ -1,4 +1,8 @@
 {
+  "locale_tag": {
+    "message": "en",
+    "description": "This pack's BCP 47 tag. Not shown to users: it is how the page knows which pack the browser actually chose."
+  },
   "extensionName": {
     "message": "Aubade"
   },
@@ -901,8 +905,11 @@
   "s_desk_reset_home": {
     "message": "Reset home layout"
   },
-  "s_photo_cards": {
-    "message": "Photo cards"
+  "s_photo_cards_home": {
+    "message": "On the home screen"
+  },
+  "s_photo_cards_desk": {
+    "message": "In the workspace"
   },
   "s_photo_cards_more": {
     "message": "One more photo card"

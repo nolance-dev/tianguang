@@ -93,15 +93,39 @@ export function t(key: string, subs?: string | string[]): string {
     if (msg) return msg;
     return import.meta.env.DEV ? key : "";
   }
-  if (import.meta.env.DEV) return fill(devBundle()[key], key, subs);
-  return key;
+  /*
+   * 完全沒有 chrome.i18n 的地方（vite dev、vite preview、截圖與 e2e）。
+   *
+   * 這裡本來只在 DEV 退回字串包，正式建置就 `return key` —— 於是 `vite preview`
+   * 跑正式產物時，整頁變成 sc_11、greet_night_anon、search_placeholder 這種鍵名。
+   * 那不是「開發者才看得到的細節」：商店截圖、e2e、給人試看的預覽全走這條路。
+   *
+   * 擴充功能裡 hasChromeI18n 永遠為真，所以這一行碰不到，改它不影響上架的行為。
+   */
+  return fill(devBundle()[key], key, subs);
 }
 
 /** 目前語系。決定外環走節氣還是月名、溫度預設攝氏還是華氏。 */
+/**
+ * 目前語系。決定外環走節氣還是月名、溫度預設攝氏還是華氏、節日抓哪一份行事曆。
+ *
+ * auto 的時候問的是**字串包自己**（locale_tag），不是 chrome.i18n.getUILanguage()。
+ *
+ * 那兩個會不一致，而且實際發生過：使用者的 Edge 介面是英文，
+ * getUILanguage() 回 "en-US"，但 chrome.i18n.getMessage() 挑到的是 zh_TW ——
+ * 於是畫面全是中文，節日卻抓了英文那一份行事曆，月曆上出現
+ * 「Mid-Autumn Festival」。（快取裡抓到現行犯：lang: "en"。）
+ *
+ * 字串包自報是哪一種語言，畫面上的字和從語言推出來的每一個決定就同源了。
+ */
 export function locale(): string {
   const pick = forced.value;
   if (pick !== "auto") return pick === "en" ? "en" : "zh-TW";
-  if (hasChromeI18n) return chrome.i18n.getUILanguage();
+  if (hasChromeI18n) {
+    const tag = chrome.i18n.getMessage("locale_tag");
+    // 舊版沒有這個鍵（同步回來的設定不會帶字串包），退回瀏覽器的答案
+    return tag || chrome.i18n.getUILanguage();
+  }
   return typeof navigator !== "undefined" ? navigator.language : "zh-TW";
 }
 
@@ -115,8 +139,17 @@ export function locale(): string {
  */
 export function intlLocale(): string | undefined {
   const pick = forced.value;
-  if (pick === "auto") return undefined;
-  return pick === "en" ? "en-GB" : "zh-TW";
+  if (pick !== "auto") return pick === "en" ? "en-GB" : "zh-TW";
+  /*
+   * auto 也要跟著字串包走。
+   *
+   * 原本回 undefined 讓 Intl 自己看瀏覽器 —— 那在「介面語言＝字串包語言」時
+   * 是對的，但兩者可以不一致（見 locale() 的註解）。不一致的時候，
+   * 畫面是中文而日期排成 Thursday, 9/3/2026。
+   */
+  if (!hasChromeI18n) return undefined;
+  const tag = chrome.i18n.getMessage("locale_tag");
+  return tag ? (tag === "en" ? "en-GB" : tag) : undefined;
 }
 
 export function isEnglish(): boolean {

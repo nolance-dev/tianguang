@@ -11,7 +11,10 @@ import {
   supported,
 } from "../lib/holidays";
 import { MAX_LINKS, suggestFromTopSites } from "../lib/links";
-import { MAX_PHOTO_WALLS } from "../lib/settings";
+import {
+  MAX_PHOTO_WALLS,
+  type PhotoWall as PhotoWallState,
+} from "../lib/settings";
 import { fileName, pack, unpack } from "../lib/snapshot";
 import type { Workspace } from "../lib/workspace";
 import {
@@ -481,41 +484,17 @@ export function SettingsPanel({
 
                 <section>
                   <h3>{t("s_card_photos")}</h3>
-                  <div class="row">
-                    <span>{t("s_photo_cards")}</span>
-                    <div class="step" role="group" aria-label={t("s_photo_cards")}>
-                      <button
-                        type="button"
-                        aria-label={t("s_photo_cards_less")}
-                        disabled={value.photoWalls.length <= 1}
-                        onClick={() =>
-                          onChange({
-                            // 從最後一張拿掉。中間抽掉的話，後面每一張掛的
-                            // 照片都會往前挪一格 —— 使用者看到的是「照片自己跑了」
-                            photoWalls: value.photoWalls.slice(0, -1),
-                          })
-                        }
-                      >
-                        −
-                      </button>
-                      <output>{value.photoWalls.length}</output>
-                      <button
-                        type="button"
-                        aria-label={t("s_photo_cards_more")}
-                        disabled={value.photoWalls.length >= MAX_PHOTO_WALLS}
-                        onClick={() =>
-                          onChange({
-                            photoWalls: [
-                              ...value.photoWalls,
-                              { id: null, rotate: 0 },
-                            ],
-                          })
-                        }
-                      >
-                        ＋
-                      </button>
-                    </div>
-                  </div>
+                  {/* 主頁面與工作區各記各的：在一邊加一張，不會動到另一邊 */}
+                  <PhotoCount
+                    label={t("s_photo_cards_home")}
+                    walls={value.homePhotoWalls}
+                    onChange={(homePhotoWalls) => onChange({ homePhotoWalls })}
+                  />
+                  <PhotoCount
+                    label={t("s_photo_cards_desk")}
+                    walls={value.photoWalls}
+                    onChange={(photoWalls) => onChange({ photoWalls })}
+                  />
                   <p class="note">{t("s_photo_cards_hint")}</p>
                 </section>
               </>
@@ -929,5 +908,46 @@ function Backup({
 
       {msg && <p class="note">{msg}</p>}
     </>
+  );
+}
+
+/**
+ * 照片牆張數的加減。
+ *
+ * 從最後一張拿掉，不是從中間 —— 中間抽掉的話後面每一張掛的照片都往前挪一格，
+ * 使用者看到的是「照片自己跑了」。
+ */
+function PhotoCount({
+  label,
+  walls,
+  onChange,
+}: {
+  label: string;
+  walls: PhotoWallState[];
+  onChange: (next: PhotoWallState[]) => void;
+}) {
+  return (
+    <div class="row">
+      <span>{label}</span>
+      <div class="step" role="group" aria-label={label}>
+        <button
+          type="button"
+          aria-label={t("s_photo_cards_less")}
+          disabled={walls.length <= 1}
+          onClick={() => onChange(walls.slice(0, -1))}
+        >
+          −
+        </button>
+        <output>{walls.length}</output>
+        <button
+          type="button"
+          aria-label={t("s_photo_cards_more")}
+          disabled={walls.length >= MAX_PHOTO_WALLS}
+          onClick={() => onChange([...walls, { id: null, rotate: 0 }])}
+        >
+          ＋
+        </button>
+      </div>
+    </div>
   );
 }

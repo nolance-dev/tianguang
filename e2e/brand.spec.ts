@@ -8,6 +8,9 @@ import { expect, test } from "@playwright/test";
  * 「新分頁」加一顆地球，等於這個擴充功能在使用者眼前沒有名字。
  */
 
+// 名字有兩個（天光／Aubade），釘死瀏覽器語言才知道該等哪一個
+test.use({ locale: "zh-TW" });
+
 test("分頁顯示的是名字，不是「新分頁」", async ({ page }) => {
   await page.goto("/");
   // 靜態那一份是中文名，載入之前就在了 —— 不會先閃一下「新分頁」

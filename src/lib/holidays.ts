@@ -205,8 +205,17 @@ export async function loadHolidays(
     now - cached.at < STALE_MS;
   if (fresh) return cached.list;
 
+  /*
+   * 過期的舊資料只有在**語言也對**的時候才拿來頂。
+   *
+   * 原本只比國碼，於是換語言之後只要這一次抓不到，月曆就繼續顯示上一種語言的
+   * 節日名 —— 中文介面配一整排 Mid-Autumn Festival，而且不會自己好。
+   * 語言不對的舊資料寧可不給：月曆本來就畫得出來，節日是加分不是前提。
+   */
+  const usable = cached?.cc === cc && cached.lang === lang ? cached.list : [];
+
   const url = feedUrl(cc, lang);
-  if (!url) return cached?.cc === cc ? cached.list : [];
+  if (!url) return usable;
 
   try {
     const res = await fetch(url);
@@ -216,7 +225,7 @@ export async function loadHolidays(
     await write({ cc, lang, at: now, list });
     return list;
   } catch {
-    return cached?.cc === cc ? cached.list : [];
+    return usable;
   }
 }
 
