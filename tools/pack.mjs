@@ -20,8 +20,19 @@ import pkg from "../package.json" with { type: "json" };
  */
 
 const STORES = {
-  edge: { drop: "minimum_chrome_version", keep: "minimum_edge_version" },
-  chrome: { drop: "minimum_edge_version", keep: "minimum_chrome_version" },
+  /*
+   * Edge 兩個鍵都留。
+   *
+   * 原本只留 minimum_edge_version，理由是「別讓每家收到不認得的鍵」——
+   * 那個前提是錯的：Edge 是 Chromium，它認得 minimum_chrome_version，
+   * 反而忽略 minimum_edge_version。對照實驗（載入未封裝擴充功能）：
+   *   minimum_chrome_version=999 → 整個不被登記
+   *   minimum_edge_version=999   → 照樣載入成功
+   * 所以只留 edge 那個鍵，等於 Edge 包根本沒有版本下限。
+   * 保留 edge 的那一個是給商店端派送用的，無法在本機驗證，留著不吃虧。
+   */
+  edge: { drop: null, keep: ["minimum_edge_version", "minimum_chrome_version"] },
+  chrome: { drop: "minimum_edge_version", keep: ["minimum_chrome_version"] },
 };
 
 /** 兩家都用同一個底線：容器查詢與 :has() 都要 Chromium 120 */
@@ -38,8 +49,8 @@ for (const [store, spec] of Object.entries(STORES)) {
 
   const file = resolve(stage, "manifest.json");
   const manifest = JSON.parse(readFileSync(file, "utf8"));
-  delete manifest[spec.drop];
-  manifest[spec.keep] = FLOOR;
+  if (spec.drop) delete manifest[spec.drop];
+  for (const key of spec.keep) manifest[key] = FLOOR;
   writeFileSync(file, JSON.stringify(manifest, null, 2) + "\n");
 
   const zip = resolve(out, `${store}-${pkg.version}.zip`);

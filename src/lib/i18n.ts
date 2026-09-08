@@ -52,10 +52,15 @@ function fill(
   if (!entry) return import.meta.env.DEV ? key : "";
   if (!subs) return entry.message;
   const list = Array.isArray(subs) ? subs : [subs];
-  return entry.message.replace(
-    /\$(\d)\$?/g,
-    (_, n) => list[Number(n) - 1] ?? "",
-  );
+  /*
+   * 只認位置式的 $1，不認 $1$。
+   *
+   * 原本寫成 /\$(\d)\$?/ 兩種都吃，於是語系檔裡的 $1$ 在這條路上看起來
+   * 完全正常 —— 而 $1$ 是具名佔位符的語法，少了 placeholders 宣告，
+   * 瀏覽器會在安裝時把整包判無效。1.0.0 就是這樣上架又裝不起來的。
+   * 這裡收緊之後，寫錯的那一刻在自家程式裡就看得出來。
+   */
+  return entry.message.replace(/\$(\d)/g, (_, n) => list[Number(n) - 1] ?? "");
 }
 
 /**

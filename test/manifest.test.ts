@@ -66,10 +66,16 @@ describe("上架前的一致性", () => {
  * 翻譯太長…超過 190 個字元的大小上限」。那不是商店陳列的說明，是套件自己的
  * description，而且每個語系各自算。英文版原本 271 字元，整包被退回。
  *
+ * 門檻取兩家的嚴格交集，不是 Edge 的 190。
+ *
+ * 一開始寫 190 是照著退件訊息校準的 —— 那只擋得住 Edge。Chrome 的 manifest
+ * description 成文上限是 132，而英文版當時是 185：Edge 收、Chrome 不收，
+ * 本機全綠，按下上傳才會知道。護欄照著單一商店校準，等於另一家沒有護欄。
+ *
  * 這種錯只有真的按下上傳才會知道 —— 除非在這裡先擋下來。
  */
 describe("套件簡述的長度", () => {
-  const LIMIT = 190;
+  const LIMIT = 132; // Chrome 的成文上限；Edge 是 190，取嚴的那個
   for (const loc of ["zh_TW", "en"]) {
     it(`${loc} 的 description 不超過 ${LIMIT} 字元`, () => {
       const bundle = JSON.parse(

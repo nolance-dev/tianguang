@@ -46,6 +46,14 @@ const CASES = {
       wx_station: [["臺北"], "臺北 測站實測"],
       c_sized: [["待辦", "3", "2"], "待辦 寬 3 高 2"],
       c_moved: [["待辦", "2", "5"], "待辦 移到第 2 張，共 5 張"],
+      s_restore_body: [
+        ["edge://extensions"],
+        "到 edge://extensions 把天光關掉。停用不會刪掉設定，隨時可以開回來。",
+      ],
+      c_media_refused: [
+        ["edge://extensions"],
+        "沒有拿到權限。可以再按一次，或到 edge://extensions 裡開啟。",
+      ],
     },
   },
   en: {
@@ -55,6 +63,14 @@ const CASES = {
       wx_station: [["Taipei"], "Taipei station"],
       c_sized: [["To-dos", "3", "2"], "To-dos is now 3 by 2"],
       c_moved: [["To-dos", "2", "5"], "To-dos moved to 2 of 5"],
+      s_restore_body: [
+        ["edge://extensions"],
+        "Open edge://extensions and turn Aubade off. Turning it off keeps your settings, so you can switch back any time.",
+      ],
+      c_media_refused: [
+        ["edge://extensions"],
+        "Permission was not granted. Try again, or turn it on in edge://extensions.",
+      ],
     },
   },
 };
@@ -72,6 +88,7 @@ for (const [lang, spec] of Object.entries(CASES)) {
       `--lang=${lang}`,
     ],
   });
+  const before = fail.length;
   const page = await ctx.newPage();
   const noise = [];
   page.on("pageerror", (e) => noise.push(`pageerror: ${e.message}`));
@@ -117,7 +134,16 @@ for (const [lang, spec] of Object.entries(CASES)) {
     }
     await page.waitForTimeout(1500); // 讓首屏跑完，錯誤才來得及冒出來
     for (const n of noise) fail.push(`${lang}: ${n}`);
-    console.log(`${lang}: 載入成功，標題 ${JSON.stringify(title)}，六則訊息代入正確`);
+    /*
+     * 只有這一輪真的沒問題才報成功。
+     * 先前無條件印，於是斷言已經失敗了畫面上還是先出現兩行「載入成功」，
+     * 失敗訊息被推到後面 —— 那正是讓人以為過了的那種輸出。
+     */
+    if (fail.length === before)
+      console.log(
+        `${lang}: 載入成功，標題 ${JSON.stringify(title)}，` +
+          `${Object.keys(spec.expect).length} 則訊息代入正確`,
+      );
   }
 
   await ctx.close();
