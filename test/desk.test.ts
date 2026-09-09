@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   COLS,
   DEFAULT_DESK,
+  DEFAULT_HOME_DESK,
   fitCols,
   kindOf,
   LINKS_PER_CARD,
@@ -10,6 +11,7 @@ import {
   normalize,
   nudge,
   resize,
+  singleRow,
   tileId,
   type Tile,
 } from "../src/lib/desk";
@@ -242,5 +244,44 @@ describe("一列放得下的", () => {
     const copy = structuredClone(list);
     fitCols(list, COLS);
     expect(list).toEqual(copy);
+  });
+});
+
+describe("單列那一排", () => {
+  const t = (id: string, w: number, h: number): Tile => ({
+    id: id as Tile["id"],
+    w,
+    h,
+  });
+
+  it("再高的卡在主頁面也只有一格高", () => {
+    // 主頁面鎖了高度，存下來的兩列版面使用者拉不回來 —— 只能在畫的時候攤平
+    expect(singleRow([t("photos", 2, 3)], COLS)).toEqual([
+      { id: "photos", w: 2, h: 1 },
+    ]);
+  });
+
+  it("攤平之後仍然只留放得下的", () => {
+    const out = singleRow([t("links", 3, 2), t("photos", 2, 2), t("note", 1, 3)], COLS);
+    expect(out).toEqual([
+      { id: "links", w: 3, h: 1 },
+      { id: "note", w: 1, h: 1 },
+    ]);
+  });
+
+  it("不動原本的版面 —— 同一張卡搬到工作區還是原本的高度", () => {
+    const list = [t("photos", 2, 2)];
+    const copy = structuredClone(list);
+    singleRow(list, COLS);
+    expect(list).toEqual(copy);
+  });
+
+  it("本來就一格高的原樣回傳，不多配一個物件", () => {
+    const one = t("links", 2, 1);
+    expect(singleRow([one], COLS)[0]).toBe(one);
+  });
+
+  it("主頁面的預設本來就只有一格高", () => {
+    expect(DEFAULT_HOME_DESK.every((d) => d.h === 1)).toBe(true);
   });
 });

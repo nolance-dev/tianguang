@@ -78,11 +78,12 @@ const IDS: CardId[] = [
  *
  * 只列快速存取和照片牆 —— 其餘的卡由 show 關掉，normalize() 還是會把它們補在
  * 後面，那不影響畫面，但保證使用者之後想換的時候尺寸是現成的。
- * 兩張都是兩欄兩列，跟它們在工作區的預設一模一樣。
+ * 高度一律一格：第一屏的高度是給時鐘的，那一排再高就把時鐘擠下去。
+ * 工作區的照片牆仍然是兩列 —— 那裡有的是空間。
  */
 export const DEFAULT_HOME_DESK: Tile[] = [
   { id: "links", w: 2, h: 1 },
-  { id: "photos", w: 2, h: 2 },
+  { id: "photos", w: 2, h: 1 },
 ];
 
 export const DEFAULT_DESK: Tile[] = [
@@ -212,4 +213,17 @@ export function fitCols(tiles: Tile[], cols: number): Tile[] {
     out.push(t);
   }
   return out;
+}
+
+/**
+ * 單列那一排最後長什麼樣：放得下的，而且一律只有一格高。
+ *
+ * 高度攤平不只是為了好看。主頁面鎖了高度（Cards 的 lockHeight），所以存下來
+ * 的舊版面如果是兩列，使用者**沒有任何辦法把它拉回來** —— 拖也拖不動，
+ * 鍵盤也改不了。這裡攤平，那些版面自己就好了。
+ *
+ * 只在畫的時候攤，設定裡存的數字不動：同一張卡搬到工作區還是它原本的高度。
+ */
+export function singleRow(tiles: Tile[], cols: number): Tile[] {
+  return fitCols(tiles, cols).map((t) => (t.h === 1 ? t : { ...t, h: 1 }));
 }

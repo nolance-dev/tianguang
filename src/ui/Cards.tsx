@@ -12,13 +12,13 @@ import type { PhotoWall as PhotoWallState, Settings } from "../lib/settings";
 import { MAX_LINKS, type Link } from "../lib/links";
 import {
   COLS,
-  fitCols,
   move,
   kindOf,
   LINKS_PER_CARD,
   normalize,
   nudge,
   resize,
+  singleRow,
   tileId,
   type CardId,
   type Tile,
@@ -177,8 +177,9 @@ export function Cards({
     if (kind === "photos") return photoIds.includes(tl.id);
     return true;
   });
-  // 主頁面那一排只有一列，塞不下的不畫 —— 再往下長會把時鐘擠出第一屏
-  const tiles = maxCols ? fitCols(shownTiles, maxCols) : shownTiles;
+  // 主頁面那一排只有一列：塞不下的不畫，太高的攤平 ——
+  // 再往下長會把時鐘擠出第一屏，而那裡的高度是拉不動的
+  const tiles = maxCols ? singleRow(shownTiles, maxCols) : shownTiles;
 
   /**
    * 卡片的名字。
