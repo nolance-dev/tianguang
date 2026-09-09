@@ -14,7 +14,8 @@
     "store": "node tools/store.mjs",
     "shots": "node tools/shots.mjs",
     "loadcheck": "node tools/loadcheck.mjs",
-    "pack": "npm run build && node tools/pack.mjs"
+    "pack": "npm run build && node tools/pack.mjs",
+    "lab": "vite --port 5174 --open /media-lab.html"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

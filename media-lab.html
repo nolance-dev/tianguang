@@ -1,0 +1,121 @@
+<!doctype html>
+<!--
+  「正在播放」的尺寸實驗室。開發用的一頁，不進 dist ——
+  vite 的預設 input 只有 index.html，這一支不會被打包進擴充功能。
+  開法：npm run lab，然後開 http://localhost:5174/media-lab.html
+-->
+<html lang="zh-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>正在播放 · 尺寸實驗室</title>
+    <style>
+      /*
+        App.tsx 平常會把整套主題變數寫到 :root 上。這一頁沒有 App，
+        所以自己給一組 —— 用的是暗色時段那一組的值，不是另外調的顏色。
+      */
+      :root {
+        --gold: #e3b667;
+        --fg-ink: #12161f;
+        --card: rgba(13, 17, 27, 0.5);
+        --glass: rgba(255, 255, 255, 0.1);
+        --glass-line: rgba(255, 255, 255, 0.2);
+        --holi: #e8776c;
+        color-scheme: dark;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(
+            120% 90% at 15% 0%,
+            #2a2f45 0%,
+            transparent 60%
+          ),
+          radial-gradient(100% 80% at 90% 100%, #1d2434 0%, transparent 55%),
+          #12151f;
+        color: var(--fg);
+        font-family: var(--f-body);
+      }
+
+      .lab {
+        max-width: 82rem;
+        margin: 0 auto;
+        padding: 2.5rem 2rem 6rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2.25rem;
+      }
+
+      .lab-head h1 {
+        font-family: var(--f-cjk);
+        font-size: 1.5rem;
+        margin: 0 0 0.5rem;
+        letter-spacing: 0.08em;
+      }
+
+      .lab-head p {
+        margin: 0 0 0.75rem;
+        max-width: 44rem;
+        font-size: 0.86rem;
+        line-height: 1.8;
+        color: var(--fg-2);
+      }
+
+      .lab-head label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-size: 0.8rem;
+        color: var(--fg-2);
+        cursor: pointer;
+      }
+
+      .lab-cell {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+      }
+
+      .lab-cell figcaption {
+        display: flex;
+        align-items: baseline;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        font-size: 0.72rem;
+        color: var(--fg-2);
+      }
+
+      .lab-cell figcaption b {
+        font-family: var(--f-mono);
+        font-size: 0.85rem;
+        color: var(--fg);
+        letter-spacing: 0.08em;
+      }
+
+      .lab-cell figcaption span::before {
+        content: "· ";
+        opacity: 0.5;
+      }
+
+      /*
+        每一格都是完整的四欄網格，卡片在裡面跨 --w 欄 —— 這樣量到的寬度就是
+        它在工作區真正的寬度。（別再另外縮網格：縮一次、卡片再跨一次，寬度
+        會被乘兩遍，一欄的卡量出來只有 66px。）
+      */
+      .lab-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .lab-grid .card {
+        grid-column: span var(--w);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="lab"></div>
+    <script type="module" src="/src/media-lab.tsx"></script>
+  </body>
+</html>

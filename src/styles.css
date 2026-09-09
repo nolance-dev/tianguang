@@ -4224,6 +4224,21 @@ body::-webkit-scrollbar {
  * 底圖是那個網站的圖示放大再糊掉。它不是專輯封面 —— 瀏覽器不給擴充功能
  * 全域媒體控制，封面拿不到 —— 但它是真的，而且一眼就知道聲音從哪個站來。
  * 糊到看不出形狀是刻意的：它是背景，不是內容。
+ *
+ * 版面跟著卡片大小走，一共十二種（寬 1–4 欄 × 高 1–3 列）。規則只有兩條：
+ *
+ *   寬度決定「一列怎麼排」——
+ *     w1 圖示與文字一行、傳輸鍵另起一行，窄到放不下並排
+ *     w2 文字在左、傳輸鍵在右，就是參考稿那一行
+ *     w3 同上再寬鬆些，靜音獨立成一組並用一道分隔線隔開
+ *     w4 傳輸鍵不再等滑過才亮 —— 這麼寬的一張卡，藏著沒有意義
+ *
+ *   高度決定「看得到幾列」——
+ *     h1 只有一列（排最前面那個），其餘的數字寫在標題旁的膠囊裡
+ *     h2 一份會捲的清單
+ *     h3 第一列變成主角：大圖示、大標題、鍵排在下面；其餘照清單排
+ *
+ * 兩條規則相乘就是十二種，沒有一種要另外寫 JSX —— 差異全在這裡。
  */
 .media {
   position: absolute;
@@ -4236,6 +4251,43 @@ body::-webkit-scrollbar {
   padding: 0.8rem 0.9rem;
   cursor: grab;
   user-select: none;
+  /* 參考稿的玻璃感：一道由亮到暗的斜向漸層壓在卡片本來的底上 */
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--fg) 7%, transparent) 0%,
+    transparent 60%
+  );
+}
+
+/*
+ * 兩團光暈，左上與右下各一。
+ *
+ * 參考稿用的是兩個固定色（emerald 與 blue）。這裡改用卡片本來的前景色與
+ * 主題的金 —— 天光的底色一小時換一次，寫死的綠會在某幾個時段整張卡看起來
+ * 像貼上去的別人的元件。
+ */
+.media::before,
+.media::after {
+  content: "";
+  position: absolute;
+  width: 14rem;
+  height: 14rem;
+  border-radius: 50%;
+  filter: blur(56px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.media::before {
+  top: -6rem;
+  inset-inline-start: -6rem;
+  background: color-mix(in srgb, var(--gold, #e3b667) 22%, transparent);
+}
+
+.media::after {
+  bottom: -6rem;
+  inset-inline-end: -6rem;
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
 }
 
 .card.held .media {
@@ -4260,10 +4312,11 @@ body::-webkit-scrollbar {
 
 .media > header {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.45rem;
   flex: none;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--glass-line) 60%, transparent);
 }
 
 .media > header b {
@@ -4271,18 +4324,54 @@ body::-webkit-scrollbar {
   font-weight: 600;
   font-size: 0.78rem;
   letter-spacing: 0.13em;
+  margin-inline-end: auto;
 }
 
 :root[lang^="en"] .media > header b {
   font-family: var(--f-latin);
   letter-spacing: 0.03em;
   font-size: 0.9rem;
+  text-transform: uppercase;
 }
 
-.media > header span {
+/* 有東西在響才跳。全部暫停時是一個不動的暗點 —— 狀態燈說謊比沒有還糟 */
+.media-live {
+  flex: none;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: var(--fg-2);
+}
+
+.media-live.on {
+  background: var(--gold, #e3b667);
+  animation: media-pulse 2s ease-in-out infinite;
+}
+
+@keyframes media-pulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.82);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .media-live.on {
+    animation: none;
+  }
+}
+
+/* 參考稿右上那顆膠囊。h1 的時候它是唯一交代「還有幾個在響」的地方 */
+.media-count {
+  flex: none;
   font-family: var(--f-mono);
-  font-size: 0.62rem;
+  font-size: 0.6rem;
+  line-height: 1;
+  padding: 0.22rem 0.45rem;
+  border-radius: 999px;
   color: var(--fg-2);
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+  border: 1px solid var(--glass-line);
 }
 
 .media .empty {
@@ -4302,7 +4391,7 @@ body::-webkit-scrollbar {
   scrollbar-width: none;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.25rem;
 }
 
 .media-list::-webkit-scrollbar {
@@ -4320,9 +4409,11 @@ body::-webkit-scrollbar {
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  border-radius: 9px;
+  border-radius: 11px;
+  border: 1px solid transparent;
   transition:
     background 0.15s,
+    border-color 0.15s,
     opacity 0.2s;
   animation: row-in 0.24s cubic-bezier(0.22, 1, 0.28, 1) both;
 }
@@ -4335,7 +4426,8 @@ body::-webkit-scrollbar {
 }
 
 .media-list li:hover {
-  background: var(--glass-line);
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+  border-color: var(--glass-line);
 }
 
 /* 靜音的那個退到背景，但留著 —— 它還在播，只是聽不到 */
@@ -4358,32 +4450,52 @@ body::-webkit-scrollbar {
   cursor: pointer;
 }
 
-.media-list img {
-  width: 1.1rem;
-  height: 1.1rem;
-  border-radius: 4px;
+/*
+ * 圖示的座。
+ *
+ * 參考稿那一格是 rounded-2xl 的漸層方塊。網站圖示的尺寸各家不同（16 到
+ * 512 都有），裝進固定的方塊裡，每一列的文字才從同一個地方開始。
+ */
+.media-art {
   flex: none;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 10px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--fg) 12%, transparent),
+    color-mix(in srgb, var(--gold, #e3b667) 14%, transparent)
+  );
+  border: 1px solid var(--glass-line);
+  overflow: hidden;
 }
 
-.media-list .dot {
+.media-art img {
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 4px;
+}
+
+.media-art .dot {
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
   background: var(--fg-2);
-  flex: none;
-  margin: 0 0.3rem;
 }
 
 .media-list .txt {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.05rem;
+  gap: 0.1rem;
 }
 
 .media-list .txt b {
-  font-weight: 400;
-  font-size: 0.78rem;
+  font-weight: 500;
+  font-size: 0.8rem;
+  letter-spacing: -0.01em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -4405,66 +4517,323 @@ body::-webkit-scrollbar {
  * 平常淡著，滑到那一列或用鍵盤走到才亮 —— 一列上四顆鈕同時全亮，
  * 眼睛會先看到一排按鈕而不是「在放什麼」，而那才是這張卡要回答的問題。
  * :focus-within 是給鍵盤的：Tab 進來的時候鈕必須看得見。
+ * 例外是 w4：那麼寬的一張卡不缺那點空間，藏著只是讓人多滑一次滑鼠。
+ */
+/*
+ * 四個固定的位子，不是一排靠攏的鈕。
+ *
+ * 不是每一站都有上下首（canSkip 量得到才長），排成 flex 的話缺一顆整排就
+ * 往右移 —— 五列疊起來，播放鍵在每一列的水平位置都不一樣。每顆鈕指定
+ * grid-column，沒長出來的那一格就空著，欄位自己對齊。
  */
 .media-ctl {
   flex: none;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1.7rem 1.95rem 1.7rem auto;
   align-items: center;
-  gap: 0.1rem;
+  gap: 0.15rem;
   margin-inline-start: auto;
+  padding-inline-end: 0.25rem;
 }
+
+.media-ctl .step[data-cmd="prev"] {
+  grid-column: 1;
+}
+
+.media-ctl .play {
+  grid-column: 2;
+}
+
+.media-ctl .step[data-cmd="next"] {
+  grid-column: 3;
+}
+
+.media-ctl .mute {
+  grid-column: 4;
+}
+
 .media-ctl button {
   flex: none;
+  display: grid;
+  place-items: center;
   border: 0;
   background: none;
   color: inherit;
-  padding: 0.3rem 0.35rem;
-  font-size: 0.8rem;
-  line-height: 1;
+  padding: 0;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
   cursor: pointer;
   opacity: 0.42;
   transition:
     opacity 0.15s,
+    background 0.15s,
     scale 0.12s;
 }
+
+.media-ctl svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  display: block;
+}
+
 .media-list li:hover .media-ctl button,
 .media-list li:focus-within .media-ctl button {
-  opacity: 0.8;
+  opacity: 0.85;
 }
+
 .media-ctl button:hover,
 .media-ctl button:focus-visible {
   opacity: 1;
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
 }
+
 .media-ctl button:active {
   scale: 0.88;
 }
+
+/*
+ * 播放鍵是實心的圓。
+ *
+ * 參考稿把它做成白底深字，一眼就知道哪顆是主要動作。這裡底用 --fg、字用
+ * --fg-ink —— App 已經算好那一對（「壓在 --fg 那個色塊上的字」），亮底暗底
+ * 都咬得住。寫死白色的話淺色主題會整顆消失。
+ */
 .media-ctl .play {
-  font-size: 0.95rem;
+  width: 1.95rem;
+  height: 1.95rem;
+  opacity: 0.9;
+  background: var(--fg);
+  color: var(--fg-ink, #12161f);
+  box-shadow: 0 2px 10px -4px rgba(0, 0, 0, 0.6);
 }
+
+.media-ctl .play svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.media-list li:hover .media-ctl .play,
+.media-list li:focus-within .media-ctl .play,
+.media-ctl .play:hover,
+.media-ctl .play:focus-visible {
+  opacity: 1;
+  background: var(--fg);
+}
+
+/*
+ * 只有第一列的播放鍵是實心的。
+ *
+ * 參考稿裡實心白圓只有一顆，因為那是「主要動作」。清單有五列時五顆都實心，
+ * 看到的是一排白點而不是「現在在放什麼」—— 第一列排在最前面是因為它在響，
+ * 那顆才是主要動作。其餘的做成空心，滑過去才填起來。
+ */
+.media-list li:not(:first-child) .media-ctl .play {
+  background: none;
+  color: inherit;
+  box-shadow: none;
+  border: 1px solid var(--glass-line);
+  opacity: 0.5;
+}
+
+.media-list li:not(:first-child):hover .media-ctl .play,
+.media-list li:not(:first-child) .media-ctl .play:hover,
+.media-list li:not(:first-child) .media-ctl .play:focus-visible {
+  background: var(--fg);
+  color: var(--fg-ink, #12161f);
+  border-color: transparent;
+  opacity: 1;
+}
+
 /* 暫停的那一列整列退到後面，但播放鍵反而要亮 —— 它是這一列現在的用途 */
 .media-list li.paused {
   opacity: 0.62;
 }
+
 .media-list li.paused .media-ctl .play {
-  opacity: 0.95;
+  opacity: 1;
 }
 
 .media-list .mute {
   flex: none;
+  display: grid;
+  place-items: center;
   border: 0;
   background: none;
-  padding: 0.3rem 0.4rem;
-  font-size: 0.85rem;
-  line-height: 1;
+  color: inherit;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  margin-inline-end: 0.3rem;
   cursor: pointer;
-  opacity: 0.55;
-  transition: opacity 0.15s;
+  opacity: 0.5;
+  transition:
+    opacity 0.15s,
+    background 0.15s;
+}
+
+.media-list .mute svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  display: block;
 }
 
 .media-list li:hover .mute,
+.media-list .mute:hover,
 .media-list .mute:focus-visible,
 .media-list li.muted .mute {
   opacity: 1;
+}
+
+.media-list .mute:hover,
+.media-list .mute:focus-visible {
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+
+/* ---------------------------------------------------------------------
+ * 十二種尺寸。寬度管一列怎麼排，高度管看得到幾列。
+ * ------------------------------------------------------------------- */
+
+/* --- 寬 1 欄：一行放不下「文字 + 四顆鈕」，所以鍵自己一行 --- */
+.card[data-w="1"] .media {
+  padding: 0.7rem 0.7rem;
+}
+
+.card[data-w="1"] .media-list li {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.15rem;
+  padding-bottom: 0.3rem;
+}
+
+/* 直排之後 margin-inline-start:auto 沒有意義了，而 .media-ctl 是收縮到內容寬的
+   flex 項目 —— justify-content 沒有空間可以分配，要置中得動 align-self */
+.card[data-w="1"] .media-ctl {
+  margin-inline-start: 0;
+  align-self: center;
+  padding-inline-end: 0;
+}
+
+/* 窄到這個地步，上一首下一首是奢侈品。留播放與靜音就好 */
+.card[data-w="1"] .media-ctl .step {
+  display: none;
+}
+
+.card[data-w="1"] .media-list .mute {
+  margin-inline-end: 0;
+}
+
+.card[data-w="1"] .media-art {
+  width: 1.7rem;
+  height: 1.7rem;
+}
+
+/* --- 寬 3 欄以上：靜音退成獨立一組，中間一道分隔線 --- */
+.card[data-w="3"] .media-list .mute,
+.card[data-w="4"] .media-list .mute {
+  margin-inline-start: 0.45rem;
+  border-inline-start: 1px solid var(--glass-line);
+  border-radius: 0;
+  padding-inline-start: 0.55rem;
+  width: auto;
+}
+
+/* --- 寬 4 欄：鍵不再等滑過才出現 --- */
+.card[data-w="4"] .media-ctl button,
+.card[data-w="4"] .media-list .mute {
+  opacity: 0.8;
+}
+
+.card[data-w="4"] .media-list .txt b {
+  font-size: 0.88rem;
+}
+
+.card[data-w="4"] .media-art {
+  width: 2.3rem;
+  height: 2.3rem;
+}
+
+/* --- 高 1 列：只放得下一列。其餘的交給標題旁那顆膠囊 --- */
+.card[data-h="1"] .media-list li:nth-child(n + 2) {
+  display: none;
+}
+
+.card[data-h="1"] .media-list {
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* --- 高 3 列：第一列升格為主角 --- */
+.card[data-h="3"] .media-list li:first-child {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.55rem;
+  padding: 0.9rem 0.6rem 0.7rem;
+  margin-bottom: 0.35rem;
+  border-color: var(--glass-line);
+  background: color-mix(in srgb, var(--fg) 5%, transparent);
+}
+
+.card[data-h="3"] .media-list li:first-child .go {
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.card[data-h="3"] .media-list li:first-child .media-art {
+  width: 4.2rem;
+  height: 4.2rem;
+  border-radius: 18px;
+}
+
+.card[data-h="3"] .media-list li:first-child .media-art img {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 8px;
+}
+
+.card[data-h="3"] .media-list li:first-child .txt {
+  align-items: center;
+  max-width: 100%;
+}
+
+.card[data-h="3"] .media-list li:first-child .txt b {
+  font-size: 0.95rem;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card[data-h="3"] .media-list li:first-child .media-ctl {
+  margin-inline-start: 0;
+  padding-inline-end: 0;
+}
+
+/* 主角那一列的鍵一直亮著 —— 它就是這張卡現在的重點 */
+.card[data-h="3"] .media-list li:first-child .media-ctl button,
+.card[data-h="3"] .media-list li:first-child .mute {
+  opacity: 0.85;
+}
+
+.card[data-h="3"] .media-list li:first-child .media-ctl .play {
+  width: 2.5rem;
+  height: 2.5rem;
+  opacity: 1;
+}
+
+.card[data-h="3"] .media-list li:first-child .media-ctl .play svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* 主角那一列在 w1 也要橫排傳輸鍵：它已經是直的了，鍵再直下去就掉出卡外 */
+.card[data-w="1"][data-h="3"] .media-list li:first-child .media-ctl .step {
+  display: grid;
 }
 
 .media-ask {
