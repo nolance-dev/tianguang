@@ -231,12 +231,19 @@ function safeColor(raw: unknown, fallback: string): string {
     : fallback;
 }
 
+/** 空白的一張。兩邊的預設都是這個，不是彼此的複本。 */
+function blankWall(): PhotoWall {
+  return { id: null, rotate: 0 };
+}
+
 /**
  * 照片牆的清單。
  *
  * 1.0 只有一張，存成 photoId／photoRotate 兩個欄位。那些設定還在使用者的
  * 瀏覽器裡，直接改欄位名等於把他們掛好的照片弄丟 —— 所以舊的兩個欄位
- * 仍然讀，讀完轉成第一張。
+ * 仍然讀，讀完轉成第一張。但只有工作區讀（legacy = true）：那兩個欄位
+ * 是工作區那張牆存下來的，主頁面拿去用等於把同一張照片複製過去，於是
+ * 兩邊一開始就掛著同一張，看起來像還連在一起。
  *
  * 一定至少有一張：零張的話「照片牆」這個開關打開會什麼都沒有，
  * 而使用者沒有任何辦法從介面上把它變回一張。
@@ -244,6 +251,7 @@ function safeColor(raw: unknown, fallback: string): string {
 function photoWalls(
   value: unknown,
   raw: Record<string, unknown>,
+  legacy = false,
 ): PhotoWall[] {
   const list = Array.isArray(value) ? value : null;
   const out: PhotoWall[] = [];
@@ -260,6 +268,7 @@ function photoWalls(
     if (out.length >= MAX_PHOTO_WALLS) break;
   }
   if (out.length) return out;
+  if (!legacy) return [blankWall()];
   // 1.0 的兩個欄位
   return [
     {
@@ -296,8 +305,9 @@ export function migrate(raw: Record<string, unknown>): Settings {
       ? merged.lang
       : DEFAULTS.lang,
     cwaKey: typeof merged.cwaKey === "string" ? merged.cwaKey.trim() : "",
-    photoWalls: photoWalls(raw.photoWalls, raw),
-    // 主頁面沒有 1.0 的舊欄位可以承接 —— 它那時候跟工作區是同一張
+    // 1.0 的 photoId／photoRotate 是工作區那張牆的，所以只有它接手
+    photoWalls: photoWalls(raw.photoWalls, raw, true),
+    // 主頁面從空的開始。承接工作區的舊值等於一開始就把兩邊接在一起
     homePhotoWalls: photoWalls(raw.homePhotoWalls, raw),
   };
 }

@@ -215,12 +215,30 @@ describe("主頁面與工作區的照片牆分開", () => {
     expect(out.homePhotoWalls).toEqual([{ id: "c", rotate: 30 }]);
   });
 
-  it("1.0 的單一 photoId 兩邊都接得住，而且各是各的", () => {
-    const out = migrate({ schemaVersion: 1, photoId: "old" } as never);
-    expect(out.photoWalls).toEqual([{ id: "old", rotate: 0 }]);
-    expect(out.homePhotoWalls).toEqual([{ id: "old", rotate: 0 }]);
-    // 同樣的內容但不是同一個物件 —— 改一邊不該動到另一邊
+  it("1.0 的 photoId 只有工作區接手，主頁面從空的開始", () => {
+    /*
+     * photoId／photoRotate 是 1.0 那張牆存下來的，而 1.0 只有工作區。
+     * 兩邊都拿去用的話，升級完第一眼看到的是兩張一模一樣的照片 ——
+     * 使用者會（合理地）以為它們還連在一起。
+     */
+    const out = migrate({
+      schemaVersion: 1,
+      photoId: "old",
+      photoRotate: 60,
+    } as never);
+    expect(out.photoWalls).toEqual([{ id: "old", rotate: 60 }]);
+    expect(out.homePhotoWalls).toEqual([{ id: null, rotate: 0 }]);
     expect(out.homePhotoWalls).not.toBe(out.photoWalls);
+  });
+
+  it("主頁面自己存過的話，舊欄位動不到它", () => {
+    const out = migrate({
+      schemaVersion: 1,
+      photoId: "old",
+      homePhotoWalls: [{ id: "mine", rotate: 15 }],
+    } as never);
+    expect(out.photoWalls).toEqual([{ id: "old", rotate: 0 }]);
+    expect(out.homePhotoWalls).toEqual([{ id: "mine", rotate: 15 }]);
   });
 
   it("只設了工作區的話，主頁面不會跟著變多", () => {
