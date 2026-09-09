@@ -1,0 +1,7 @@
+# 產生出來的素材不進知識圖。
+#
+# assets/ 與 public/icons/ 裡的每一個檔案都是 tools/icons.mjs、tools/store.mjs、
+# tools/shots.mjs 跑出來的 —— 圖裡的資訊在那三支程式和 docs/STORE.md 都有，
+# 而每張圖要吃掉一個視覺子代理。改了產生器就重跑產生器，不要讓輸出繞回輸入。
+assets/
+public/icons/
