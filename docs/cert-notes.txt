@@ -1,39 +1,39 @@
+WHAT IS NEW IN 1.1.0
+Playback controls on the "now playing" card. The browser gives extensions no
+media-control API, so a short function is injected with chrome.scripting into
+the tab currently making sound, only when the user presses a control. It plays
+or pauses that page's <video>/<audio>, or clicks the site's own next button.
+No page content is read, nothing is sent, nothing is left behind. This adds
+the optional permission "scripting" and ten named media hosts, asked one
+origin at a time when a control is pressed. <all_urls> is not requested.
+
 WHAT THIS IS
 A new tab page: clock, search box, quick links, and an optional second screen
-of cards (to-dos, notes, pomodoro, calendar, weather, now playing). No
-account, no server, no analytics, no remote code, no declared content
-scripts. No credentials are needed to test it.
+of cards (to-dos, notes, pomodoro, calendar, weather, now playing). No account,
+no server, no analytics, no remote code, no declared content scripts. No
+credentials are needed to test it.
 
 HOW TO TEST
 Open a new tab. Scroll down for the second screen, click the clock for the
 dial, gear at the bottom right for settings.
 
 REQUIRED
-storage - settings, layout, to-dos and notes. sync for settings and layout,
-local for larger data. Nothing is uploaded anywhere.
-topSites - read once, only when the user presses "import from most visited".
-favicon - quick-link icons from the browser's own cache via _favicon/,
-requested so we do NOT fetch icons from the sites themselves and disclose
-the user's saved sites to third parties.
+storage - settings, layout, to-dos and notes; nothing is uploaded anywhere.
+topSites - read once, when the user presses "import from most visited".
+favicon - quick-link icons from the browser's own cache via _favicon/, so we
+do NOT fetch them from the sites and disclose the user's saved sites.
 
 OPTIONAL
-All requested at runtime inside a user gesture, only when the user opens the
+Requested at runtime inside a user gesture, only when the user opens the
 matching feature; declining leaves the rest working.
-tabs - the "now playing" card lists tabs producing sound.
+tabs - the card lists tabs producing sound.
 bookmarks / history / sessions / downloads - the command palette (Ctrl+K)
 matches locally and transmits nothing.
-scripting - play/pause and next/previous on that card. The browser gives
-extensions no media-control API, so a short function is injected into the
-tab currently making sound, only when a control is pressed. It plays or
-pauses that page's <video>/<audio>, or clicks the site's own next button.
-No page content is read, nothing is sent, nothing is left behind.
+scripting - the playback controls above.
 
 OPTIONAL HOSTS
-Ten media sites (youtube.com, open.spotify.com, soundcloud.com, bilibili.com,
-music.apple.com, twitch.tv, nicovideo.jp, mixcloud.com, deezer.com,
-bandcamp.com) for those controls, asked one origin at a time. <all_urls> is
-deliberately not requested. Weather and holidays add five open-data hosts,
-only once turned on. Full reasoning: docs/PRIVACY.md in the repo.
-
-Nothing is collected or sold; there is no server.
+youtube.com, open.spotify.com, soundcloud.com, bilibili.com, music.apple.com,
+twitch.tv, nicovideo.jp, mixcloud.com, deezer.com, bandcamp.com. Weather and
+holidays add five open-data hosts, only once turned on. Reasoning:
+docs/PRIVACY.md in the repo. Nothing is collected or sold; no server.
 https://github.com/nolance-dev/tianguang
