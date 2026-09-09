@@ -60,6 +60,35 @@ const cells = await page.$$eval(".lab-cell", (nodes) =>
 console.table(cells);
 
 /*
+ * 捲得動嗎。
+ *
+ * styles.css 是給新分頁那一頁寫的：body { height: 100%; overflow: hidden }
+ * —— 那一頁的捲動在每一屏自己身上。這一頁整個匯入那份樣式，所以第一屏以下
+ * 全部被切掉：十二格排好了、量得到、就是看不到也捲不到。整頁截圖那時候只
+ * 畫得出三格，訊號一直在，是我讀錯了。
+ */
+const scroll = await page.evaluate(async () => {
+  const before = window.scrollY;
+  window.scrollTo(0, document.documentElement.scrollHeight);
+  await new Promise((r) => requestAnimationFrame(r));
+  const after = window.scrollY;
+  window.scrollTo(0, before);
+  return {
+    docHeight: document.documentElement.scrollHeight,
+    viewport: window.innerHeight,
+    moved: after,
+    bodyOverflow: getComputedStyle(document.body).overflowY,
+  };
+});
+const needsScroll = scroll.docHeight > scroll.viewport + 1;
+if (needsScroll && scroll.moved === 0)
+  console.log(
+    `FAIL: 頁高 ${scroll.docHeight}px、視窗 ${scroll.viewport}px，但捲不動` +
+      `（body overflow-y: ${scroll.bodyOverflow}）`,
+  );
+else console.log(`scroll ok: ${scroll.docHeight}px, moved to ${scroll.moved}`);
+
+/*
  * 一格拍一張，不拍整頁。
  *
  * 整頁那張在 1440×6104 只畫得出前三格，後面全是空的 —— 十二張卡各帶兩團

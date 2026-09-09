@@ -4,7 +4,7 @@
   vite 的預設 input 只有 index.html，這一支不會被打包進擴充功能。
   開法：npm run lab，然後開 http://localhost:5174/media-lab.html
 -->
-<html lang="zh-TW">
+<html lang="zh-TW" class="lab-page">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -22,6 +22,21 @@
         --glass-line: rgba(255, 255, 255, 0.2);
         --holi: #e8776c;
         color-scheme: dark;
+      }
+
+      /*
+        styles.css 給的是新分頁那一頁的規矩：html/body 高 100%、body
+        overflow: hidden —— 那一頁的捲動發生在每一屏自己身上，文件本身不捲。
+        這一頁沒有「屏」，十二格就是一條長的，所以要把那條規矩收回來。
+
+        用 html.lab-page 而不是 !important：vite 在 dev 是把 styles.css 用
+        <style> 插進 head 的，插在這一段後面 —— 同樣是 `body` 選擇器的話它後
+        到先贏。多一個 class 讓權重高過去，比在每一條後面掛 !important 乾淨。
+      */
+      html.lab-page,
+      html.lab-page body {
+        height: auto;
+        overflow: visible;
       }
 
       body {
