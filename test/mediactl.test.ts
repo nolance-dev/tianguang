@@ -47,6 +47,21 @@ describe("可控制的站", () => {
     expect(canControl("www.youtube.com")).toBe(true);
   });
 
+  it("宣告成精確主機的站，子網域不給 —— 那顆鈕要不到權限", () => {
+    /*
+     * manifest 裡 open.spotify.com 與 music.apple.com 是精確主機，
+     * 其餘是 *://*.host/*。實測過 chrome.permissions.contains()：
+     * beta.music.apple.com 回 false。長出鈕來只會跳一次詢問然後失敗。
+     */
+    expect(canControl("music.apple.com")).toBe(true);
+    expect(canControl("beta.music.apple.com")).toBe(false);
+    expect(canControl("open.spotify.com")).toBe(true);
+    expect(canControl("preview.open.spotify.com")).toBe(false);
+    // 帶萬用字元宣告的那些，子網域照給
+    expect(canControl("m.bilibili.com")).toBe(true);
+    expect(canControl("www.youtube.com")).toBe(true);
+  });
+
   it("沒宣告的站一律不能控制 —— 長出鈕來只是騙人", () => {
     expect(canControl("example.com")).toBe(false);
     // 尾綴要比在點上，notyoutube.com 不是 youtube.com 的子網域

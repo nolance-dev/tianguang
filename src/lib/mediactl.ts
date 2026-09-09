@@ -49,9 +49,23 @@ export const CONTROLLABLE: string[] = [
   "bandcamp.com",
 ];
 
+/**
+ * manifest 裡宣告成精確主機的那幾個。
+ *
+ * 其餘的宣告是 `*://*.youtube.com/*` 這種帶萬用字元的，子網域要得到權限；
+ * 這兩個是 `*://open.spotify.com/*`、`*://music.apple.com/*`，
+ * beta.music.apple.com 要不到。要不到就不該長出鈕 —— 按下去只會跳一次
+ * 權限詢問然後失敗，那比沒有那顆鈕更糟。
+ *
+ * 要放寬就兩邊一起改：manifest 的來源加上 `*.`，這裡把它移出去。
+ */
+const EXACT = new Set(["open.spotify.com", "music.apple.com"]);
+
 /** 這一站在不在清單上。不在就連播放／暫停都不長出來 */
 export function canControl(host: string): boolean {
-  return CONTROLLABLE.some((k) => host === k || host.endsWith("." + k));
+  return CONTROLLABLE.some(
+    (k) => host === k || (!EXACT.has(k) && host.endsWith("." + k)),
+  );
 }
 
 export interface Adapter {

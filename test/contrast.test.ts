@@ -64,3 +64,53 @@ describe("對比", () => {
     }
   });
 });
+
+/**
+ * 設定抽屜的次要文字扛不到 AA —— 那是刻意的，但要有人記著它有多低。
+ *
+ * mesh.ts 的 fg2 是把同一個字色淡成 .62／.66，那裡的註解寫明「淡的那一層
+ * 本來就不扛 4.5」。決定沒問題，問題是沒有任何東西量過它，而 1.1.0 的
+ * commit 訊息說設定抽屜用的是「contrast.test.ts 已經守住 4.5 的那組配色」——
+ * 那句話對 fg 成立，對 fg2 不成立。抽屜同時把 --fg-2 指到 --solid-fg-2
+ * （styles.css 的 .panel），h3、.note、未選取的分頁都吃那一格。
+ *
+ * 所以這裡不假裝它有 AA，而是把真正的下限釘住。要補到 AA 得讓 fg2 也走
+ * harden()，那會改變整個介面的視覺層次，是設計決定不是修 bug。
+ */
+describe("設定抽屜的次要文字", () => {
+  /** 全天實測最低約 2.57。低於這裡代表有人又把它調淡了 */
+  const FLOOR = 2.5;
+
+  const hex = (rgb: number[]) =>
+    "#" +
+    rgb.map((v) => Math.round(v).toString(16).padStart(2, "0")).join("");
+
+  /** fg2 是 rgba(r,g,b,a)，要先跟自己的底合成才有意義 */
+  function fg2Ratio(hour: number): number {
+    // --solid 是這個時刻的代表色，--solid-fg-2 是照它算的（見 App.tsx）
+    const solid = paletteAt(hour).boot;
+    const m = /rgba?\(([^)]+)\)/.exec(paletteForColor(solid).fg2)!;
+    const [r, g, b, a] = m[1]!.split(",").map((x) => parseFloat(x)) as number[];
+    const bg = [1, 3, 5].map((i) => parseInt(solid.slice(i, i + 2), 16));
+    const mixed = [r!, g!, b!].map((v, i) => v * a! + bg[i]! * (1 - a!));
+    return ratio(luminance(hex(mixed)), luminance(solid));
+  }
+
+  it("整天都不會比現在更糟", () => {
+    let worst = { r: Infinity, at: 0 };
+    for (let q = 0; q < 24; q += 0.05) {
+      const got = fg2Ratio(q);
+      if (got < worst.r) worst = { r: got, at: q };
+    }
+    expect(
+      worst.r,
+      `全天最低 ${worst.r.toFixed(2)}:1（${worst.at.toFixed(2)} 時）`,
+    ).toBeGreaterThanOrEqual(FLOOR);
+  });
+
+  it("它確實還在 AA 之下 —— 補好的那天這一條會紅，提醒回來刪掉上面的註解", () => {
+    let worst = Infinity;
+    for (let q = 0; q < 24; q += 0.05) worst = Math.min(worst, fg2Ratio(q));
+    expect(worst).toBeLessThan(AA);
+  });
+});
