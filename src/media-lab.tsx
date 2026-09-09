@@ -90,7 +90,7 @@ function icon(bg: string, glyph: string): string {
 
 /** 每一種尺寸旁邊那行說明：這個大小為什麼長這樣 */
 const WHY_W: Record<number, string> = {
-  1: "一行放不下文字加四顆鍵，所以鍵自己一行；上下首收起來",
+  1: "一行放不下文字加四顆鍵，所以鍵自己一行、置中",
   2: "參考稿那一行：文字在左，傳輸鍵在右",
   3: "同上再寬鬆些，靜音獨立成一組，中間一道分隔線",
   4: "夠寬了，傳輸鍵不再等滑過才亮；標題與圖示都放大",
@@ -99,7 +99,7 @@ const WHY_W: Record<number, string> = {
 const WHY_H: Record<number, string> = {
   1: "只看得到排最前面那一個，其餘寫在標題旁的膠囊裡",
   2: "一份會捲的清單",
-  3: "第一列升格成主角：大圖示、大標題、鍵排在它下面",
+  3: "第一列升格成主角：大圖示、大標題、傳輸鍵置中，靜音退到右上角",
 };
 
 function Cell({ w, h, rows }: { w: number; h: number; rows: Playing[] }) {

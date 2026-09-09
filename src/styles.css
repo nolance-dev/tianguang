@@ -4228,7 +4228,7 @@ body::-webkit-scrollbar {
  * 版面跟著卡片大小走，一共十二種（寬 1–4 欄 × 高 1–3 列）。規則只有兩條：
  *
  *   寬度決定「一列怎麼排」——
- *     w1 圖示與文字一行、傳輸鍵另起一行，窄到放不下並排
+ *     w1 圖示與文字一行、傳輸鍵另起一行置中，四顆鍵都在
  *     w2 文字在左、傳輸鍵在右，就是參考稿那一行
  *     w3 同上再寬鬆些，靜音獨立成一組並用一道分隔線隔開
  *     w4 傳輸鍵不再等滑過才亮 —— 這麼寬的一張卡，藏著沒有意義
@@ -4706,17 +4706,36 @@ body::-webkit-scrollbar {
   padding-bottom: 0.3rem;
 }
 
-/* 直排之後 margin-inline-start:auto 沒有意義了，而 .media-ctl 是收縮到內容寬的
-   flex 項目 —— justify-content 沒有空間可以分配，要置中得動 align-self */
+/*
+ * 直排之後 margin-inline-start:auto 沒有意義了，而 .media-ctl 是收縮到內容寬的
+ * flex 項目 —— justify-content 沒有空間可以分配，要置中得動 align-self。
+ *
+ * 而且置中的要是播放鍵本身。四顆鍵排一排再把整排置中，播放鍵是第二顆，
+ * 中線落在播放與下一首之間，播放鍵差 15px 沒對上。左邊補一欄空的跟靜音同寬，
+ * 四顆就對稱了，播放鍵自己落在正中間。（h3 的主角那一列走另一條路：
+ * 靜音移到角落。這裡不行 —— 列很矮，角落就是標題的位置。）
+ */
 .card[data-w="1"] .media-ctl {
   margin-inline-start: 0;
   align-self: center;
   padding-inline-end: 0;
+  grid-template-columns: 1.7rem 1.7rem 1.95rem 1.7rem 1.7rem;
 }
 
-/* 窄到這個地步，上一首下一首是奢侈品。留播放與靜音就好 */
-.card[data-w="1"] .media-ctl .step {
-  display: none;
+.card[data-w="1"] .media-ctl .step[data-cmd="prev"] {
+  grid-column: 2;
+}
+
+.card[data-w="1"] .media-ctl .play {
+  grid-column: 3;
+}
+
+.card[data-w="1"] .media-ctl .step[data-cmd="next"] {
+  grid-column: 4;
+}
+
+.card[data-w="1"] .media-ctl .mute {
+  grid-column: 5;
 }
 
 .card[data-w="1"] .media-list .mute {
@@ -4765,6 +4784,7 @@ body::-webkit-scrollbar {
 
 /* --- 高 3 列：第一列升格為主角 --- */
 .card[data-h="3"] .media-list li:first-child {
+  position: relative;
   flex-direction: column;
   align-items: center;
   text-align: center;
@@ -4831,9 +4851,46 @@ body::-webkit-scrollbar {
   height: 1rem;
 }
 
-/* 主角那一列在 w1 也要橫排傳輸鍵：它已經是直的了，鍵再直下去就掉出卡外 */
-.card[data-w="1"][data-h="3"] .media-list li:first-child .media-ctl .step {
-  display: grid;
+/*
+ * 主角那一列：置中的是播放鍵本身，不是那一排鍵。
+ *
+ * 四顆鍵排成一排再把整排置中，播放鍵是第二顆 —— 整排的中線落在播放與下一首
+ * 之間，播放鍵永遠差 10–15px 沒對上標題的中線。量得到，也看得出來。
+ *
+ * 所以靜音退出這一排，絕對定位到主角框的右上角；剩下三顆對稱，播放鍵自己
+ * 就在正中間。真的播放器也是這樣排的：傳輸鍵在中間，音量在旁邊。
+ */
+/* 中間那欄要跟主角放大後的播放鍵同寬（下面那條把它拉到 2.5rem）。留 1.95rem
+   的話鍵會從自己的軌道往右溢出 8.8px，中線就跟著偏 4.4px —— 量得出來的那 4px */
+.card[data-h="3"] .media-list li:first-child .media-ctl {
+  grid-template-columns: 1.7rem 2.5rem 1.7rem;
+  justify-content: center;
+}
+
+/* 欄位也要跟著回到 1/2/3。w1 把它們挪到 2/3/4 好在那邊補一欄空的，主角這裡
+   只有三欄 —— 不改回來的話 grid 會長出隱含欄，1×3 就偏 28px */
+.card[data-h="3"] .media-list li:first-child .media-ctl .step[data-cmd="prev"] {
+  grid-column: 1;
+}
+
+.card[data-h="3"] .media-list li:first-child .media-ctl .play {
+  grid-column: 2;
+}
+
+.card[data-h="3"] .media-list li:first-child .media-ctl .step[data-cmd="next"] {
+  grid-column: 3;
+}
+
+.card[data-h="3"] .media-list li:first-child .mute {
+  position: absolute;
+  top: 0.45rem;
+  inset-inline-end: 0.45rem;
+  /* w3/w4 給靜音加了分隔線和內距，飄到角落上就沒有意義了 */
+  width: 1.7rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
 }
 
 .media-ask {
