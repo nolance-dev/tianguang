@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { resolve, looksLikeUrl } from "../src/lib/search";
 import { sunTimes } from "../src/lib/solar";
-import { migrate, DEFAULTS, MAX_PHOTO_WALLS } from "../src/lib/settings";
+import { DEFAULTS, MAX_PHOTO_WALLS, migrate } from "../src/lib/settings";
 import { normalize } from "../src/lib/desk";
 
 /**

@@ -377,6 +377,20 @@ export function save(s: Settings, onResult?: (r: SaveOutcome) => void): void {
   }, 300);
 }
 
+/**
+ * 取消還沒落盤的那一次寫入。測試用。
+ *
+ * pending 與 latest 是模組層的，跨測試活著 —— 上一條測試排的那次寫入
+ * 會在三百毫秒後醒來，把它的設定蓋到下一條測試的 localStorage 上。
+ * 機器忙的時候才會撞到，所以它是一條隨機紅的測試，而隨機紅的測試
+ * 跟沒有測試是同一回事（這一輪已經因此誤判過兩次）。
+ */
+export function cancelSave(): void {
+  if (pending) clearTimeout(pending);
+  pending = undefined;
+  latest = undefined;
+}
+
 async function flush(
   s: Settings,
   onResult?: (r: SaveOutcome) => void,

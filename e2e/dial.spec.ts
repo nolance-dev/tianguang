@@ -45,22 +45,88 @@ async function openDial(page: Page, lang: string) {
   );
 }
 
-/** 中央每一行 × 每個金色標籤，相交的組合 */
+/**
+ * 中央每一行 × 每個金色標籤，真的疊在一起的組合。
+ *
+ * 兩件事都不能用 getBoundingClientRect() 直接比：
+ *
+ * 標籤是**跟著盤旋轉**的 SVG 文字，貼著弧線走。旋轉之後的軸對齊外接矩形
+ * 比那行字大得多 —— 一行小字量出來 66 像素高。拿兩個外接矩形相交當成
+ * 「字壓到字」，一天二十四小時會誤報八九次，而截圖上明明留著空隙。
+ * 所以標籤要取 getBBox() 的四個角，經 getScreenCTM() 轉到螢幕座標，
+ * 得到真正的斜方框，再用分離軸定理判交。
+ *
+ * 中央那幾行是區塊元素，寬度是整個 .dial-center，而字是置中的 ——
+ * 方框同樣比字寬。用 Range 圈住內容才量得到墨跡。
+ */
 function clashes(page: Page) {
   return page.evaluate(() => {
-    const box = (el: Element) => el.getBoundingClientRect();
-    const hit = (a: DOMRect, b: DOMRect) =>
-      a.left < b.right &&
-      b.left < a.right &&
-      a.top < b.bottom &&
-      b.top < a.bottom;
-    const labs = [...document.querySelectorAll(".sunlab")].map(box);
+    /** 一個凸多邊形的四個角（螢幕座標） */
+    type Quad = { x: number; y: number }[];
+
+    const rectQuad = (r: DOMRect): Quad => [
+      { x: r.left, y: r.top },
+      { x: r.right, y: r.top },
+      { x: r.right, y: r.bottom },
+      { x: r.left, y: r.bottom },
+    ];
+
+    /** SVG 元素旋轉後的真實四角 */
+    const svgQuad = (el: SVGGraphicsElement): Quad | null => {
+      const m = el.getScreenCTM();
+      if (!m) return null;
+      const b = el.getBBox();
+      return [
+        [b.x, b.y],
+        [b.x + b.width, b.y],
+        [b.x + b.width, b.y + b.height],
+        [b.x, b.y + b.height],
+      ].map(([x, y]) => ({
+        x: m.a * x! + m.c * y! + m.e,
+        y: m.b * x! + m.d * y! + m.f,
+      }));
+    };
+
+    /** 分離軸定理：找得到一條分隔線就是沒交集 */
+    const overlap = (p: Quad, q: Quad): boolean => {
+      for (const poly of [p, q]) {
+        for (let i = 0; i < poly.length; i++) {
+          const a = poly[i]!;
+          const c = poly[(i + 1) % poly.length]!;
+          // 邊的法線
+          const nx = -(c.y - a.y);
+          const ny = c.x - a.x;
+          const span = (r: Quad) => {
+            const vs = r.map((v) => v.x * nx + v.y * ny);
+            return [Math.min(...vs), Math.max(...vs)] as const;
+          };
+          const [lo1, hi1] = span(p);
+          const [lo2, hi2] = span(q);
+          if (hi1 < lo2 || hi2 < lo1) return false;
+        }
+      }
+      return true;
+    };
+
+    /** 區塊元素裡那行字真正佔的地方，不是區塊本身 */
+    const inkRect = (el: Element): DOMRect => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const r = range.getBoundingClientRect();
+      range.detach();
+      return r.width > 0 ? r : el.getBoundingClientRect();
+    };
+
+    const labs = [...document.querySelectorAll(".sunlab")]
+      .map((e) => svgQuad(e as SVGGraphicsElement))
+      .filter((q): q is Quad => q !== null);
+
     const out: string[] = [];
     for (const sel of [".dc-time", ".dc-date", ".dc-name", ".dc-sub"]) {
       const el = document.querySelector(sel);
       if (!el) continue;
-      const r = box(el);
-      for (const l of labs) if (hit(r, l)) out.push(`${sel} × sunlab`);
+      const q = rectQuad(inkRect(el));
+      for (const l of labs) if (overlap(q, l)) out.push(`${sel} × sunlab`);
     }
     return out;
   });
