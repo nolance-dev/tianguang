@@ -248,11 +248,15 @@ function blankWall(): PhotoWall {
  * 一定至少有一張：零張的話「照片牆」這個開關打開會什麼都沒有，
  * 而使用者沒有任何辦法從介面上把它變回一張。
  */
-function photoWalls(
-  value: unknown,
-  raw: Record<string, unknown>,
-  legacy = false,
-): PhotoWall[] {
+/**
+ * 一份照片牆清單。讀不出東西就回 null，讓呼叫端決定拿什麼頂。
+ *
+ * 原本這裡吃一個 legacy 旗標，呼叫端只看得到一個裸露的 true —— 那個 true
+ * 是什麼意思全靠上一行註解撐著。改成「讀得到就給，讀不到回 null」，
+ * 「工作區接手 1.0 的舊欄位、主頁面不接」這個決定就寫在呼叫的地方，
+ * 看得到它旁邊的另一行。
+ */
+function photoWalls(value: unknown): PhotoWall[] | null {
   const list = Array.isArray(value) ? value : null;
   const out: PhotoWall[] = [];
   for (const item of list ?? []) {
@@ -267,18 +271,18 @@ function photoWalls(
     });
     if (out.length >= MAX_PHOTO_WALLS) break;
   }
-  if (out.length) return out;
-  if (!legacy) return [blankWall()];
-  // 1.0 的兩個欄位
-  return [
-    {
-      id: typeof raw.photoId === "string" ? raw.photoId : null,
-      rotate:
-        typeof raw.photoRotate === "number" && Number.isFinite(raw.photoRotate)
-          ? Math.max(0, Math.round(raw.photoRotate))
-          : 0,
-    },
-  ];
+  return out.length ? out : null;
+}
+
+/** 1.0 只有一面牆，存在 photoId／photoRotate 兩個欄位裡 */
+function legacyWall(raw: Record<string, unknown>): PhotoWall {
+  return {
+    id: typeof raw.photoId === "string" ? raw.photoId : null,
+    rotate:
+      typeof raw.photoRotate === "number" && Number.isFinite(raw.photoRotate)
+        ? Math.max(0, Math.round(raw.photoRotate))
+        : 0,
+  };
 }
 
 export function migrate(raw: Record<string, unknown>): Settings {
@@ -306,9 +310,9 @@ export function migrate(raw: Record<string, unknown>): Settings {
       : DEFAULTS.lang,
     cwaKey: typeof merged.cwaKey === "string" ? merged.cwaKey.trim() : "",
     // 1.0 的 photoId／photoRotate 是工作區那張牆的，所以只有它接手
-    photoWalls: photoWalls(raw.photoWalls, raw, true),
+    photoWalls: photoWalls(raw.photoWalls) ?? [legacyWall(raw)],
     // 主頁面從空的開始。承接工作區的舊值等於一開始就把兩邊接在一起
-    homePhotoWalls: photoWalls(raw.homePhotoWalls, raw),
+    homePhotoWalls: photoWalls(raw.homePhotoWalls) ?? [blankWall()],
   };
 }
 

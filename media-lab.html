@@ -92,6 +92,8 @@
         display: flex;
         flex-direction: column;
         gap: 0.6rem;
+        /* 上面那個 96% 要算在接近視窗的寬度上，格子本身不要再收一次 */
+        width: 100%;
       }
 
       .lab-cell figcaption {
@@ -120,8 +122,23 @@
         它在工作區真正的寬度。（別再另外縮網格：縮一次、卡片再跨一次，寬度
         會被乘兩遍，一欄的卡量出來只有 66px。）
       */
-      .lab-grid {
+      /*
+        寬度要跟工作區一樣，不是 .cards 的基礎值。
+
+        .cards 基礎是 min(58rem, 88%)，但工作區把它收窄成
+        .screen.desk .cards { width: min(84rem, 96%) } —— 實驗室不在那個屏
+        裡面，吃不到那條規則。不補的話量出來是 928px，真的是 1309px，
+        差四成：結構看起來對，但標題在哪裡被截斷、會不會換行全都不準。
+
+        用 vw 不是 %：百分比算的是父層，而實驗室的父層跟 .screen.desk 不同。
+        改了 styles.css 那條就要跟著改這裡。剩下約 2% 的落差來自工作區那一屏
+        自己的左右內距，不影響判斷。
+      */
+      /* .cards.lab-grid 而不是 .lab-grid：同權重時 styles.css 是後注入的，
+         基礎那條 width 會贏。多一個 class 才壓得過去。 */
+      .cards.lab-grid {
         grid-template-columns: repeat(4, minmax(0, 1fr));
+        width: min(84rem, 96vw);
       }
 
       .lab-grid .card {

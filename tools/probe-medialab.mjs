@@ -107,12 +107,23 @@ for (let i = 0; i < nodes.length; i++) {
 }
 console.log(`shots: ${dir}/ (${nodes.length})`);
 
-if (cells.length !== 12) console.log(`FAIL: 應該十二格，量到 ${cells.length}`);
+/*
+ * 印 FAIL 還 exit 0 的檢查等於沒有檢查 —— CI 收到的是綠燈。
+ * tools/loadcheck.mjs 末尾就是這樣收的，這支跟著同一個規矩。
+ */
+const fails = [];
+if (cells.length !== 12) fails.push(`應該十二格，量到 ${cells.length}`);
 for (const c of cells) {
-  if (c.h < 100) console.log(`FAIL ${c.size}: 卡片高度只有 ${c.h}px`);
-  if (c.overflow) console.log(`FAIL ${c.size}: 內容溢出卡片`);
+  if (c.h < 100) fails.push(`${c.size}: 卡片高度只有 ${c.h}px`);
+  if (c.overflow) fails.push(`${c.size}: 內容溢出卡片`);
 }
-if (errors.length) console.log("console errors:", errors);
-else console.log("no console errors");
+for (const e of errors) fails.push(`console error: ${e}`);
+if (!errors.length) console.log("no console errors");
 
 await browser.close();
+
+if (fails.length) {
+  console.error("");
+  for (const f of fails) console.error("FAIL " + f);
+  process.exit(1);
+}

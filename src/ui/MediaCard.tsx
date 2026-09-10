@@ -36,19 +36,26 @@ const POLL_MS = 2000;
  * 基線、留白全都不一樣，四顆鈕排在一起會高高低低。表情符號的 🔊 更糟：
  * 有些平台直接上彩色圖。畫出來的圖示跟著文字顏色走，兩種主題都對。
  */
-const PATHS: Record<string, string> = {
+/*
+ * 不要標成 Record<string, string>。
+ *
+ * 標了之後 keyof typeof 退化成 string，<Icon name="pause2" /> 這種錯字
+ * tsc 一聲都不吭，執行時 d 是 undefined —— 畫面上就是一顆空白的鈕。
+ * as const 讓鍵回到聯集，錯字在編譯期就攔下來。
+ */
+const ICON_PATHS = {
   prev: "M17 5v14L8 12l9-7ZM6 5h2v14H6V5Z",
   next: "M7 5v14l9-7-9-7ZM16 5h2v14h-2V5Z",
   play: "M8 5.5v13l11-6.5-11-6.5Z",
   pause: "M8 5h3v14H8V5Zm5 0h3v14h-3V5Z",
   volume: "M4 9h3.5L12 5v14L7.5 15H4V9Zm11.5-.5a5 5 0 0 1 0 7l-1.2-1.2a3.3 3.3 0 0 0 0-4.6l1.2-1.2Z",
   muted: "M4 9h3.5L12 5v14L7.5 15H4V9Zm11 1.6 1.4-1.4 1.5 1.5 1.5-1.5 1.4 1.4-1.5 1.5 1.5 1.5-1.4 1.4-1.5-1.5-1.5 1.5-1.4-1.4 1.5-1.5-1.5-1.5Z",
-};
+} as const;
 
-function Icon({ name }: { name: keyof typeof PATHS }) {
+function Icon({ name }: { name: keyof typeof ICON_PATHS }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d={PATHS[name]} fill="currentColor" />
+      <path d={ICON_PATHS[name]} fill="currentColor" />
     </svg>
   );
 }

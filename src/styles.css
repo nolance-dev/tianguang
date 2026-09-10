@@ -4225,20 +4225,13 @@ body::-webkit-scrollbar {
  * 全域媒體控制，封面拿不到 —— 但它是真的，而且一眼就知道聲音從哪個站來。
  * 糊到看不出形狀是刻意的：它是背景，不是內容。
  *
- * 版面跟著卡片大小走，一共十二種（寬 1–4 欄 × 高 1–3 列）。規則只有兩條：
+ * 版面跟著卡片大小走，一共十二種（寬 1–4 欄 × 高 1–3 列）：寬度決定一列
+ * 怎麼排，高度決定看得到幾列。兩條相乘就是十二種，沒有一種要另外寫 JSX ——
+ * 差異全在這個檔案底下的 .card[data-w] / .card[data-h] 那幾段。
  *
- *   寬度決定「一列怎麼排」——
- *     w1 圖示與文字一行、傳輸鍵另起一行置中，四顆鍵都在
- *     w2 文字在左、傳輸鍵在右，就是參考稿那一行
- *     w3 同上再寬鬆些，靜音獨立成一組並用一道分隔線隔開
- *     w4 傳輸鍵不再等滑過才亮 —— 這麼寬的一張卡，藏著沒有意義
- *
- *   高度決定「看得到幾列」——
- *     h1 只有一列（排最前面那個），其餘的數字寫在標題旁的膠囊裡
- *     h2 一份會捲的清單
- *     h3 第一列變成主角：大圖示、大標題、鍵排在下面；其餘照清單排
- *
- * 兩條規則相乘就是十二種，沒有一種要另外寫 JSX —— 差異全在這裡。
+ * 每一種為什麼長那樣，寫在 src/media-lab.tsx 的 WHY_W / WHY_H，只有那一份。
+ * 那份會被畫在 npm run lab 的每一格旁邊，所以它一說謊就看得見；抄一份到
+ * 這裡的話，改了 CSS 忘了那邊（或反過來），兩邊誰是真的沒有人知道。
  */
 .media {
   position: absolute;
@@ -4526,7 +4519,18 @@ body::-webkit-scrollbar {
  * 往右移 —— 五列疊起來，播放鍵在每一列的水平位置都不一樣。每顆鈕指定
  * grid-column，沒長出來的那一格就空著，欄位自己對齊。
  */
+/*
+ * 每顆鈕落在哪一欄，只寫一次。
+ *
+ * 三種排法（基準、w1、h3 的主角列）本來各自重寫一整組 grid-column，
+ * 同一張對照表存在三個地方 —— 改了一處忘了另一處，鈕就會疊在一起或
+ * 長出隱含欄。現在變體只覆寫 --col-* 與軌道定義，指派規則只有底下那四條。
+ */
 .media-ctl {
+  --col-prev: 1;
+  --col-play: 2;
+  --col-next: 3;
+  --col-mute: 4;
   flex: none;
   display: grid;
   grid-template-columns: 1.7rem 1.95rem 1.7rem auto;
@@ -4537,19 +4541,19 @@ body::-webkit-scrollbar {
 }
 
 .media-ctl .step[data-cmd="prev"] {
-  grid-column: 1;
+  grid-column: var(--col-prev);
 }
 
 .media-ctl .play {
-  grid-column: 2;
+  grid-column: var(--col-play);
 }
 
 .media-ctl .step[data-cmd="next"] {
-  grid-column: 3;
+  grid-column: var(--col-next);
 }
 
 .media-ctl .mute {
-  grid-column: 4;
+  grid-column: var(--col-mute);
 }
 
 .media-ctl button {
@@ -4654,18 +4658,16 @@ body::-webkit-scrollbar {
   opacity: 1;
 }
 
+/*
+ * 靜音鍵住在 .media-ctl 裡，形狀由 .media-ctl button 給。這裡只留它跟
+ * 其他三顆不一樣的地方 —— 整組重寫的話，兩邊的 opacity（0.42 對 0.5）
+ * 就變成靠選擇器權重決勝，而那種勝負沒有寫在任何地方。
+ *
+ * transition 刻意不含 scale：它跟著 .media-ctl button:active 縮，但那一下
+ * 是硬切的。靜音是這一列唯一不需要權限的鍵，平常也就亮一點。
+ */
 .media-list .mute {
-  flex: none;
-  display: grid;
-  place-items: center;
-  border: 0;
-  background: none;
-  color: inherit;
-  width: 1.7rem;
-  height: 1.7rem;
-  border-radius: 50%;
   margin-inline-end: 0.3rem;
-  cursor: pointer;
   opacity: 0.5;
   transition:
     opacity 0.15s,
@@ -4685,10 +4687,7 @@ body::-webkit-scrollbar {
   opacity: 1;
 }
 
-.media-list .mute:hover,
-.media-list .mute:focus-visible {
-  background: color-mix(in srgb, var(--fg) 10%, transparent);
-}
+/* hover 的底色由 .media-ctl button:hover 給，這裡不再重述一次 */
 
 /* ---------------------------------------------------------------------
  * 十二種尺寸。寬度管一列怎麼排，高度管看得到幾列。
@@ -4715,27 +4714,16 @@ body::-webkit-scrollbar {
  * 四顆就對稱了，播放鍵自己落在正中間。（h3 的主角那一列走另一條路：
  * 靜音移到角落。這裡不行 —— 列很矮，角落就是標題的位置。）
  */
+/* 五軌：兩側各留一格空的，四顆鈕才會落在正中間 */
 .card[data-w="1"] .media-ctl {
+  --col-prev: 2;
+  --col-play: 3;
+  --col-next: 4;
+  --col-mute: 5;
   margin-inline-start: 0;
   align-self: center;
   padding-inline-end: 0;
   grid-template-columns: 1.7rem 1.7rem 1.95rem 1.7rem 1.7rem;
-}
-
-.card[data-w="1"] .media-ctl .step[data-cmd="prev"] {
-  grid-column: 2;
-}
-
-.card[data-w="1"] .media-ctl .play {
-  grid-column: 3;
-}
-
-.card[data-w="1"] .media-ctl .step[data-cmd="next"] {
-  grid-column: 4;
-}
-
-.card[data-w="1"] .media-ctl .mute {
-  grid-column: 5;
 }
 
 .card[data-w="1"] .media-list .mute {
@@ -4862,23 +4850,14 @@ body::-webkit-scrollbar {
  */
 /* 中間那欄要跟主角放大後的播放鍵同寬（下面那條把它拉到 2.5rem）。留 1.95rem
    的話鍵會從自己的軌道往右溢出 8.8px，中線就跟著偏 4.4px —— 量得出來的那 4px */
+/* 主角列只有三欄（靜音絕對定位到右上角）。欄位要跟著回到 1/2/3 ——
+   w1 把它們挪到 2/3/4 好補一欄空的，不改回來 grid 會長出隱含欄，1×3 偏 28px */
 .card[data-h="3"] .media-list li:first-child .media-ctl {
+  --col-prev: 1;
+  --col-play: 2;
+  --col-next: 3;
   grid-template-columns: 1.7rem 2.5rem 1.7rem;
   justify-content: center;
-}
-
-/* 欄位也要跟著回到 1/2/3。w1 把它們挪到 2/3/4 好在那邊補一欄空的，主角這裡
-   只有三欄 —— 不改回來的話 grid 會長出隱含欄，1×3 就偏 28px */
-.card[data-h="3"] .media-list li:first-child .media-ctl .step[data-cmd="prev"] {
-  grid-column: 1;
-}
-
-.card[data-h="3"] .media-list li:first-child .media-ctl .play {
-  grid-column: 2;
-}
-
-.card[data-h="3"] .media-list li:first-child .media-ctl .step[data-cmd="next"] {
-  grid-column: 3;
 }
 
 .card[data-h="3"] .media-list li:first-child .mute {
